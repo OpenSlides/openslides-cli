@@ -1,0 +1,41 @@
+# Binaries
+osmanage
+osmanage-*
+*.exe
+
+# Test files
+*.test
+*.out
+coverage.txt
+
+# Go workspace
+go.work
+go.work.sum
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+
+# Secrets
+secrets/
+*.key
+*.pem
+*password*
+
+# Build artifacts
+dist/
+tmp/
+
+# Deployment outputs (keep templates)
+openslides-deployment/
+deployment/
+*.yml
+!templates/*.yml
+!default-config.yml
+!services.yml
+
+# OS
+Thumbs.db
