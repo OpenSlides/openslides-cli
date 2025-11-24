@@ -1,7 +1,10 @@
-# Binaries
+# Binaries (root only)
 /osmanage
 /osmanage-*
 *.exe
+*.dll
+*.so
+*.dylib
 
 # Test files
 *.test
@@ -16,26 +19,32 @@ go.work.sum
 .vscode/
 .idea/
 *.swp
+*.swo
 *~
 .DS_Store
 
-# Secrets
+# Secrets (specific files only)
 secrets/
 *.key
 *.pem
-*password*
+*.crt
+postgres-password
+superadmin
+internal_auth_password
+auth_token_key
+auth_cookie_key
 
 # Build artifacts
 dist/
+build/
 tmp/
 
 # Deployment outputs (keep templates)
 openslides-deployment/
 deployment/
-*.yml
-!templates/*.yml
+docker-compose.yml
+!templates/docker-compose.yml
 !default-config.yml
-!services.yml
 
 # OS
 Thumbs.db
