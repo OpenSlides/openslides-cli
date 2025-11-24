@@ -1,6 +1,6 @@
 # Binaries
-osmanage
-osmanage-*
+/osmanage
+/osmanage-*
 *.exe
 
 # Test files
