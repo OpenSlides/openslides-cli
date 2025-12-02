@@ -1,0 +1,44 @@
+name: GitHub Release (reusable)
+on:
+  workflow_call:
+    inputs:
+      branch:
+        type: string
+        default: main
+      tag:
+        type: string
+        default: dev
+      title:
+        type: string
+        default: Development Build
+      prerelease:
+        type: boolean
+        default: true
+
+jobs:
+  release:
+    name: Create GitHub Release and upload binary
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Go
+      uses: actions/setup-go@v2.1.3
+      with:
+        go-version: 1.19
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+      with:
+        ref: "${{ inputs.branch }}"
+
+    - name: Build binaries
+      run: go build ./cmd/osmanage
+
+    - name: Create release
+      uses: marvinpinto/action-automatic-releases@latest
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "${{ inputs.tag }}"
+        prerelease: "${{ inputs.prerelease }}"
+        title: "${{ inputs.title }}"
+        files: |
+          osmanage
