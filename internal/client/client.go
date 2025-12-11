@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/OpenSlides/openslides-cli/internal/logger"
@@ -38,11 +39,43 @@ func (c *Client) buildURL(path string) string {
 	return httpScheme + c.address + path
 }
 
+// escapeForShell escapes single quotes in a string for safe use in shell commands.
+func escapeForShell(s string) string {
+	return strings.ReplaceAll(s, "'", "'\"'\"'")
+}
+
+// logCurlCommand logs a curl command that can be used to reproduce the request.
+func logCurlCommand(method, url string, headers map[string]string, body []byte) {
+	var parts []string
+	parts = append(parts, fmt.Sprintf("curl -X %s '%s'", method, url))
+
+	for key, value := range headers {
+		parts = append(parts, fmt.Sprintf("-H '%s: %s'", key, value))
+	}
+
+	if len(body) > 0 {
+		parts = append(parts, fmt.Sprintf("-d '%s'", escapeForShell(string(body))))
+	}
+
+	logger.Debug("Equivalent curl command:\n  %s", strings.Join(parts, " \\\n  "))
+}
+
+// logResponseDetails logs response headers and metadata.
+func logResponseDetails(resp *http.Response, duration time.Duration) {
+	logger.Debug("Response status: %d %s", resp.StatusCode, resp.Status)
+	logger.Debug("Response headers:")
+	for key, values := range resp.Header {
+		for _, value := range values {
+			logger.Debug("  %s: %s", key, value)
+		}
+	}
+	logger.Debug("Request completed in %v", duration)
+}
+
 // SendAction sends an action request to the backend service.
 // rawData should be a JSON array of action data objects.
 func (c *Client) SendAction(action string, rawData []byte) (*http.Response, error) {
 	logger.Info("Sending action: %s", action)
-	logger.Debug("Action payload size: %d bytes", len(rawData))
 
 	payload := []map[string]any{
 		{
@@ -57,11 +90,7 @@ func (c *Client) SendAction(action string, rawData []byte) (*http.Response, erro
 		return nil, fmt.Errorf("marshalling payload: %w", err)
 	}
 
-	logger.Debug("Request body size: %d bytes", len(body))
-	logger.Debug("Request body %s", body)
-
 	url := c.buildURL(handleRequestPath)
-	logger.Debug("Sending POST request to: %s", url)
 
 	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
@@ -69,8 +98,14 @@ func (c *Client) SendAction(action string, rawData []byte) (*http.Response, erro
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
 
+	authHeader := base64.StdEncoding.EncodeToString([]byte(c.password))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", base64.StdEncoding.EncodeToString([]byte(c.password)))
+	req.Header.Set("Authorization", authHeader)
+
+	logCurlCommand("POST", url, map[string]string{
+		"Content-Type":  "application/json",
+		"Authorization": authHeader,
+	}, body)
 
 	start := time.Now()
 	resp, err := http.DefaultClient.Do(req)
@@ -81,7 +116,8 @@ func (c *Client) SendAction(action string, rawData []byte) (*http.Response, erro
 		return nil, err
 	}
 
-	logger.Debug("Request completed in %v with status: %d", duration, resp.StatusCode)
+	logResponseDetails(resp, duration)
+
 	return resp, nil
 }
 
@@ -100,7 +136,6 @@ func (c *Client) SendMigrations(command string) (*http.Response, error) {
 	}
 
 	url := c.buildURL(migrationsPath)
-	logger.Debug("Sending POST request to: %s", url)
 
 	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
@@ -108,8 +143,14 @@ func (c *Client) SendMigrations(command string) (*http.Response, error) {
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
 
+	authHeader := base64.StdEncoding.EncodeToString([]byte(c.password))
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", base64.StdEncoding.EncodeToString([]byte(c.password)))
+	req.Header.Set("Authorization", authHeader)
+
+	logCurlCommand("POST", url, map[string]string{
+		"Content-Type":  "application/json",
+		"Authorization": authHeader,
+	}, body)
 
 	start := time.Now()
 	resp, err := http.DefaultClient.Do(req)
@@ -120,7 +161,8 @@ func (c *Client) SendMigrations(command string) (*http.Response, error) {
 		return nil, err
 	}
 
-	logger.Debug("Migrations request completed in %v with status: %d", duration, resp.StatusCode)
+	logResponseDetails(resp, duration)
+
 	return resp, nil
 }
 
@@ -134,7 +176,7 @@ func CheckResponse(resp *http.Response) ([]byte, error) {
 		return nil, fmt.Errorf("reading response: %w", err)
 	}
 
-	logger.Debug("Response body size: %d bytes", len(body))
+	logger.Debug("Response body (%d bytes): %s", len(body), string(body))
 
 	if resp.StatusCode != http.StatusOK {
 		logger.Error("Request failed with status %d: %s", resp.StatusCode, string(body))
