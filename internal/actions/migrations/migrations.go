@@ -146,7 +146,6 @@ func runMigrations(cl *client.Client, command string, intervalFlag *time.Duratio
 	}
 
 	// Track progress with intervals
-	outCount := 0
 	fmt.Println("Progress:")
 	logger.Debug("Starting progress tracking with interval: %v", interval)
 
@@ -166,9 +165,11 @@ func runMigrations(cl *client.Client, command string, intervalFlag *time.Duratio
 			}
 			fmt.Print(out)
 		} else {
-			out, c := mR.OutputSince(outCount)
+			out, err := mR.GetOutput("progress")
+			if err != nil {
+				return fmt.Errorf("error parsing progress output: %w", err)
+			}
 			fmt.Print(out)
-			outCount = c
 		}
 
 		if !mR.Running() {
@@ -336,13 +337,4 @@ func (mR MigrationResponse) Faulty() bool {
 
 func (mR MigrationResponse) Running() bool {
 	return mR.Status == migrationRunning
-}
-
-func (mR MigrationResponse) OutputSince(lines int) (string, int) {
-	s := strings.Split(strings.TrimSpace(mR.Output), "\n")
-	out := strings.Join(s[lines:], "\n")
-	if lines < len(s) {
-		out += "\n"
-	}
-	return out, len(s)
 }

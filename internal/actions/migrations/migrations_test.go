@@ -58,33 +58,6 @@ func TestMigrationResponse_Running(t *testing.T) {
 	}
 }
 
-func TestMigrationResponse_OutputSince(t *testing.T) {
-	resp := MigrationResponse{
-		Output: "Line 1\nLine 2\nLine 3\n",
-	}
-	t.Run("from beginning", func(t *testing.T) {
-		output, count := resp.OutputSince(0)
-		if count != 3 {
-			t.Errorf("Expected 3 lines, got %d", count)
-		}
-		if !strings.Contains(output, "Line 1") {
-			t.Error("Expected Line 1 in output")
-		}
-	})
-	t.Run("from middle", func(t *testing.T) {
-		output, count := resp.OutputSince(1)
-		if count != 3 {
-			t.Errorf("Expected 3 total lines, got %d", count)
-		}
-		if strings.Contains(output, "Line 1") {
-			t.Error("Should not contain Line 1")
-		}
-		if !strings.Contains(output, "Line 2") {
-			t.Error("Should contain Line 2")
-		}
-	})
-}
-
 func TestMigrationResponse_GetOutput(t *testing.T) {
 	t.Run("normal output", func(t *testing.T) {
 		resp := MigrationResponse{
