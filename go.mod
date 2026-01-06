@@ -5,7 +5,7 @@ go 1.25.1
 require (
 	github.com/OpenSlides/openslides-go v0.0.0-20251104124242-d8e4b15bb11e
 	github.com/shopspring/decimal v1.4.0
-	github.com/spf13/cobra v1.10.1
+	github.com/spf13/cobra v1.10.2
 	golang.org/x/text v0.29.0
 )
 
