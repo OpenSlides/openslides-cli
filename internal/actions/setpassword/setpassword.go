@@ -29,8 +29,8 @@ func Cmd() *cobra.Command {
 	userID := cmd.Flags().Int64P("user_id", "u", 0, "ID of the user account")
 	password := cmd.Flags().StringP("password", "p", "", "new password of the user")
 
-	cmd.MarkFlagRequired("user_id")
-	cmd.MarkFlagRequired("password")
+	_ = cmd.MarkFlagRequired("user_id")
+	_ = cmd.MarkFlagRequired("password")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		logger.Info("=== SET PASSWORD ===")

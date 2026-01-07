@@ -28,7 +28,11 @@ func TestNewConfig(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer os.Remove(tmpfile.Name())
+		t.Cleanup(func() {
+			if err := os.Remove(tmpfile.Name()); err != nil {
+				t.Logf("warning: failed to remove temp file: %v", err)
+			}
+		})
 
 		customConfig := `---
 url: test.example.com
@@ -39,8 +43,12 @@ defaults:
   tag: custom-tag
   containerRegistry: example.com/registry
 `
-		tmpfile.WriteString(customConfig)
-		tmpfile.Close()
+		if _, err := tmpfile.WriteString(customConfig); err != nil {
+			t.Fatalf("failed to write test config: %v", err)
+		}
+		if err := tmpfile.Close(); err != nil {
+			t.Fatalf("failed to close temp file: %v", err)
+		}
 
 		cfg, err := NewConfig([]string{tmpfile.Name()})
 		if err != nil {
@@ -73,10 +81,14 @@ defaults:
 		tmpdir := t.TempDir()
 
 		config1 := filepath.Join(tmpdir, "config1.yml")
-		os.WriteFile(config1, []byte("host: 127.0.0.1\nport: 8000\n"), 0644)
+		if err := os.WriteFile(config1, []byte("host: 127.0.0.1\nport: 8000\n"), 0644); err != nil {
+			t.Fatalf("failed to write config1: %v", err)
+		}
 
 		config2 := filepath.Join(tmpdir, "config2.yml")
-		os.WriteFile(config2, []byte("port: 9000\nstackName: test-stack\n"), 0644)
+		if err := os.WriteFile(config2, []byte("port: 9000\nstackName: test-stack\n"), 0644); err != nil {
+			t.Fatalf("failed to write config2: %v", err)
+		}
 
 		cfg, err := NewConfig([]string{config1, config2})
 		if err != nil {
@@ -100,20 +112,24 @@ defaults:
 		tmpdir := t.TempDir()
 
 		config1 := filepath.Join(tmpdir, "config1.yml")
-		os.WriteFile(config1, []byte(`
+		if err := os.WriteFile(config1, []byte(`
 services:
   client:
     tag: latest
     replicas: 3
-`), 0644)
+`), 0644); err != nil {
+			t.Fatalf("failed to write config1: %v", err)
+		}
 
 		config2 := filepath.Join(tmpdir, "config2.yml")
-		os.WriteFile(config2, []byte(`
+		if err := os.WriteFile(config2, []byte(`
 services:
   client:
     foo: bar
     replicas: 5
-`), 0644)
+`), 0644); err != nil {
+			t.Fatalf("failed to write config2: %v", err)
+		}
 
 		cfg, err := NewConfig([]string{config1, config2})
 		if err != nil {
@@ -148,21 +164,25 @@ services:
 		tmpdir := t.TempDir()
 
 		config1 := filepath.Join(tmpdir, "config1.yml")
-		os.WriteFile(config1, []byte(`
+		if err := os.WriteFile(config1, []byte(`
 services:
   client:
     tag: latest
-`), 0644)
+`), 0644); err != nil {
+			t.Fatalf("failed to write config1: %v", err)
+		}
 
 		config2 := filepath.Join(tmpdir, "config2.yml")
-		os.WriteFile(config2, []byte(`
+		if err := os.WriteFile(config2, []byte(`
 services:
   client:
     custom:
       deeply:
         nested:
           value: 42
-`), 0644)
+`), 0644); err != nil {
+			t.Fatalf("failed to write config2: %v", err)
+		}
 
 		cfg, err := NewConfig([]string{config1, config2})
 		if err != nil {
@@ -191,15 +211,17 @@ services:
 
 		// Simulates default-config.yml - no services section needed!
 		config1 := filepath.Join(tmpdir, "default.yml")
-		os.WriteFile(config1, []byte(`
+		if err := os.WriteFile(config1, []byte(`
 defaults:
   containerRegistry: registry.example.com
   tag: latest
-`), 0644)
+`), 0644); err != nil {
+			t.Fatalf("failed to write config1: %v", err)
+		}
 
 		// Simulates environment-specific config - only define services that need custom config
 		config2 := filepath.Join(tmpdir, "production.yml")
-		os.WriteFile(config2, []byte(`
+		if err := os.WriteFile(config2, []byte(`
 defaults:
   tag: 4.2.0
 services:
@@ -207,7 +229,9 @@ services:
     password: super-secret
   projector:
     replicas: 3
-`), 0644)
+`), 0644); err != nil {
+			t.Fatalf("failed to write config2: %v", err)
+		}
 
 		cfg, err := NewConfig([]string{config1, config2})
 		if err != nil {
@@ -249,10 +273,18 @@ services:
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer os.Remove(tmpfile.Name())
+		t.Cleanup(func() {
+			if err := os.Remove(tmpfile.Name()); err != nil {
+				t.Logf("warning: failed to remove temp file: %v", err)
+			}
+		})
 
-		tmpfile.WriteString("invalid: yaml: content:")
-		tmpfile.Close()
+		if _, err := tmpfile.WriteString("invalid: yaml: content:"); err != nil {
+			t.Fatalf("failed to write invalid yaml: %v", err)
+		}
+		if err := tmpfile.Close(); err != nil {
+			t.Fatalf("failed to close temp file: %v", err)
+		}
 
 		_, err = NewConfig([]string{tmpfile.Name()})
 		if err == nil {
@@ -313,8 +345,12 @@ func TestGetFilename(t *testing.T) {
 func TestTemplateFunctions(t *testing.T) {
 	tmpdir := t.TempDir()
 	secretsDir := filepath.Join(tmpdir, "secrets")
-	os.MkdirAll(secretsDir, 0755)
-	os.WriteFile(filepath.Join(secretsDir, "test_secret"), []byte("secret123"), 0644)
+	if err := os.MkdirAll(secretsDir, 0755); err != nil {
+		t.Fatalf("failed to create secrets dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(secretsDir, "test_secret"), []byte("secret123"), 0644); err != nil {
+		t.Fatalf("failed to write test secret: %v", err)
+	}
 
 	tf := &TemplateFunctions{baseDir: tmpdir}
 
@@ -441,7 +477,9 @@ func TestCreateDirAndFiles(t *testing.T) {
 
 	t.Run("template file", func(t *testing.T) {
 		tplFile := filepath.Join(tmpdir, "template.yml")
-		os.WriteFile(tplFile, []byte("test: {{ .url }}"), 0644)
+		if err := os.WriteFile(tplFile, []byte("test: {{ .url }}"), 0644); err != nil {
+			t.Fatalf("failed to write template: %v", err)
+		}
 
 		outDir := filepath.Join(tmpdir, "output1")
 		cfg := map[string]any{
@@ -454,7 +492,10 @@ func TestCreateDirAndFiles(t *testing.T) {
 			t.Errorf("CreateDirAndFiles() error = %v", err)
 		}
 
-		result, _ := os.ReadFile(filepath.Join(outDir, "result.yml"))
+		result, err := os.ReadFile(filepath.Join(outDir, "result.yml"))
+		if err != nil {
+			t.Fatalf("failed to read result file: %v", err)
+		}
 		if !strings.Contains(string(result), "example.com") {
 			t.Error("Expected template to be processed")
 		}
@@ -462,9 +503,15 @@ func TestCreateDirAndFiles(t *testing.T) {
 
 	t.Run("template directory", func(t *testing.T) {
 		tplDir := filepath.Join(tmpdir, "templates")
-		os.MkdirAll(tplDir, 0755)
-		os.WriteFile(filepath.Join(tplDir, "file1.yml"), []byte("content1"), 0644)
-		os.WriteFile(filepath.Join(tplDir, "file2.yml"), []byte("content2"), 0644)
+		if err := os.MkdirAll(tplDir, 0755); err != nil {
+			t.Fatalf("failed to create template dir: %v", err)
+		}
+		if err := os.WriteFile(filepath.Join(tplDir, "file1.yml"), []byte("content1"), 0644); err != nil {
+			t.Fatalf("failed to write file1: %v", err)
+		}
+		if err := os.WriteFile(filepath.Join(tplDir, "file2.yml"), []byte("content2"), 0644); err != nil {
+			t.Fatalf("failed to write file2: %v", err)
+		}
 
 		outDir := filepath.Join(tmpdir, "output2")
 		cfg := map[string]any{
@@ -487,7 +534,9 @@ func TestCreateDirAndFiles(t *testing.T) {
 
 	t.Run("template with nested config access", func(t *testing.T) {
 		tplFile := filepath.Join(tmpdir, "nested-template.yml")
-		os.WriteFile(tplFile, []byte("foo: {{ .services.client.foo }}\ntag: {{ .services.client.tag }}"), 0644)
+		if err := os.WriteFile(tplFile, []byte("foo: {{ .services.client.foo }}\ntag: {{ .services.client.tag }}"), 0644); err != nil {
+			t.Fatalf("failed to write template: %v", err)
+		}
 
 		outDir := filepath.Join(tmpdir, "output3")
 		cfg := map[string]any{
@@ -505,7 +554,10 @@ func TestCreateDirAndFiles(t *testing.T) {
 			t.Errorf("CreateDirAndFiles() error = %v", err)
 		}
 
-		result, _ := os.ReadFile(filepath.Join(outDir, "nested-result.yml"))
+		result, err := os.ReadFile(filepath.Join(outDir, "nested-result.yml"))
+		if err != nil {
+			t.Fatalf("failed to read result: %v", err)
+		}
 		content := string(result)
 		if !strings.Contains(content, "foo: bar") {
 			t.Error("Expected nested foo value")
@@ -517,9 +569,10 @@ func TestCreateDirAndFiles(t *testing.T) {
 
 	t.Run("template with or operator fallback pattern", func(t *testing.T) {
 		tplFile := filepath.Join(tmpdir, "or-template.yml")
-		// Template using the 'or' pattern to fall back to defaults
-		os.WriteFile(tplFile, []byte(`tag: {{ or .services.auth.tag .defaults.tag }}
-registry: {{ or .services.auth.containerRegistry .defaults.containerRegistry }}`), 0644)
+		if err := os.WriteFile(tplFile, []byte(`tag: {{ or .services.auth.tag .defaults.tag }}
+registry: {{ or .services.auth.containerRegistry .defaults.containerRegistry }}`), 0644); err != nil {
+			t.Fatalf("failed to write template: %v", err)
+		}
 
 		outDir := filepath.Join(tmpdir, "output4")
 		cfg := map[string]any{
@@ -530,7 +583,6 @@ registry: {{ or .services.auth.containerRegistry .defaults.containerRegistry }}`
 			},
 			"services": map[string]any{
 				"auth": map[string]any{
-					// Only override tag, let containerRegistry fall back to default
 					"tag": "4.2.0",
 				},
 			},
@@ -541,14 +593,15 @@ registry: {{ or .services.auth.containerRegistry .defaults.containerRegistry }}`
 			t.Errorf("CreateDirAndFiles() error = %v", err)
 		}
 
-		result, _ := os.ReadFile(filepath.Join(outDir, "or-result.yml"))
+		result, err := os.ReadFile(filepath.Join(outDir, "or-result.yml"))
+		if err != nil {
+			t.Fatalf("failed to read result: %v", err)
+		}
 		content := string(result)
 
-		// tag should use service-specific value
 		if !strings.Contains(content, "tag: 4.2.0") {
 			t.Error("Expected tag from service config")
 		}
-		// registry should fall back to default
 		if !strings.Contains(content, "registry: registry.example.com") {
 			t.Error("Expected registry from defaults")
 		}
@@ -556,15 +609,16 @@ registry: {{ or .services.auth.containerRegistry .defaults.containerRegistry }}`
 
 	t.Run("template with direct or pattern - recommended approach", func(t *testing.T) {
 		tplFile := filepath.Join(tmpdir, "or-pattern-template.yml")
-		// Recommended pattern: Direct 'or' references without 'with' blocks
-		// Works even when service doesn't exist or is nil
-		os.WriteFile(tplFile, []byte(`auth:
+		templateContent := `auth:
   image: {{ or .services.auth.containerRegistry .defaults.containerRegistry }}/openslides-auth:{{ or .services.auth.tag .defaults.tag }}
   replicas: {{ or .services.auth.replicas 1 }}
 
 projector:
   image: {{ or .services.projector.containerRegistry .defaults.containerRegistry }}/openslides-projector:{{ or .services.projector.tag .defaults.tag }}
-  replicas: {{ or .services.projector.replicas 1 }}`), 0644)
+  replicas: {{ or .services.projector.replicas 1 }}`
+		if err := os.WriteFile(tplFile, []byte(templateContent), 0644); err != nil {
+			t.Fatalf("failed to write template: %v", err)
+		}
 
 		outDir := filepath.Join(tmpdir, "output5")
 		cfg := map[string]any{
@@ -575,11 +629,9 @@ projector:
 			},
 			"services": map[string]any{
 				"auth": map[string]any{
-					// Override only tag, containerRegistry falls back to default
 					"tag":      "4.2.0",
 					"replicas": 3,
 				},
-				// projector not defined at all - should still work with defaults
 			},
 		}
 
@@ -588,10 +640,12 @@ projector:
 			t.Errorf("CreateDirAndFiles() error = %v", err)
 		}
 
-		result, _ := os.ReadFile(filepath.Join(outDir, "or-pattern-result.yml"))
+		result, err := os.ReadFile(filepath.Join(outDir, "or-pattern-result.yml"))
+		if err != nil {
+			t.Fatalf("failed to read result: %v", err)
+		}
 		content := string(result)
 
-		// Auth: should use service-specific tag and replicas, default registry
 		if !strings.Contains(content, ":4.2.0") {
 			t.Error("Expected auth tag 4.2.0 from service config")
 		}
@@ -602,7 +656,6 @@ projector:
 			t.Error("Expected auth replicas from service config")
 		}
 
-		// Projector: should use all defaults since service doesn't exist
 		if !strings.Contains(content, ":4.2.21") {
 			t.Error("Expected projector tag 4.2.21 from defaults")
 		}

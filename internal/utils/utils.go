@@ -79,7 +79,7 @@ func ReadFromFileOrStdin(filename string) ([]byte, error) {
 		if err != nil {
 			return nil, fmt.Errorf("opening file %q: %w", filename, err)
 		}
-		defer f.Close()
+		defer func() { _ = f.Close() }()
 		reader = f
 	}
 

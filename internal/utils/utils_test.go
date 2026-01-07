@@ -12,13 +12,19 @@ func TestReadFromFileOrStdin(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer os.Remove(tmpfile.Name())
+		t.Cleanup(func() {
+			if err := os.Remove(tmpfile.Name()); err != nil {
+				t.Logf("warning: failed to remove temp file: %v", err)
+			}
+		})
 
 		content := "test content"
 		if _, err := tmpfile.WriteString(content); err != nil {
-			t.Fatal(err)
+			t.Fatalf("failed to write test content: %v", err)
 		}
-		tmpfile.Close()
+		if err := tmpfile.Close(); err != nil {
+			t.Fatalf("failed to close temp file: %v", err)
+		}
 
 		data, err := ReadFromFileOrStdin(tmpfile.Name())
 		if err != nil {
@@ -76,11 +82,19 @@ func TestReadPassword(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer os.Remove(tmpfile.Name())
+		t.Cleanup(func() {
+			if err := os.Remove(tmpfile.Name()); err != nil {
+				t.Logf("warning: failed to remove temp file: %v", err)
+			}
+		})
 
 		password := "secret123"
-		tmpfile.WriteString(password)
-		tmpfile.Close()
+		if _, err := tmpfile.WriteString(password); err != nil {
+			t.Fatalf("failed to write password: %v", err)
+		}
+		if err := tmpfile.Close(); err != nil {
+			t.Fatalf("failed to close temp file: %v", err)
+		}
 
 		result, err := ReadPassword(tmpfile.Name())
 		if err != nil {
@@ -111,7 +125,7 @@ func TestCreateFile(t *testing.T) {
 
 		data, err := os.ReadFile(filepath.Join(tmpdir, "test.txt"))
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("failed to read created file: %v", err)
 		}
 		if string(data) != string(content) {
 			t.Errorf("File content = %s, want %s", string(data), string(content))
@@ -121,12 +135,19 @@ func TestCreateFile(t *testing.T) {
 	t.Run("don't overwrite without force", func(t *testing.T) {
 		filename := "existing.txt"
 		original := []byte("original")
-		CreateFile(tmpdir, false, filename, original)
+		if err := CreateFile(tmpdir, false, filename, original); err != nil {
+			t.Fatalf("failed to create initial file: %v", err)
+		}
 
 		newContent := []byte("new content")
-		CreateFile(tmpdir, false, filename, newContent)
+		if err := CreateFile(tmpdir, false, filename, newContent); err != nil {
+			t.Fatalf("CreateFile() error = %v", err)
+		}
 
-		data, _ := os.ReadFile(filepath.Join(tmpdir, filename))
+		data, err := os.ReadFile(filepath.Join(tmpdir, filename))
+		if err != nil {
+			t.Fatalf("failed to read file: %v", err)
+		}
 		if string(data) != string(original) {
 			t.Error("File was overwritten without force flag")
 		}
@@ -135,12 +156,19 @@ func TestCreateFile(t *testing.T) {
 	t.Run("overwrite with force", func(t *testing.T) {
 		filename := "force.txt"
 		original := []byte("original")
-		CreateFile(tmpdir, true, filename, original)
+		if err := CreateFile(tmpdir, true, filename, original); err != nil {
+			t.Fatalf("failed to create initial file: %v", err)
+		}
 
 		newContent := []byte("new content")
-		CreateFile(tmpdir, true, filename, newContent)
+		if err := CreateFile(tmpdir, true, filename, newContent); err != nil {
+			t.Fatalf("CreateFile() error = %v", err)
+		}
 
-		data, _ := os.ReadFile(filepath.Join(tmpdir, filename))
+		data, err := os.ReadFile(filepath.Join(tmpdir, filename))
+		if err != nil {
+			t.Fatalf("failed to read file: %v", err)
+		}
 		if string(data) != string(newContent) {
 			t.Error("File was not overwritten with force flag")
 		}

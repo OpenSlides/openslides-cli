@@ -168,7 +168,7 @@ func (c *Client) SendMigrations(command string) (*http.Response, error) {
 
 // CheckResponse reads and checks the response, returning the body or an error.
 func CheckResponse(resp *http.Response) ([]byte, error) {
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
