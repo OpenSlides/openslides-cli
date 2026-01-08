@@ -74,7 +74,9 @@ func TestSendAction(t *testing.T) {
 			}
 
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"success":true}`))
+			if _, err := w.Write([]byte(`{"success":true}`)); err != nil {
+				t.Fatalf("failed to write response: %v", err)
+			}
 		}))
 		defer server.Close()
 
@@ -85,7 +87,7 @@ func TestSendAction(t *testing.T) {
 		if err != nil {
 			t.Fatalf("SendAction() error = %v", err)
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("Expected status 200, got %d", resp.StatusCode)
@@ -99,7 +101,9 @@ func TestSendAction(t *testing.T) {
 	t.Run("server error", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(`{"error":"server error"}`))
+			if _, err := w.Write([]byte(`{"error":"server error"}`)); err != nil {
+				t.Fatalf("failed to write response: %v", err)
+			}
 		}))
 		defer server.Close()
 
@@ -110,7 +114,7 @@ func TestSendAction(t *testing.T) {
 		if err != nil {
 			t.Fatalf("SendAction() error = %v", err)
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode != http.StatusInternalServerError {
 			t.Errorf("Expected status 500, got %d", resp.StatusCode)
@@ -126,7 +130,7 @@ func TestSendAction(t *testing.T) {
 		if err == nil {
 			t.Error("Expected error for invalid JSON data")
 			if resp != nil {
-				resp.Body.Close()
+				_ = resp.Body.Close()
 			}
 			return
 		}
@@ -139,7 +143,7 @@ func TestSendAction(t *testing.T) {
 		// resp should be nil when there's an error before sending
 		if resp != nil {
 			t.Error("Expected nil response when marshalling fails")
-			resp.Body.Close()
+			_ = resp.Body.Close()
 		}
 	})
 }
@@ -163,7 +167,9 @@ func TestSendMigrations(t *testing.T) {
 			}
 
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"success":true,"status":"completed"}`))
+			if _, err := w.Write([]byte(`{"success":true,"status":"completed"}`)); err != nil {
+				t.Fatalf("failed to write response: %v", err)
+			}
 		}))
 		defer server.Close()
 
@@ -174,7 +180,7 @@ func TestSendMigrations(t *testing.T) {
 		if err != nil {
 			t.Errorf("SendMigrations() error = %v", err)
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("Expected status 200, got %d", resp.StatusCode)
@@ -184,7 +190,9 @@ func TestSendMigrations(t *testing.T) {
 	t.Run("migrations error response", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(`{"error":"invalid command"}`))
+			if _, err := w.Write([]byte(`{"error":"invalid command"}`)); err != nil {
+				t.Fatalf("failed to write response: %v", err)
+			}
 		}))
 		defer server.Close()
 
@@ -195,7 +203,7 @@ func TestSendMigrations(t *testing.T) {
 		if err != nil {
 			t.Errorf("SendMigrations() error = %v", err)
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		if resp.StatusCode != http.StatusBadRequest {
 			t.Errorf("Expected status 400, got %d", resp.StatusCode)
@@ -207,7 +215,9 @@ func TestCheckResponse(t *testing.T) {
 	t.Run("success response", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"success":true}`))
+			if _, err := w.Write([]byte(`{"success":true}`)); err != nil {
+				t.Fatalf("failed to write response: %v", err)
+			}
 		}))
 		defer server.Close()
 
@@ -224,7 +234,9 @@ func TestCheckResponse(t *testing.T) {
 	t.Run("error response", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(`{"error":"bad request"}`))
+			if _, err := w.Write([]byte(`{"error":"bad request"}`)); err != nil {
+				t.Fatalf("failed to write response: %v", err)
+			}
 		}))
 		defer server.Close()
 
@@ -277,7 +289,9 @@ func TestCheckResponse(t *testing.T) {
 			t.Run(tt.name, func(t *testing.T) {
 				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 					w.WriteHeader(tt.statusCode)
-					w.Write([]byte(`{"status":"test"}`))
+					if _, err := w.Write([]byte(`{"status":"test"}`)); err != nil {
+						t.Fatalf("failed to write response: %v", err)
+					}
 				}))
 				defer server.Close()
 

@@ -132,7 +132,9 @@ func randomSecret() ([]byte, error) {
 	b64e := base64.NewEncoder(base64.StdEncoding, buf)
 
 	if _, err := io.Copy(b64e, io.LimitReader(rand.Reader, 32)); err != nil {
-		b64e.Close()
+		if err := b64e.Close(); err != nil {
+			return nil, fmt.Errorf("closing base64 encoder: %w", err)
+		}
 		return nil, fmt.Errorf("generating random secret: %w", err)
 	}
 	if err := b64e.Close(); err != nil {

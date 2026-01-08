@@ -150,7 +150,9 @@ func TestCreateSecrets_NoOverwrite(t *testing.T) {
 	tmpdir := t.TempDir()
 
 	// Create initial secret
-	os.WriteFile(filepath.Join(tmpdir, "existing"), []byte("original"), 0644)
+	if err := os.WriteFile(filepath.Join(tmpdir, "existing"), []byte("original"), 0644); err != nil {
+		t.Fatalf("failed to write template: %v", err)
+	}
 
 	specs := []SecretSpec{
 		{"existing", func() ([]byte, error) { return []byte("new"), nil }},
@@ -286,7 +288,9 @@ defaults:
   containerRegistry: registry.example.com
   tag: 4.2.21
 `
-	os.WriteFile(configFile, []byte(configContent), 0644)
+	if err := os.WriteFile(configFile, []byte(configContent), 0644); err != nil {
+		t.Fatalf("failed to write template: %v", err)
+	}
 
 	// Create a minimal template using camelCase config keys
 	templateFile := filepath.Join(tmpdir, "template.yml")
@@ -300,7 +304,9 @@ disablePostgres: {{ .disablePostgres }}
 registry: {{ .defaults.containerRegistry }}
 tag: {{ .defaults.tag }}
 `
-	os.WriteFile(templateFile, []byte(templateContent), 0644)
+	if err := os.WriteFile(templateFile, []byte(templateContent), 0644); err != nil {
+		t.Fatalf("failed to write template: %v", err)
+	}
 
 	// This would be what the setup command does
 	outDir := filepath.Join(tmpdir, "output")
@@ -384,7 +390,9 @@ defaults:
   containerRegistry: registry.example.com
   tag: 4.2.21
 `
-	os.WriteFile(configFile, []byte(configContent), 0644)
+	if err := os.WriteFile(configFile, []byte(configContent), 0644); err != nil {
+		t.Fatalf("failed to write template: %v", err)
+	}
 
 	outDir := filepath.Join(tmpdir, "output")
 	secretsDir := filepath.Join(outDir, SecretsDirName)
