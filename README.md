@@ -1,3 +1,14 @@
+> **📋 Pre-Release Notice**
+> 
+> `osmanage` is currently in **alpha/pre-release stage** and is being actively developed for production use at Intevation GmbH. While the tool is functional, it is not yet ready for general community adoption:
+> 
+> - APIs and command interfaces may change
+> - Some features are still being finalized
+> - Documentation is work-in-progress
+> - Production hardening is ongoing
+> 
+> We plan to release a stable, community-ready version in the future. For now, use at your own risk or for experimentation only. Contributions and feedback are welcome!
+
 # osmanage
 
 A command-line interface for managing OpenSlides instances. This tool provides direct access to OpenSlides backend actions, datastore queries, database migrations, and deployment setup.
@@ -46,7 +57,7 @@ Download the latest binary from the [releases page](https://github.com/OpenSlide
 
 ```bash
 # Linux AMD64
-curl -L https://github.com/OpenSlides/openslides-cli/releases/latest/download/osmanage-linux-amd64 -o osmanage
+curl -L https://github.com/OpenSlides/openslides-cli/releases/latest/download/osmanage -o osmanage
 chmod +x osmanage
 sudo mv osmanage /usr/local/bin/
 ```
@@ -672,24 +683,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - **Issues**: [GitHub Issues](https://github.com/OpenSlides/openslides-cli/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/OpenSlides/openslides-cli/discussions)
-
----
-
-## Changelog
-
-### Version 2.0.0 (Current)
-- New `get` command with advanced filtering
-- Migration from `datastorereader` to `dsfetch`
-- Retry logic with exponential backoff in migrations
-- Comprehensive test coverage
-- Improved error handling
-- Various bug fixes and stability improvements
-- Removed gRPC and need of a manage service intermediary
-
-### Version 1.0.0 (Original)
-- Initial release by Norman Jäckel
-- gRPC based client-server communication via manage service
-- Docker Compose and k3s generation
-- Migration commands
-- Actions via backendmanage service
-- datastore access via datastorereader
