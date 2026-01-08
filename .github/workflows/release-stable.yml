@@ -5,20 +5,25 @@ on:
 
 jobs:
   release-stable:
-    name: "Create GitHub Release (4.x.x) and upload binary"
+    name: "Create GitHub Release (${{ github.event.client_payload.version }}) and upload binary"
     if: startsWith(github.event.client_payload.branch, 'stable/4')
     uses: ./.github/workflows/release-create.yml
+    permissions:
+      contents: write
     with:
       branch: "${{ github.event.client_payload.branch }}"
       tag: "${{ github.event.client_payload.version }}"
-      title: Stable Build
+      title: "Stable Release ${{ github.event.client_payload.version }}"
       prerelease: false
   release-stable-latest:
     name: "Create GitHub Release (latest) and upload binary"
     if: startsWith(github.event.client_payload.branch, 'stable/4')
     uses: ./.github/workflows/release-create.yml
+    needs: release-stable
+    permissions:
+      contents: write
     with:
       branch: "${{ github.event.client_payload.branch }}"
       tag: latest
-      title: Stable Build
+      title: "Stable Release ${{ github.event.client_payload.version }}"
       prerelease: false

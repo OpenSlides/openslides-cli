@@ -19,16 +19,18 @@ jobs:
   release:
     name: Create GitHub Release and upload binary
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v6
+      with:
+        ref: "${{ inputs.branch }}"
+
     - name: Set up Go
       uses: actions/setup-go@v6
       with:
-        go-version: 1.25.1
-
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
-      with:
-        ref: "${{ inputs.branch }}"
+        go-version-file: 'go.mod'
 
     - name: Build binaries
       run: go build ./cmd/osmanage

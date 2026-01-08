@@ -7,3 +7,5 @@ jobs:
   release-dev:
     name: "Create dev Release"
     uses: ./.github/workflows/release-create.yml
+    permissions:
+      contents: write
