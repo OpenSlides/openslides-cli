@@ -6,7 +6,7 @@ require (
 	github.com/OpenSlides/openslides-go v0.0.0-20251104124242-d8e4b15bb11e
 	github.com/shopspring/decimal v1.4.0
 	github.com/spf13/cobra v1.10.2
-	golang.org/x/text v0.29.0
+	golang.org/x/text v0.32.0
 )
 
 require (
@@ -15,7 +15,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.6 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	golang.org/x/crypto v0.42.0 // indirect
-	golang.org/x/sync v0.17.0 // indirect
+	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.37.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
