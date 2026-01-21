@@ -11,6 +11,7 @@ import (
 	"github.com/OpenSlides/openslides-cli/internal/actions/migrations"
 	"github.com/OpenSlides/openslides-cli/internal/actions/set"
 	"github.com/OpenSlides/openslides-cli/internal/actions/setpassword"
+	k8sActions "github.com/OpenSlides/openslides-cli/internal/k8s/actions"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
 	"github.com/OpenSlides/openslides-cli/internal/templating/config"
 	"github.com/OpenSlides/openslides-cli/internal/templating/setup"
@@ -62,6 +63,21 @@ func RootCmd() *cobra.Command {
 		return nil
 	}
 
+	// K8s command group
+	k8sCmd := &cobra.Command{
+		Use:   "k8s",
+		Short: "Manage Kubernetes deployments",
+		Long:  "Manage OpenSlides instances deployed on Kubernetes",
+	}
+
+	k8sCmd.AddCommand(
+		k8sActions.StartCmd(),
+		k8sActions.StopCmd(),
+		k8sActions.CreateCmd(),
+		k8sActions.HealthCmd(),
+		k8sActions.ClusterStatusCmd(),
+	)
+
 	rootCmd.AddCommand(
 		setup.Cmd(),
 		config.Cmd(),
@@ -72,6 +88,7 @@ func RootCmd() *cobra.Command {
 		get.Cmd(),
 		action.Cmd(),
 		migrations.Cmd(),
+		k8sCmd,
 	)
 
 	return rootCmd
