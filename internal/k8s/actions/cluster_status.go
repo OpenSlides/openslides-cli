@@ -14,8 +14,7 @@ import (
 
 const (
 	ClusterStatusHelp      = "Check Kubernetes cluster status"
-	ClusterStatusHelpExtra = `Checks the status of the Kubernetes cluster by querying node conditions.
-Reports the total number of nodes and how many are in Ready state.
+	ClusterStatusHelpExtra = `Checks the health of all nodes in the Kubernetes cluster.
 
 Examples:
   osmanage k8s cluster-status
@@ -63,37 +62,32 @@ func ClusterStatusCmd() *cobra.Command {
 		logger.Info("Ready nodes: %d", status.ReadyNodes)
 
 		for _, node := range status.Nodes {
-			statusStr := "NotReady"
 			if node.Ready {
-				statusStr = "Ready"
-			}
-			logger.Info("Node %s: %s", node.Name, statusStr)
-
-			if !node.Ready {
-				for _, condition := range node.Conditions {
-					if condition.Status == corev1.ConditionTrue && condition.Type != corev1.NodeReady {
-						logger.Debug("  - %s: %s (Reason: %s)", condition.Type, condition.Message, condition.Reason)
+				logger.Info("Node %s: Ready", node.Name)
+			} else {
+				logger.Info("Node %s: NotReady", node.Name)
+				for _, cond := range node.Conditions {
+					if cond.Status == corev1.ConditionTrue && cond.Type != corev1.NodeReady {
+						logger.Debug("  - %s: %s (Reason: %s)", cond.Type, cond.Status, cond.Reason)
 					}
 				}
 			}
 		}
 
-		if status.ReadyNodes < status.TotalNodes {
+		if status.ReadyNodes != status.TotalNodes {
 			return fmt.Errorf("cluster is not healthy: %d/%d nodes ready", status.ReadyNodes, status.TotalNodes)
 		}
 
-		logger.Info("Cluster is healthy ✓")
+		logger.Info("Cluster is healthy")
 		return nil
 	}
 
 	return cmd
 }
 
-// checkClusterStatus retrieves and analyzes the cluster status
+// checkClusterStatus checks the overall cluster health
 func checkClusterStatus(ctx context.Context, k8sClient *client.Client) (*ClusterStatus, error) {
-	clientset := k8sClient.Clientset()
-
-	nodes, err := clientset.CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+	nodes, err := k8sClient.Clientset().CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("listing nodes: %w", err)
 	}
@@ -120,7 +114,7 @@ func checkClusterStatus(ctx context.Context, k8sClient *client.Client) (*Cluster
 	return status, nil
 }
 
-// isNodeReady checks if a node is in Ready state
+// isNodeReady checks if a node is ready
 func isNodeReady(node *corev1.Node) bool {
 	for _, condition := range node.Status.Conditions {
 		if condition.Type == corev1.NodeReady {
@@ -130,36 +124,35 @@ func isNodeReady(node *corev1.Node) bool {
 	return false
 }
 
-// GetNodeCondition retrieves a specific condition from a node
-func GetNodeCondition(node *corev1.Node, conditionType corev1.NodeConditionType) *corev1.NodeCondition {
-	for i := range node.Status.Conditions {
-		if node.Status.Conditions[i].Type == conditionType {
-			return &node.Status.Conditions[i]
-		}
-	}
-	return nil
-}
-
-// IsNodeHealthy checks if a node has any problematic conditions
+// IsNodeHealthy checks if a node is healthy (no pressure conditions)
 func IsNodeHealthy(node *corev1.Node) bool {
-	readyCondition := GetNodeCondition(node, corev1.NodeReady)
-	if readyCondition == nil || readyCondition.Status != corev1.ConditionTrue {
+	if !isNodeReady(node) {
 		return false
 	}
 
-	negativeConditions := []corev1.NodeConditionType{
+	pressureTypes := []corev1.NodeConditionType{
 		corev1.NodeMemoryPressure,
 		corev1.NodeDiskPressure,
 		corev1.NodePIDPressure,
 		corev1.NodeNetworkUnavailable,
 	}
 
-	for _, condType := range negativeConditions {
-		condition := GetNodeCondition(node, condType)
+	for _, pressureType := range pressureTypes {
+		condition := GetNodeCondition(node, pressureType)
 		if condition != nil && condition.Status == corev1.ConditionTrue {
 			return false
 		}
 	}
 
 	return true
+}
+
+// GetNodeCondition retrieves a specific condition from a node
+func GetNodeCondition(node *corev1.Node, conditionType corev1.NodeConditionType) *corev1.NodeCondition {
+	for _, condition := range node.Status.Conditions {
+		if condition.Type == conditionType {
+			return &condition
+		}
+	}
+	return nil
 }

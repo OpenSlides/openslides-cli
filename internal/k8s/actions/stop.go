@@ -17,35 +17,30 @@ import (
 
 const (
 	StopHelp      = "Stop an OpenSlides instance"
-	StopHelpExtra = `Stops an OpenSlides instance by deleting its namespace.
+	StopHelpExtra = `Stops an OpenSlides instance by deleting its Kubernetes namespace.
 If a TLS certificate secret exists, it will be saved before deletion.
 
 Examples:
-  osmanage k8s stop --namespace openslides-prod --project-dir ./my-instance
-  osmanage k8s stop -n openslides-test --project-dir ./test-instance`
+  osmanage k8s stop ./my-instance --kubeconfig ~/.kube/config`
 
 	tlsCertSecret = "tls-letsencrypt"
 )
 
 func StopCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "stop",
+		Use:   "stop <project-dir>",
 		Short: StopHelp,
 		Long:  StopHelp + "\n\n" + StopHelpExtra,
-		Args:  cobra.NoArgs,
+		Args:  cobra.ExactArgs(1),
 	}
 
-	namespace := cmd.Flags().StringP("namespace", "n", "", "Kubernetes namespace to delete (required)")
-	projectDir := cmd.Flags().StringP("project-dir", "d", "", "Project directory to save TLS secret (required)")
 	kubeconfig := cmd.Flags().String("kubeconfig", "", "Path to kubeconfig file")
 
-	_ = cmd.MarkFlagRequired("namespace")
-	_ = cmd.MarkFlagRequired("project-dir")
-
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		projectDir := args[0]
+
 		logger.Info("=== K8S STOP INSTANCE ===")
-		logger.Debug("Namespace: %s", *namespace)
-		logger.Debug("Project directory: %s", *projectDir)
+		logger.Debug("Project directory: %s", projectDir)
 
 		k8sClient, err := client.New(*kubeconfig)
 		if err != nil {
@@ -54,12 +49,13 @@ func StopCmd() *cobra.Command {
 
 		ctx := context.Background()
 
-		if err := saveTLSSecret(ctx, k8sClient, *namespace, *projectDir); err != nil {
+		namespace := extractNamespace(projectDir)
+		if err := saveTLSSecret(ctx, k8sClient, namespace, projectDir); err != nil {
 			logger.Warn("Failed to save TLS secret: %v", err)
 		}
 
-		logger.Info("Stopping instance: %s", *namespace)
-		if err := deleteNamespace(ctx, k8sClient, *namespace); err != nil {
+		logger.Info("Stopping instance: %s", namespace)
+		if err := deleteNamespace(ctx, k8sClient, namespace); err != nil {
 			return fmt.Errorf("deleting namespace: %w", err)
 		}
 

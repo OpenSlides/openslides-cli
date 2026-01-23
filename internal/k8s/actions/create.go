@@ -23,8 +23,8 @@ This command:
 The secrets directory must already exist (created by 'setup' command).
 
 Examples:
-  osmanage k8s create --project-dir ./my-instance --db-password "mydbpass" --superadmin-password "myadminpass"
-  osmanage k8s create -d ./instance --db-password "$(cat db.txt)" --superadmin-password "$(cat admin.txt)"`
+  osmanage k8s create ./my-instance --db-password "mydbpass" --superadmin-password "myadminpass"
+  osmanage k8s create ./my-instance --db-password "$(cat db.txt)" --superadmin-password "$(cat admin.txt)"`
 
 	adminSecretsFile = "superadmin"
 	pgPasswordFile   = "postgres_password"
@@ -32,25 +32,24 @@ Examples:
 
 func CreateCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create",
+		Use:   "create <project-dir>",
 		Short: CreateHelp,
 		Long:  CreateHelp + "\n\n" + CreateHelpExtra,
-		Args:  cobra.NoArgs,
+		Args:  cobra.ExactArgs(1),
 	}
 
-	projectDir := cmd.Flags().StringP("project-dir", "d", "", "Project directory containing secrets (required)")
 	dbPassword := cmd.Flags().String("db-password", "", "PostgreSQL database password (required)")
 	superadminPassword := cmd.Flags().String("superadmin-password", "", "Superadmin password (required)")
 
-	_ = cmd.MarkFlagRequired("project-dir")
 	_ = cmd.MarkFlagRequired("db-password")
 	_ = cmd.MarkFlagRequired("superadmin-password")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		logger.Info("=== K8S CREATE INSTANCE ===")
-		logger.Debug("Project directory: %s", *projectDir)
+		projectDir := args[0]
+		logger.Debug("Project directory: %s", projectDir)
 
-		if err := createInstance(*projectDir, *dbPassword, *superadminPassword); err != nil {
+		if err := createInstance(projectDir, *dbPassword, *superadminPassword); err != nil {
 			return fmt.Errorf("creating instance: %w", err)
 		}
 

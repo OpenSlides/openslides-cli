@@ -16,28 +16,25 @@ WARNING: This operation is irreversible! All configuration files, secrets,
 and instance data in the directory will be permanently deleted.
 
 Examples:
-  osmanage k8s remove --project-dir ./my-instance
-  osmanage k8s remove -d ./old-instance`
+  osmanage k8s remove ./my-instance`
 )
 
 func RemoveCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "remove",
+		Use:   "remove <project-dir>",
 		Short: RemoveHelp,
 		Long:  RemoveHelp + "\n\n" + RemoveHelpExtra,
-		Args:  cobra.NoArgs,
+		Args:  cobra.ExactArgs(1),
 	}
 
-	projectDir := cmd.Flags().StringP("project-dir", "d", "", "Project directory to remove (required)")
 	force := cmd.Flags().BoolP("force", "f", false, "Skip confirmation prompt")
-
-	_ = cmd.MarkFlagRequired("project-dir")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		logger.Info("=== K8S REMOVE INSTANCE ===")
-		logger.Debug("Project directory: %s", *projectDir)
+		projectDir := args[0]
+		logger.Debug("Project directory: %s", projectDir)
 
-		if err := removeInstance(*projectDir, *force); err != nil {
+		if err := removeInstance(projectDir, *force); err != nil {
 			return fmt.Errorf("removing instance: %w", err)
 		}
 

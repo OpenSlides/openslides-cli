@@ -76,6 +76,7 @@ func RootCmd() *cobra.Command {
 		k8sActions.CreateCmd(),
 		k8sActions.HealthCmd(),
 		k8sActions.ClusterStatusCmd(),
+		k8sActions.UpdateBackendmanageCmd(),
 	)
 
 	rootCmd.AddCommand(
