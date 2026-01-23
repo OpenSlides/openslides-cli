@@ -19,9 +19,9 @@ const (
 Note: You must edit the deployment file to change the replica count before running this command.
 
 Examples:
-  osmanage k8s scale ./my-instance --service backend
-  osmanage k8s scale ./my-instance --service autoupdate --skip-ready-check
-  osmanage k8s scale ./my-instance --service frontend --kubeconfig ~/.kube/config`
+  osmanage k8s scale ./my.instance.dir.org --service backendmanage
+  osmanage k8s scale ./my.instance.dir.org --service autoupdate --skip-ready-check
+  osmanage k8s scale ./my.instance.dir.org --service search --kubeconfig ~/.kube/config`
 )
 
 func ScaleCmd() *cobra.Command {

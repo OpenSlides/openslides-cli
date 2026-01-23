@@ -1,4 +1,3 @@
-// cluster_status_test.go
 package actions
 
 import (

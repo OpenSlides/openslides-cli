@@ -18,17 +18,17 @@ func TestExtractNamespace(t *testing.T) {
 		},
 		{
 			name:     "directory with dots",
-			input:    "my.instance",
-			expected: "myinstance",
+			input:    "my.instance.org",
+			expected: "myinstanceorg",
 		},
 		{
 			name:     "full path with dots",
-			input:    "/home/user/projects/my.instance",
-			expected: "myinstance",
+			input:    "/home/user/projects/my.instance.org",
+			expected: "myinstanceorg",
 		},
 		{
 			name:     "nested path without dots",
-			input:    "/var/lib/openslides/prod-instance",
+			input:    "/var/lib/test/prod-instance",
 			expected: "prod-instance",
 		},
 	}
@@ -49,8 +49,10 @@ func TestFileExists(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
-	defer os.Remove(tmpFile.Name())
-	tmpFile.Close()
+	defer func() {
+		_ = tmpFile.Close()
+		_ = os.Remove(tmpFile.Name())
+	}()
 
 	tests := []struct {
 		name     string

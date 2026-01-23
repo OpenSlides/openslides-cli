@@ -21,7 +21,7 @@ const (
 If a TLS certificate secret exists, it will be saved before deletion.
 
 Examples:
-  osmanage k8s stop ./my-instance --kubeconfig ~/.kube/config`
+  osmanage k8s stop ./my.instance.dir.org --kubeconfig ~/.kube/config`
 
 	tlsCertSecret = "tls-letsencrypt"
 )

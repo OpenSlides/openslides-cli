@@ -16,9 +16,9 @@ const (
 	UpdateInstanceHelpExtra = `Updates the instance by applying new manifest files from the project directory.
 
 Examples:
-  osmanage k8s update-instance ./my-instance
-  osmanage k8s update-instance ./my-instance --skip-ready-check
-  osmanage k8s update-instance ./my-instance --kubeconfig ~/.kube/config`
+  osmanage k8s update-instance ./my.instance.dir.org
+  osmanage k8s update-instance ./my.instance.dir.org --skip-ready-check
+  osmanage k8s update-instance ./my.instance.dir.org --kubeconfig ~/.kube/config`
 )
 
 func UpdateInstanceCmd() *cobra.Command {

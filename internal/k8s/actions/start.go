@@ -16,9 +16,9 @@ const (
 	StartHelpExtra = `Applies Kubernetes manifests to start an OpenSlides instance.
 
 Examples:
-  osmanage k8s start ./my-instance
-  osmanage k8s start ./my-instance --skip-ready-check
-  osmanage k8s start ./my-instance --kubeconfig ~/.kube/config`
+  osmanage k8s start ./my.instance.dir.org
+  osmanage k8s start ./my.instance.dir.org --skip-ready-check
+  osmanage k8s start ./my.instance.dir.org --kubeconfig ~/.kube/config`
 
 	tlsCertSecretYAML = "secrets/tls-letsencrypt-secret.yaml"
 )

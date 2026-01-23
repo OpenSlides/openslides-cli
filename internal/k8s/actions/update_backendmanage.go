@@ -3,7 +3,6 @@ package actions
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
@@ -18,31 +17,30 @@ const (
 	UpdateBackendmanageHelpExtra = `Updates the backendmanage service deployment image tag and registry to new version.
 
 Examples:
-  osmanage k8s update-backendmanage --url my.openslides.url.org --kubeconfig ~/.kube/config --tag 4.2.23 --containerRegistry myRegistry`
+  osmanage k8s update-backendmanage ./my.instance.dir.org --kubeconfig ~/.kube/config --tag 4.2.23 --containerRegistry myRegistry`
 )
 
 func UpdateBackendmanageCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-backendmanage",
+		Use:   "update-backendmanage <project-dir>",
 		Short: UpdateBackendmanageHelp,
 		Long:  UpdateBackendmanageHelp + "\n\n" + UpdateBackendmanageHelpExtra,
-		Args:  cobra.NoArgs,
+		Args:  cobra.ExactArgs(1),
 	}
 
 	kubeconfig := cmd.Flags().String("kubeconfig", "", "Path to kubeconfig file")
-	revert := cmd.Flags().Bool("revert", false, "Same as update, except not really")
-	url := cmd.Flags().String("url", "", "The URL string of the OpenSlides instance (required)")
+	revert := cmd.Flags().Bool("revert", false, "Changes image back with given tag and registry")
 	tag := cmd.Flags().StringP("tag", "t", "", "Image tag (required)")
 	containerRegistry := cmd.Flags().String("containerRegistry", "", "Container registry (required)")
 
-	cmd.MarkFlagRequired("url")
-	cmd.MarkFlagRequired("tag")
-	cmd.MarkFlagRequired("containerRegistry")
+	_ = cmd.MarkFlagRequired("tag")
+	_ = cmd.MarkFlagRequired("containerRegistry")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		namespace := strings.ReplaceAll(*url, ".", "")
-
 		logger.Info("=== K8S UPDATE/REVERT BACKENDMANAGE ===")
+		projectDir := args[0]
+		namespace := extractNamespace(projectDir)
+
 		logger.Info("Namespace: %s", namespace)
 
 		k8sClient, err := client.New(*kubeconfig)

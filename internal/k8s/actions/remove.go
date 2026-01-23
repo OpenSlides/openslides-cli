@@ -16,7 +16,7 @@ WARNING: This operation is irreversible! All configuration files, secrets,
 and instance data in the directory will be permanently deleted.
 
 Examples:
-  osmanage k8s remove ./my-instance`
+  osmanage k8s remove ./my.instance.dir.org`
 )
 
 func RemoveCmd() *cobra.Command {
@@ -65,7 +65,7 @@ func removeInstance(projectDir string, force bool) error {
 
 		fmt.Print("Are you sure you want to continue? [y/N]: ")
 		var response string
-		fmt.Scanln(&response)
+		_, _ = fmt.Scanln(&response)
 
 		if response != "y" && response != "Y" && response != "yes" && response != "YES" {
 			logger.Info("Removal cancelled")

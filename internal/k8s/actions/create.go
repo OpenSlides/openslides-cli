@@ -23,8 +23,8 @@ This command:
 The secrets directory must already exist (created by 'setup' command).
 
 Examples:
-  osmanage k8s create ./my-instance --db-password "mydbpass" --superadmin-password "myadminpass"
-  osmanage k8s create ./my-instance --db-password "$(cat db.txt)" --superadmin-password "$(cat admin.txt)"`
+  osmanage k8s create ./my.instance.dir.org --db-password "mydbpass" --superadmin-password "myadminpass"
+  osmanage k8s create ./my.instance.dir.org --db-password "$(cat db.txt)" --superadmin-password "$(cat admin.txt)"`
 
 	adminSecretsFile = "superadmin"
 	pgPasswordFile   = "postgres_password"
