@@ -110,18 +110,21 @@ func waitForDeploymentReady(ctx context.Context, k8sClient *client.Client, names
 				continue
 			}
 
-			// Check if deployment is ready
-			if deployment.Status.UpdatedReplicas == *deployment.Spec.Replicas &&
+			if deployment.Status.ObservedGeneration >= deployment.Generation &&
+				deployment.Status.UpdatedReplicas == *deployment.Spec.Replicas &&
 				deployment.Status.AvailableReplicas == *deployment.Spec.Replicas &&
 				deployment.Status.ReadyReplicas == *deployment.Spec.Replicas {
-				logger.Info("✓ Deployment %s is ready with %d replicas", deploymentName, *deployment.Spec.Replicas)
+
+				logger.Info("Deployment %s is ready with %d replicas", deploymentName, *deployment.Spec.Replicas)
 				return nil
 			}
 
-			logger.Debug("Deployment %s: %d/%d replicas ready",
+			logger.Debug("Deployment %s: %d/%d replicas ready (generation: %d/%d)",
 				deploymentName,
 				deployment.Status.ReadyReplicas,
-				*deployment.Spec.Replicas)
+				*deployment.Spec.Replicas,
+				deployment.Status.ObservedGeneration,
+				deployment.Generation)
 
 		case <-timeoutCtx.Done():
 			return fmt.Errorf("timeout waiting for deployment %s to become ready", deploymentName)

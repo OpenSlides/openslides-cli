@@ -80,7 +80,7 @@ func UpdateInstanceCmd() *cobra.Command {
 			return fmt.Errorf("waiting for instance health: %w", err)
 		}
 
-		logger.Info("✓ Instance updated successfully")
+		logger.Info("Instance updated successfully")
 		return nil
 	}
 

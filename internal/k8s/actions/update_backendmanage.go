@@ -17,7 +17,12 @@ const (
 	UpdateBackendmanageHelpExtra = `Updates the backendmanage service deployment image tag and registry to new version.
 
 Examples:
-  osmanage k8s update-backendmanage ./my.instance.dir.org --kubeconfig ~/.kube/config --tag 4.2.23 --containerRegistry myRegistry`
+  osmanage k8s update-backendmanage ./my.instance.dir.org --kubeconfig ~/.kube/config --tag 4.2.23 --container-registry myRegistry
+  osmanage k8s update-backendmanage ./my.instance.dir.org --tag 4.2.23 --container-registry myRegistry --timeout 30s
+  osmanage k8s update-backendmanage ./my.instance.dir.org --tag 4.2.23 --container-registry myRegistry --revert --timeout 30s`
+
+	backendmanageDeployment = "backendmanage"
+	backendmanageContainer  = "backendmanage"
 )
 
 func UpdateBackendmanageCmd() *cobra.Command {
@@ -28,15 +33,23 @@ func UpdateBackendmanageCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 	}
 
+	tag := cmd.Flags().StringP("tag", "t", "", "Image tag (required)")
+	containerRegistry := cmd.Flags().String("container-registry", "", "Container registry (required)")
 	kubeconfig := cmd.Flags().String("kubeconfig", "", "Path to kubeconfig file")
 	revert := cmd.Flags().Bool("revert", false, "Changes image back with given tag and registry")
-	tag := cmd.Flags().StringP("tag", "t", "", "Image tag (required)")
-	containerRegistry := cmd.Flags().String("containerRegistry", "", "Container registry (required)")
+	timeout := cmd.Flags().Duration("timeout", 3*time.Minute, "Timeout for deployment readiness check")
 
 	_ = cmd.MarkFlagRequired("tag")
-	_ = cmd.MarkFlagRequired("containerRegistry")
+	_ = cmd.MarkFlagRequired("container-registry")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		if *tag == "" {
+			return fmt.Errorf("--tag cannot be empty")
+		}
+		if *containerRegistry == "" {
+			return fmt.Errorf("--container-registry cannot be empty")
+		}
+
 		logger.Info("=== K8S UPDATE/REVERT BACKENDMANAGE ===")
 		projectDir := args[0]
 		namespace := extractNamespace(projectDir)
@@ -51,13 +64,13 @@ func UpdateBackendmanageCmd() *cobra.Command {
 		ctx := context.Background()
 
 		if *revert {
-			if err := revertBackendmanage(ctx, k8sClient, namespace, *tag, *containerRegistry); err != nil {
+			if err := revertBackendmanage(ctx, k8sClient, namespace, *tag, *containerRegistry, *timeout); err != nil {
 				return err
 			}
 
 			logger.Info("Successfully reverted backendmanage")
 		} else {
-			if err := updateBackendmanage(ctx, k8sClient, namespace, *tag, *containerRegistry); err != nil {
+			if err := updateBackendmanage(ctx, k8sClient, namespace, *tag, *containerRegistry, *timeout); err != nil {
 				return err
 			}
 
@@ -69,16 +82,16 @@ func UpdateBackendmanageCmd() *cobra.Command {
 	return cmd
 }
 
-func updateBackendmanage(ctx context.Context, k8sClient *client.Client, namespace, tag, containerRegistry string) error {
+func updateBackendmanage(ctx context.Context, k8sClient *client.Client, namespace, tag, containerRegistry string, timeout time.Duration) error {
 	image := fmt.Sprintf("%s/openslides-backend:%s", containerRegistry, tag)
 
 	logger.Info("Updating deployment to image: %s", image)
 
-	patch := []byte(fmt.Sprintf(`{"spec":{"template":{"spec":{"containers":[{"name":"backendmanage","image":"%s"}]}}}}`, image))
+	patch := []byte(fmt.Sprintf(`{"spec":{"template":{"spec":{"containers":[{"name":"%s","image":"%s"}]}}}}`, backendmanageContainer, image))
 
 	updated, err := k8sClient.Clientset().AppsV1().Deployments(namespace).Patch(
 		ctx,
-		"backendmanage",
+		backendmanageDeployment,
 		types.StrategicMergePatchType,
 		patch,
 		metav1.PatchOptions{},
@@ -90,23 +103,23 @@ func updateBackendmanage(ctx context.Context, k8sClient *client.Client, namespac
 	logger.Info("Patch applied (generation: %d)", updated.Generation)
 
 	logger.Info("Waiting for rollout to complete...")
-	if err := waitForRollout(ctx, k8sClient, namespace, "backendmanage", 5*time.Minute); err != nil {
+	if err := waitForDeploymentReady(ctx, k8sClient, namespace, backendmanageDeployment, timeout); err != nil {
 		return fmt.Errorf("rollout failed: %w", err)
 	}
 
 	return nil
 }
 
-func revertBackendmanage(ctx context.Context, k8sClient *client.Client, namespace, tag, containerRegistry string) error {
+func revertBackendmanage(ctx context.Context, k8sClient *client.Client, namespace, tag, containerRegistry string, timeout time.Duration) error {
 	image := fmt.Sprintf("%s/openslides-backend:%s", containerRegistry, tag)
 
 	logger.Info("Reverting deployment to image: %s", image)
 
-	patch := []byte(fmt.Sprintf(`{"spec":{"template":{"spec":{"containers":[{"name":"backendmanage","image":"%s"}]}}}}`, image))
+	patch := []byte(fmt.Sprintf(`{"spec":{"template":{"spec":{"containers":[{"name":"%s","image":"%s"}]}}}}`, backendmanageContainer, image))
 
 	updated, err := k8sClient.Clientset().AppsV1().Deployments(namespace).Patch(
 		ctx,
-		"backendmanage",
+		backendmanageDeployment,
 		types.StrategicMergePatchType,
 		patch,
 		metav1.PatchOptions{},
@@ -118,38 +131,9 @@ func revertBackendmanage(ctx context.Context, k8sClient *client.Client, namespac
 	logger.Info("Patch applied (generation: %d)", updated.Generation)
 
 	logger.Info("Waiting for rollout to complete...")
-	if err := waitForRollout(ctx, k8sClient, namespace, "backendmanage", 5*time.Minute); err != nil {
+	if err := waitForDeploymentReady(ctx, k8sClient, namespace, backendmanageDeployment, timeout); err != nil {
 		return fmt.Errorf("rollout failed: %w", err)
 	}
 
 	return nil
-}
-
-func waitForRollout(ctx context.Context, k8sClient *client.Client, namespace, deploymentName string, timeout time.Duration) error {
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
-	ticker := time.NewTicker(2 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return fmt.Errorf("timeout after %v", timeout)
-
-		case <-ticker.C:
-			d, err := k8sClient.Clientset().AppsV1().Deployments(namespace).Get(ctx, deploymentName, metav1.GetOptions{})
-			if err != nil {
-				return err
-			}
-
-			if d.Status.ObservedGeneration >= d.Generation &&
-				d.Status.UpdatedReplicas == *d.Spec.Replicas &&
-				d.Status.AvailableReplicas == *d.Spec.Replicas {
-				return nil
-			}
-
-			logger.Info("  %d/%d replicas ready", d.Status.ReadyReplicas, *d.Spec.Replicas)
-		}
-	}
 }

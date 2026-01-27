@@ -18,7 +18,7 @@ const (
 
 Examples:
   osmanage k8s health ./my.instance.dir.org 
-  osmanage k8s health ./my.instance.dir.org --wait --timeout 5m`
+  osmanage k8s health ./my.instance.dir.org --wait --timeout 30s`
 )
 
 func HealthCmd() *cobra.Command {
@@ -31,7 +31,7 @@ func HealthCmd() *cobra.Command {
 
 	kubeconfig := cmd.Flags().String("kubeconfig", "", "Path to kubeconfig file")
 	wait := cmd.Flags().Bool("wait", false, "Wait for instance to become healthy")
-	timeout := cmd.Flags().Duration("timeout", 5*time.Minute, "Timeout for wait operation")
+	timeout := cmd.Flags().Duration("timeout", 3*time.Minute, "Timeout for wait operation")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		logger.Info("=== K8S HEALTH CHECK ===")

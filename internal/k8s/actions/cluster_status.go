@@ -58,6 +58,8 @@ func ClusterStatusCmd() *cobra.Command {
 			return fmt.Errorf("checking cluster status: %w", err)
 		}
 
+		fmt.Printf("cluster_status: %d %d\n", status.TotalNodes, status.ReadyNodes)
+
 		logger.Info("Total nodes: %d", status.TotalNodes)
 		logger.Info("Ready nodes: %d", status.ReadyNodes)
 

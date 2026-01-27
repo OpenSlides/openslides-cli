@@ -33,6 +33,10 @@ func Cmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("password")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		if *password == "" {
+			return fmt.Errorf("--password cannot be empty")
+		}
+
 		logger.Info("=== SET PASSWORD ===")
 		logger.Debug("Setting password for user ID: %d", *userID)
 

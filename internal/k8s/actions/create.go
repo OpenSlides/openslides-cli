@@ -45,6 +45,13 @@ func CreateCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("superadmin-password")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		if *dbPassword == "" {
+			return fmt.Errorf("--db-password cannot be empty")
+		}
+		if *superadminPassword == "" {
+			return fmt.Errorf("--superadmin-password cannot be empty")
+		}
+
 		logger.Info("=== K8S CREATE INSTANCE ===")
 		projectDir := args[0]
 		logger.Debug("Project directory: %s", projectDir)
@@ -77,13 +84,13 @@ func createInstance(projectDir, dbPassword, superadminPassword string) error {
 
 	pgPasswordPath := filepath.Join(secretsDir, pgPasswordFile)
 	logger.Debug("Writing PostgreSQL password to: %s", pgPasswordPath)
-	if err := writeSecretFile(pgPasswordPath, dbPassword); err != nil {
+	if err := os.WriteFile(pgPasswordPath, []byte(dbPassword), 0600); err != nil {
 		return fmt.Errorf("writing postgres password: %w", err)
 	}
 
 	superadminPath := filepath.Join(secretsDir, adminSecretsFile)
 	logger.Debug("Writing superadmin password to: %s", superadminPath)
-	if err := writeSecretFile(superadminPath, superadminPassword); err != nil {
+	if err := os.WriteFile(superadminPath, []byte(superadminPassword), 0600); err != nil {
 		return fmt.Errorf("writing superadmin password: %w", err)
 	}
 
@@ -111,29 +118,6 @@ func secureSecretsDirectory(secretsDir string) error {
 		if err := os.Chmod(filePath, 0600); err != nil {
 			return fmt.Errorf("setting permissions for %s: %w", entry.Name(), err)
 		}
-	}
-
-	return nil
-}
-
-// writeSecretFile writes a secret to a file with secure permissions
-func writeSecretFile(path, secret string) error {
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-	if err != nil {
-		return fmt.Errorf("opening file: %w", err)
-	}
-	defer func() {
-		if closeErr := file.Close(); closeErr != nil && err == nil {
-			err = fmt.Errorf("closing file %s: %w", file.Name(), closeErr)
-		}
-	}()
-
-	if err := file.Chmod(0600); err != nil {
-		return fmt.Errorf("setting file permissions: %w", err)
-	}
-
-	if _, err := file.WriteString(secret); err != nil {
-		return fmt.Errorf("writing secret: %w", err)
 	}
 
 	return nil

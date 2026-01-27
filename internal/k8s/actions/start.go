@@ -18,7 +18,7 @@ const (
 Examples:
   osmanage k8s start ./my.instance.dir.org
   osmanage k8s start ./my.instance.dir.org --skip-ready-check
-  osmanage k8s start ./my.instance.dir.org --kubeconfig ~/.kube/config`
+  osmanage k8s start ./my.instance.dir.org --kubeconfig ~/.kube/config --timeout 30s`
 
 	tlsCertSecretYAML = "secrets/tls-letsencrypt-secret.yaml"
 )
@@ -33,7 +33,7 @@ func StartCmd() *cobra.Command {
 
 	kubeconfig := cmd.Flags().String("kubeconfig", "", "Path to kubeconfig file")
 	skipReadyCheck := cmd.Flags().Bool("skip-ready-check", false, "Skip waiting for instance to become ready")
-	timeout := cmd.Flags().Duration("timeout", 5*time.Minute, "Timeout for ready check")
+	timeout := cmd.Flags().Duration("timeout", 3*time.Minute, "Timeout for ready check")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		projectDir := args[0]

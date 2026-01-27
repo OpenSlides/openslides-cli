@@ -1,4 +1,3 @@
-// scale.go
 package actions
 
 import (
@@ -21,7 +20,7 @@ Note: You must edit the deployment file to change the replica count before runni
 Examples:
   osmanage k8s scale ./my.instance.dir.org --service backendmanage
   osmanage k8s scale ./my.instance.dir.org --service autoupdate --skip-ready-check
-  osmanage k8s scale ./my.instance.dir.org --service search --kubeconfig ~/.kube/config`
+  osmanage k8s scale ./my.instance.dir.org --service search --kubeconfig ~/.kube/config --timeout 30s`
 )
 
 func ScaleCmd() *cobra.Command {
@@ -35,14 +34,17 @@ func ScaleCmd() *cobra.Command {
 	service := cmd.Flags().String("service", "", "Service deployment to scale (required)")
 	kubeconfig := cmd.Flags().String("kubeconfig", "", "Path to kubeconfig file")
 	skipReadyCheck := cmd.Flags().Bool("skip-ready-check", false, "Skip waiting for deployment to become ready")
-	timeout := cmd.Flags().Duration("timeout", 5*time.Minute, "Timeout for ready check")
+	timeout := cmd.Flags().Duration("timeout", 3*time.Minute, "Timeout for ready check")
 
 	_ = cmd.MarkFlagRequired("service")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		projectDir := args[0]
+		if *service == "" {
+			return fmt.Errorf("--service cannot be empty")
+		}
 
 		logger.Info("=== K8S SCALE SERVICE ===")
+		projectDir := args[0]
 		logger.Debug("Project directory: %s", projectDir)
 		logger.Info("Service: %s", *service)
 
@@ -76,7 +78,7 @@ func ScaleCmd() *cobra.Command {
 			return fmt.Errorf("waiting for deployment ready: %w", err)
 		}
 
-		logger.Info("✓ Service scaled successfully")
+		logger.Info("Service scaled successfully")
 		return nil
 	}
 
