@@ -36,9 +36,8 @@ func StartCmd() *cobra.Command {
 	timeout := cmd.Flags().Duration("timeout", 3*time.Minute, "Timeout for ready check")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		projectDir := args[0]
-
 		logger.Info("=== K8S START INSTANCE ===")
+		projectDir := args[0]
 		logger.Debug("Project directory: %s", projectDir)
 
 		k8sClient, err := client.New(*kubeconfig)
@@ -79,7 +78,7 @@ func StartCmd() *cobra.Command {
 			return fmt.Errorf("waiting for ready: %w", err)
 		}
 
-		logger.Info("✓ Instance started successfully")
+		logger.Info("Instance started successfully")
 		return nil
 	}
 
