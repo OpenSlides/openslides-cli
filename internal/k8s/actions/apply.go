@@ -13,9 +13,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/client-go/discovery"
-	"k8s.io/client-go/dynamic"
-	"k8s.io/client-go/restmapper"
 )
 
 // applyManifest applies a single YAML manifest file using RESTMapper
@@ -37,17 +34,11 @@ func applyManifest(ctx context.Context, k8sClient *client.Client, manifestPath s
 		namespace = obj.GetName()
 	}
 
-	discoveryClient, err := discovery.NewDiscoveryClientForConfig(k8sClient.Config())
+	mapper, err := k8sClient.RESTMapper()
 	if err != nil {
-		return "", fmt.Errorf("creating discovery client: %w", err)
+		return "", fmt.Errorf("getting REST mapper: %w", err)
 	}
 
-	apiGroupResources, err := restmapper.GetAPIGroupResources(discoveryClient)
-	if err != nil {
-		return "", fmt.Errorf("getting API group resources: %w", err)
-	}
-
-	mapper := restmapper.NewDiscoveryRESTMapper(apiGroupResources)
 	gvk := obj.GroupVersionKind()
 
 	mapping, err := mapper.RESTMapping(gvk.GroupKind(), gvk.Version)
@@ -55,15 +46,16 @@ func applyManifest(ctx context.Context, k8sClient *client.Client, manifestPath s
 		return "", fmt.Errorf("getting REST mapping for %s: %w", gvk.String(), err)
 	}
 
-	dynamicClient, err := dynamic.NewForConfig(k8sClient.Config())
+	dynamicClient, err := k8sClient.Dynamic()
 	if err != nil {
-		return "", fmt.Errorf("creating dynamic client: %w", err)
+		return "", fmt.Errorf("getting dynamic client: %w", err)
 	}
 
 	var result *unstructured.Unstructured
 	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
 		if namespace == "" {
-			namespace = "default"
+			return "", fmt.Errorf("resource %s/%s is namespaced but has no namespace specified",
+				obj.GetKind(), obj.GetName())
 		}
 		result, err = dynamicClient.Resource(mapping.Resource).Namespace(namespace).Apply(
 			ctx,
@@ -75,6 +67,7 @@ func applyManifest(ctx context.Context, k8sClient *client.Client, manifestPath s
 			},
 		)
 	} else {
+		// Cluster-scoped resource (Namespace, ClusterRole, etc.)
 		result, err = dynamicClient.Resource(mapping.Resource).Apply(
 			ctx,
 			obj.GetName(),
