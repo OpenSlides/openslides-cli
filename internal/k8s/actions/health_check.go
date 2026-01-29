@@ -162,6 +162,7 @@ func printDeploymentStatus(namespace, name string, deployment *appsv1.Deployment
 		deployment.Generation)
 	fmt.Printf("Replicas:\n")
 	fmt.Printf("  Desired:   %d\n", *deployment.Spec.Replicas)
+	fmt.Printf("  Current:   %d\n", deployment.Status.Replicas)
 	fmt.Printf("  Ready:     %d\n", deployment.Status.ReadyReplicas)
 	fmt.Printf("  Updated:   %d\n", deployment.Status.UpdatedReplicas)
 	fmt.Printf("  Available: %d\n", deployment.Status.AvailableReplicas)
@@ -204,16 +205,18 @@ func waitForDeploymentReady(ctx context.Context, k8sClient *client.Client, names
 			if deployment.Status.ObservedGeneration >= deployment.Generation &&
 				deployment.Status.UpdatedReplicas == *deployment.Spec.Replicas &&
 				deployment.Status.AvailableReplicas == *deployment.Spec.Replicas &&
-				deployment.Status.ReadyReplicas == *deployment.Spec.Replicas {
+				deployment.Status.ReadyReplicas == *deployment.Spec.Replicas &&
+				deployment.Status.Replicas == *deployment.Spec.Replicas {
 
 				logger.Info("Deployment %s is ready with %d replicas", deploymentName, *deployment.Spec.Replicas)
 				return nil
 			}
 
-			logger.Debug("Deployment %s: %d/%d replicas ready (generation: %d/%d)",
+			logger.Debug("Deployment %s: %d/%d replicas ready, %d total (generation: %d/%d)",
 				deploymentName,
 				deployment.Status.ReadyReplicas,
 				*deployment.Spec.Replicas,
+				deployment.Status.Replicas,
 				deployment.Status.ObservedGeneration,
 				deployment.Generation)
 
