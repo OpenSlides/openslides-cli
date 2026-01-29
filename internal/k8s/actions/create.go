@@ -26,8 +26,10 @@ Examples:
   osmanage k8s create ./my.instance.dir.org --db-password "mydbpass" --superadmin-password "myadminpass"
   osmanage k8s create ./my.instance.dir.org --db-password "$(cat db.txt)" --superadmin-password "$(cat admin.txt)"`
 
-	adminSecretsFile = "superadmin"
-	pgPasswordFile   = "postgres_password"
+	adminSecretsFile             = "superadmin"
+	pgPasswordFile               = "postgres_password"
+	secretDirPerm    os.FileMode = 0700
+	secretFilePerm   os.FileMode = 0600
 )
 
 func CreateCmd() *cobra.Command {
@@ -84,13 +86,13 @@ func createInstance(projectDir, dbPassword, superadminPassword string) error {
 
 	pgPasswordPath := filepath.Join(secretsDir, pgPasswordFile)
 	logger.Debug("Writing PostgreSQL password to: %s", pgPasswordPath)
-	if err := os.WriteFile(pgPasswordPath, []byte(dbPassword), 0600); err != nil {
+	if err := os.WriteFile(pgPasswordPath, []byte(dbPassword), secretFilePerm); err != nil {
 		return fmt.Errorf("writing postgres password: %w", err)
 	}
 
 	superadminPath := filepath.Join(secretsDir, adminSecretsFile)
 	logger.Debug("Writing superadmin password to: %s", superadminPath)
-	if err := os.WriteFile(superadminPath, []byte(superadminPassword), 0600); err != nil {
+	if err := os.WriteFile(superadminPath, []byte(superadminPassword), secretFilePerm); err != nil {
 		return fmt.Errorf("writing superadmin password: %w", err)
 	}
 
@@ -100,7 +102,7 @@ func createInstance(projectDir, dbPassword, superadminPassword string) error {
 
 // secureSecretsDirectory sets restrictive permissions on the secrets directory and all files within
 func secureSecretsDirectory(secretsDir string) error {
-	if err := os.Chmod(secretsDir, 0700); err != nil {
+	if err := os.Chmod(secretsDir, secretDirPerm); err != nil {
 		return fmt.Errorf("setting directory permissions: %w", err)
 	}
 
@@ -115,7 +117,7 @@ func secureSecretsDirectory(secretsDir string) error {
 		}
 
 		filePath := filepath.Join(secretsDir, entry.Name())
-		if err := os.Chmod(filePath, 0600); err != nil {
+		if err := os.Chmod(filePath, secretFilePerm); err != nil {
 			return fmt.Errorf("setting permissions for %s: %w", entry.Name(), err)
 		}
 	}
