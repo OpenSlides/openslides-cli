@@ -87,7 +87,7 @@ func updateBackendmanage(ctx context.Context, k8sClient *client.Client, namespac
 
 	logger.Info("Updating deployment to image: %s", image)
 
-	patch := []byte(fmt.Sprintf(`{"spec":{"template":{"spec":{"containers":[{"name":"%s","image":"%s"}]}}}}`, backendmanageContainer, image))
+	patch := fmt.Appendf(nil, `{"spec":{"template":{"spec":{"containers":[{"name":"%s","image":"%s"}]}}}}`, backendmanageContainer, image)
 
 	updated, err := k8sClient.Clientset().AppsV1().Deployments(namespace).Patch(
 		ctx,
@@ -115,7 +115,7 @@ func revertBackendmanage(ctx context.Context, k8sClient *client.Client, namespac
 
 	logger.Info("Reverting deployment to image: %s", image)
 
-	patch := []byte(fmt.Sprintf(`{"spec":{"template":{"spec":{"containers":[{"name":"%s","image":"%s"}]}}}}`, backendmanageContainer, image))
+	patch := fmt.Appendf(nil, `{"spec":{"template":{"spec":{"containers":[{"name":"%s","image":"%s"}]}}}}`, backendmanageContainer, image)
 
 	updated, err := k8sClient.Clientset().AppsV1().Deployments(namespace).Patch(
 		ctx,
