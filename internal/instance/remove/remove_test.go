@@ -1,8 +1,9 @@
-package actions
+package remove
 
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -62,7 +63,7 @@ func TestRemoveInstance_DirectoryNotExist(t *testing.T) {
 	}
 
 	expectedMsg := "does not exist"
-	if err != nil && !contains(err.Error(), expectedMsg) {
+	if err != nil && !strings.Contains(err.Error(), expectedMsg) {
 		t.Errorf("Error should mention directory doesn't exist, got: %v", err)
 	}
 }
@@ -89,7 +90,7 @@ func TestRemoveInstance_NotADirectory(t *testing.T) {
 	}
 
 	expectedMsg := "not a directory"
-	if err != nil && !contains(err.Error(), expectedMsg) {
+	if err != nil && !strings.Contains(err.Error(), expectedMsg) {
 		t.Errorf("Error should mention it's not a directory, got: %v", err)
 	}
 }

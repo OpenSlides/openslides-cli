@@ -1,4 +1,4 @@
-package actions
+package remove
 
 import (
 	"fmt"
@@ -16,10 +16,10 @@ WARNING: This operation is irreversible! All configuration files, secrets,
 and instance data in the directory will be permanently deleted.
 
 Examples:
-  osmanage k8s remove ./my.instance.dir.org --force`
+  osmanage remove ./my.instance.dir.org --force`
 )
 
-func RemoveCmd() *cobra.Command {
+func Cmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "remove <project-dir>",
 		Short: RemoveHelp,

@@ -1,8 +1,9 @@
-package actions
+package create
 
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -44,13 +45,13 @@ func TestSecureSecretsDirectory(t *testing.T) {
 		t.Fatalf("Failed to stat secrets directory: %v", err)
 	}
 
-	expectedDirPerms := os.FileMode(0700)
+	expectedDirPerms := os.FileMode(secretDirPerm)
 	if dirInfo.Mode().Perm() != expectedDirPerms {
 		t.Errorf("Directory permissions = %v, want %v", dirInfo.Mode().Perm(), expectedDirPerms)
 	}
 
 	// Verify all file permissions (600)
-	expectedFilePerms := os.FileMode(0600)
+	expectedFilePerms := os.FileMode(secretFilePerm)
 	for _, filename := range testFiles {
 		path := filepath.Join(secretsDir, filename)
 		fileInfo, err := os.Stat(path)
@@ -106,8 +107,8 @@ func TestSecureSecretsDirectory_SkipsSubdirectories(t *testing.T) {
 	}
 
 	// Should still have original 0755 permissions
-	if subDirInfo.Mode().Perm() == os.FileMode(0600) {
-		t.Error("Subdirectory permissions should not be changed to 0600")
+	if subDirInfo.Mode().Perm() == os.FileMode(secretFilePerm) {
+		t.Error("Subdirectory permissions should not be changed to secretFilePerm")
 	}
 
 	// Verify file permissions WERE changed
@@ -116,7 +117,7 @@ func TestSecureSecretsDirectory_SkipsSubdirectories(t *testing.T) {
 		t.Fatalf("Failed to stat file: %v", err)
 	}
 
-	expectedPerms := os.FileMode(0600)
+	expectedPerms := os.FileMode(secretFilePerm)
 	if fileInfo.Mode().Perm() != expectedPerms {
 		t.Errorf("File permissions = %v, want %v", fileInfo.Mode().Perm(), expectedPerms)
 	}
@@ -189,13 +190,13 @@ func TestCreateInstance(t *testing.T) {
 		t.Errorf("internal_auth_password was unexpectedly changed")
 	}
 
-	// Verify all files have 0600 permissions
+	// Verify all files have secretFilePerm permissions
 	entries, err := os.ReadDir(secretsDir)
 	if err != nil {
 		t.Fatalf("Failed to read secrets directory: %v", err)
 	}
 
-	expectedPerms := os.FileMode(0600)
+	expectedPerms := os.FileMode(secretFilePerm)
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
@@ -212,13 +213,13 @@ func TestCreateInstance(t *testing.T) {
 		}
 	}
 
-	// Verify directory has 0700 permissions
+	// Verify directory has secretDirPerm permissions
 	dirInfo, err := os.Stat(secretsDir)
 	if err != nil {
 		t.Fatalf("Failed to stat secrets directory: %v", err)
 	}
 
-	expectedDirPerms := os.FileMode(0700)
+	expectedDirPerms := os.FileMode(secretDirPerm)
 	if dirInfo.Mode().Perm() != expectedDirPerms {
 		t.Errorf("Directory permissions = %v, want %v", dirInfo.Mode().Perm(), expectedDirPerms)
 	}
@@ -243,21 +244,7 @@ func TestCreateInstance_SecretsDirectoryNotExist(t *testing.T) {
 
 	// Error message should mention running 'setup' first
 	expectedMsg := "run 'setup' first"
-	if err != nil && !contains(err.Error(), expectedMsg) {
+	if err != nil && !strings.Contains(err.Error(), expectedMsg) {
 		t.Errorf("Error should mention running 'setup', got: %v", err)
 	}
-}
-
-// Helper function to check if string contains substring
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || hasSubstring(s, substr))
-}
-
-func hasSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }

@@ -1,4 +1,4 @@
-package actions
+package create
 
 import (
 	"fmt"
@@ -23,8 +23,8 @@ This command:
 The secrets directory must already exist (created by 'setup' command).
 
 Examples:
-  osmanage k8s create ./my.instance.dir.org --db-password "mydbpass" --superadmin-password "myadminpass"
-  osmanage k8s create ./my.instance.dir.org --db-password "$(cat db.txt)" --superadmin-password "$(cat admin.txt)"`
+  osmanage create ./my.instance.dir.org --db-password "mydbpass" --superadmin-password "myadminpass"
+  osmanage create ./my.instance.dir.org --db-password "$(cat db.txt)" --superadmin-password "$(cat admin.txt)"`
 
 	adminSecretsFile             = "superadmin"
 	pgPasswordFile               = "postgres_password"
@@ -32,7 +32,7 @@ Examples:
 	secretFilePerm   os.FileMode = 0600
 )
 
-func CreateCmd() *cobra.Command {
+func Cmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <project-dir>",
 		Short: CreateHelp,
