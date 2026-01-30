@@ -17,8 +17,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/OpenSlides/openslides-cli/internal/instance/config"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
-	"github.com/OpenSlides/openslides-cli/internal/templating/config"
 	"github.com/OpenSlides/openslides-cli/internal/utils"
 
 	"github.com/spf13/cobra"
@@ -26,9 +26,19 @@ import (
 
 const (
 	SetupHelp      = "Creates the required files for deployment"
-	SetupHelpExtra = `This command creates deployment configuration files (Docker Compose or Kubernetes).
-It also creates the required secrets and directories for volumes containing persistent
-database and SSL certs. Everything is created in the given directory.`
+	SetupHelpExtra = `Creates deployment configuration files and generates secrets for an OpenSlides instance.
+
+This command:
+1. Creates secrets directory with secure permissions
+2. Generates authentication tokens and passwords
+3. Creates SSL certificates (if enableLocalHTTPS: true)
+4. Generates deployment files from templates
+
+Examples:
+  osmanage setup ./my.instance.dir.org
+  osmanage setup ./my.instance.dir.org --force
+  osmanage setup ./my.instance.dir.org --template ./custom --config ./config.yaml
+  osmanage setup ./my.instance.dir.org --config ./base.yaml --config ./override.yaml`
 
 	DefaultSuperadminPasswordLength = 20
 	DefaultPostgresPasswordLength   = 40
@@ -54,7 +64,7 @@ var defaultSecrets = []SecretSpec{
 
 func Cmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "setup directory",
+		Use:   "setup <project-dir>",
 		Short: SetupHelp,
 		Long:  SetupHelp + "\n\n" + SetupHelpExtra,
 		Args:  cobra.ExactArgs(1),

@@ -4,16 +4,19 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/OpenSlides/openslides-cli/internal/actions/action"
-	"github.com/OpenSlides/openslides-cli/internal/actions/createuser"
-	"github.com/OpenSlides/openslides-cli/internal/actions/get"
-	"github.com/OpenSlides/openslides-cli/internal/actions/initialdata"
-	"github.com/OpenSlides/openslides-cli/internal/actions/migrations"
-	"github.com/OpenSlides/openslides-cli/internal/actions/set"
-	"github.com/OpenSlides/openslides-cli/internal/actions/setpassword"
+	"github.com/OpenSlides/openslides-cli/internal/instance/config"
+	"github.com/OpenSlides/openslides-cli/internal/instance/create"
+	"github.com/OpenSlides/openslides-cli/internal/instance/remove"
+	"github.com/OpenSlides/openslides-cli/internal/instance/setup"
+	k8sActions "github.com/OpenSlides/openslides-cli/internal/k8s/actions"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
-	"github.com/OpenSlides/openslides-cli/internal/templating/config"
-	"github.com/OpenSlides/openslides-cli/internal/templating/setup"
+	"github.com/OpenSlides/openslides-cli/internal/manage/actions/action"
+	"github.com/OpenSlides/openslides-cli/internal/manage/actions/createuser"
+	"github.com/OpenSlides/openslides-cli/internal/manage/actions/get"
+	"github.com/OpenSlides/openslides-cli/internal/manage/actions/initialdata"
+	"github.com/OpenSlides/openslides-cli/internal/manage/actions/migrations"
+	"github.com/OpenSlides/openslides-cli/internal/manage/actions/set"
+	"github.com/OpenSlides/openslides-cli/internal/manage/actions/setpassword"
 
 	"github.com/spf13/cobra"
 )
@@ -62,9 +65,28 @@ func RootCmd() *cobra.Command {
 		return nil
 	}
 
+	// K8s command group
+	k8sCmd := &cobra.Command{
+		Use:   "k8s",
+		Short: "Manage Kubernetes deployments",
+		Long:  "Manage OpenSlides instances deployed on Kubernetes",
+	}
+
+	k8sCmd.AddCommand(
+		k8sActions.StartCmd(),
+		k8sActions.StopCmd(),
+		k8sActions.HealthCmd(),
+		k8sActions.ClusterStatusCmd(),
+		k8sActions.UpdateBackendmanageCmd(),
+		k8sActions.UpdateInstanceCmd(),
+		k8sActions.ScaleCmd(),
+	)
+
 	rootCmd.AddCommand(
 		setup.Cmd(),
 		config.Cmd(),
+		create.Cmd(),
+		remove.Cmd(),
 		createuser.Cmd(),
 		initialdata.Cmd(),
 		setpassword.Cmd(),
@@ -72,6 +94,7 @@ func RootCmd() *cobra.Command {
 		get.Cmd(),
 		action.Cmd(),
 		migrations.Cmd(),
+		k8sCmd,
 	)
 
 	return rootCmd
