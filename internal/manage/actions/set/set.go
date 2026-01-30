@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/OpenSlides/openslides-cli/internal/manage/client"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
+	"github.com/OpenSlides/openslides-cli/internal/manage/client"
 	"github.com/OpenSlides/openslides-cli/internal/utils"
 
 	"github.com/spf13/cobra"
