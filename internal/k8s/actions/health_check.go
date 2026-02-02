@@ -15,8 +15,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// Width of the progress bar for wait functions
-const progressBarWidth = 40
+const (
+	// Width of the progress bar for wait functions
+	progressBarWidth int = 40
+)
 
 // HealthStatus represents the health status of an instance
 type HealthStatus struct {
@@ -97,11 +99,11 @@ func checkHealth(ctx context.Context, k8sClient *client.Client, namespace string
 	return nil
 }
 
-// waitForHealthy waits for instance to become healthy
-func waitForHealthy(ctx context.Context, k8sClient *client.Client, namespace string, timeout time.Duration) error {
+// waitForInstanceHealthy waits for instance to become healthy
+func waitForInstanceHealthy(ctx context.Context, k8sClient *client.Client, namespace string, timeout time.Duration) error {
 	logger.Info("Waiting for instance to become healthy (timeout: %v)", timeout)
 
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
 
 	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
@@ -125,12 +127,16 @@ func waitForHealthy(ctx context.Context, k8sClient *client.Client, namespace str
 			}
 
 			if bar != nil {
-				bar.Set(status.Ready)
+				if err := bar.Set(status.Ready); err != nil {
+					return fmt.Errorf("setting progress bar: %w", err)
+				}
 			}
 
 			if status.Healthy {
 				if bar != nil {
-					bar.Finish()
+					if err := bar.Finish(); err != nil {
+						return fmt.Errorf("finishing progress bar: %w", err)
+					}
 				}
 				logger.Info("Instance is healthy: %d/%d pods ready", status.Ready, status.Total)
 				return nil
@@ -138,7 +144,9 @@ func waitForHealthy(ctx context.Context, k8sClient *client.Client, namespace str
 
 		case <-timeoutCtx.Done():
 			if bar != nil {
-				bar.Finish()
+				if err := bar.Finish(); err != nil {
+					return fmt.Errorf("finishing progress bar: %w", err)
+				}
 			}
 			logger.Warn("Timeout reached. Current status:")
 			if lastStatus != nil {
@@ -261,6 +269,32 @@ func waitForDeploymentReady(ctx context.Context, k8sClient *client.Client, names
 			}
 
 			return fmt.Errorf("timeout waiting for deployment %s to become ready", deploymentName)
+		}
+	}
+}
+
+// waitForNamespaceDeletion waits for a namespace to be completely deleted
+func waitForNamespaceDeletion(ctx context.Context, k8sClient *client.Client, namespace string, timeout time.Duration) error {
+	clientset := k8sClient.Clientset()
+
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+
+	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	for {
+		select {
+		case <-ticker.C:
+			_, err := clientset.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
+			if err != nil {
+				logger.Debug("Namespace %s successfully deleted", namespace)
+				return nil
+			}
+			logger.Debug("Namespace %s still terminating...", namespace)
+
+		case <-timeoutCtx.Done():
+			return fmt.Errorf("timeout waiting for namespace %s to be deleted", namespace)
 		}
 	}
 }

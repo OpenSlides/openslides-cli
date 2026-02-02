@@ -3,8 +3,8 @@ package actions
 import (
 	"context"
 	"fmt"
-	"time"
 
+	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
 	"github.com/spf13/cobra"
@@ -29,12 +29,12 @@ func HealthCmd() *cobra.Command {
 
 	kubeconfig := cmd.Flags().String("kubeconfig", "", "Path to kubeconfig file")
 	wait := cmd.Flags().Bool("wait", false, "Wait for instance to become healthy")
-	timeout := cmd.Flags().Duration("timeout", 3*time.Minute, "Timeout for wait operation")
+	timeout := cmd.Flags().Duration("timeout", constants.DefaultInstanceTimeout, "Timeout for instance health check")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		logger.Info("=== K8S HEALTH CHECK ===")
-		projectDir := args[0]
-		namespace := extractNamespace(projectDir)
+		instanceDir := args[0]
+		namespace := extractNamespace(instanceDir)
 		logger.Debug("Namespace: %s", namespace)
 
 		k8sClient, err := client.New(*kubeconfig)
@@ -45,7 +45,7 @@ func HealthCmd() *cobra.Command {
 		ctx := context.Background()
 
 		if *wait {
-			return waitForHealthy(ctx, k8sClient, namespace, *timeout)
+			return waitForInstanceHealthy(ctx, k8sClient, namespace, *timeout)
 		}
 
 		return checkHealth(ctx, k8sClient, namespace)

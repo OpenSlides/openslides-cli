@@ -11,12 +11,12 @@ import (
 	"encoding/pem"
 	"fmt"
 	"io"
-	"io/fs"
 	"math/big"
 	"os"
 	"path/filepath"
 	"time"
 
+	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/instance/config"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
 	"github.com/OpenSlides/openslides-cli/internal/utils"
@@ -39,14 +39,6 @@ Examples:
   osmanage setup ./my.instance.dir.org --force
   osmanage setup ./my.instance.dir.org --template ./custom --config ./config.yaml
   osmanage setup ./my.instance.dir.org --config ./base.yaml --config ./override.yaml`
-
-	DefaultSuperadminPasswordLength = 20
-	DefaultPostgresPasswordLength   = 40
-	SecretsDirName                  = "secrets"
-
-	subDirPerms  fs.FileMode = 0770
-	certCertName             = "cert_crt"
-	certKeyName              = "cert_key"
 )
 
 type SecretSpec struct {
@@ -55,16 +47,16 @@ type SecretSpec struct {
 }
 
 var defaultSecrets = []SecretSpec{
-	{"auth_token_key", randomSecret},
-	{"auth_cookie_key", randomSecret},
-	{"internal_auth_password", randomSecret},
-	{"postgres_password", func() ([]byte, error) { return randomString(DefaultPostgresPasswordLength) }},
-	{"superadmin", func() ([]byte, error) { return randomString(DefaultSuperadminPasswordLength) }},
+	{constants.AuthTokenKey, randomSecret},
+	{constants.AuthCookieKey, randomSecret},
+	{constants.InternalAuthPassword, randomSecret},
+	{constants.PgPasswordFile, func() ([]byte, error) { return randomString(constants.DefaultPostgresPasswordLength) }},
+	{constants.AdminSecretsFile, func() ([]byte, error) { return randomString(constants.DefaultSuperadminPasswordLength) }},
 }
 
 func Cmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "setup <project-dir>",
+		Use:   "setup <instance-dir>",
 		Short: SetupHelp,
 		Long:  SetupHelp + "\n\n" + SetupHelpExtra,
 		Args:  cobra.ExactArgs(1),
@@ -89,22 +81,22 @@ func Cmd() *cobra.Command {
 		}
 
 		// Create secrets directory
-		secrDir := filepath.Join(baseDir, SecretsDirName)
-		logger.Debug("Creating secrets directory: %s", secrDir)
-		if err := os.MkdirAll(secrDir, subDirPerms); err != nil {
+		secretsDir := filepath.Join(baseDir, constants.SecretsDirName)
+		logger.Debug("Creating secrets directory: %s", secretsDir)
+		if err := os.MkdirAll(secretsDir, constants.SecretsDirPerm); err != nil {
 			return fmt.Errorf("creating secrets directory: %w", err)
 		}
 
 		// Create secrets
 		logger.Info("Creating secrets...")
-		if err := createSecrets(secrDir, *force, defaultSecrets); err != nil {
+		if err := createSecrets(secretsDir, *force, defaultSecrets); err != nil {
 			return fmt.Errorf("creating secrets: %w", err)
 		}
 
 		// Create certificates if HTTPS is enabled
 		if enableLocalHTTPS, ok := cfg["enableLocalHTTPS"].(bool); ok && enableLocalHTTPS {
 			logger.Info("Creating SSL certificates...")
-			if err := createCerts(secrDir, *force); err != nil {
+			if err := createCerts(secretsDir, *force); err != nil {
 				return fmt.Errorf("creating certificates: %w", err)
 			}
 		}
@@ -130,7 +122,7 @@ func createSecrets(dir string, force bool, secrets []SecretSpec) error {
 		if err != nil {
 			return fmt.Errorf("generating secret %q: %w", spec.Name, err)
 		}
-		if err := utils.CreateFile(dir, force, spec.Name, data); err != nil {
+		if err := utils.CreateFile(dir, force, spec.Name, data, constants.SecretFilePerm); err != nil {
 			return fmt.Errorf("creating secret file %q: %w", spec.Name, err)
 		}
 	}
@@ -211,7 +203,7 @@ func createCerts(dir string, force bool) error {
 	if err := pem.Encode(buf1, &pem.Block{Type: "CERTIFICATE", Bytes: certData}); err != nil {
 		return fmt.Errorf("encoding certificate: %w", err)
 	}
-	if err := utils.CreateFile(dir, force, certCertName, buf1.Bytes()); err != nil {
+	if err := utils.CreateFile(dir, force, constants.CertCertName, buf1.Bytes(), constants.SecretFilePerm); err != nil {
 		return fmt.Errorf("creating certificate file: %w", err)
 	}
 
@@ -224,7 +216,7 @@ func createCerts(dir string, force bool) error {
 	if err := pem.Encode(buf2, &pem.Block{Type: "PRIVATE KEY", Bytes: keyData}); err != nil {
 		return fmt.Errorf("encoding key: %w", err)
 	}
-	if err := utils.CreateFile(dir, force, certKeyName, buf2.Bytes()); err != nil {
+	if err := utils.CreateFile(dir, force, constants.CertKeyName, buf2.Bytes(), constants.SecretFilePerm); err != nil {
 		return fmt.Errorf("creating key file: %w", err)
 	}
 

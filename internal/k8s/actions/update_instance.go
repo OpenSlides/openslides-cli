@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"time"
 
+	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
 	"github.com/spf13/cobra"
@@ -13,7 +13,7 @@ import (
 
 const (
 	UpdateInstanceHelp      = "Updates an OpenSlides instance."
-	UpdateInstanceHelpExtra = `Updates the instance by applying new manifest files from the project directory.
+	UpdateInstanceHelpExtra = `Updates the instance by applying new manifest files from the instance directory.
 
 Examples:
   osmanage k8s update-instance ./my.instance.dir.org
@@ -23,7 +23,7 @@ Examples:
 
 func UpdateInstanceCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-instance <project-dir>",
+		Use:   "update-instance <instance-dir>",
 		Short: UpdateInstanceHelp,
 		Long:  UpdateInstanceHelp + "\n\n" + UpdateInstanceHelpExtra,
 		Args:  cobra.ExactArgs(1),
@@ -31,15 +31,15 @@ func UpdateInstanceCmd() *cobra.Command {
 
 	kubeconfig := cmd.Flags().String("kubeconfig", "", "Path to kubeconfig file")
 	skipReadyCheck := cmd.Flags().Bool("skip-ready-check", false, "Skip waiting for instance to become ready")
-	timeout := cmd.Flags().Duration("timeout", 5*time.Minute, "Timeout for ready check")
+	timeout := cmd.Flags().Duration("timeout", constants.DefaultInstanceTimeout, "Timeout for instance health check")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		projectDir := args[0]
-
 		logger.Info("=== K8S UPDATE INSTANCE ===")
-		logger.Debug("Project directory: %s", projectDir)
+		instanceDir := args[0]
 
-		namespace := extractNamespace(projectDir)
+		logger.Debug("Instance directory: %s", instanceDir)
+
+		namespace := extractNamespace(instanceDir)
 		logger.Info("Namespace: %s", namespace)
 
 		k8sClient, err := client.New(*kubeconfig)
@@ -65,7 +65,7 @@ func UpdateInstanceCmd() *cobra.Command {
 
 		logger.Info("Updating OpenSlides services.")
 
-		stackDir := filepath.Join(projectDir, "stack")
+		stackDir := filepath.Join(instanceDir, constants.StackDirName)
 		if err := applyDirectory(ctx, k8sClient, stackDir); err != nil {
 			return fmt.Errorf("applying stack: %w", err)
 		}
@@ -76,7 +76,7 @@ func UpdateInstanceCmd() *cobra.Command {
 		}
 
 		logger.Info("Waiting for instance to become ready...")
-		if err := waitForHealthy(ctx, k8sClient, namespace, *timeout); err != nil {
+		if err := waitForInstanceHealthy(ctx, k8sClient, namespace, *timeout); err != nil {
 			return fmt.Errorf("waiting for instance health: %w", err)
 		}
 

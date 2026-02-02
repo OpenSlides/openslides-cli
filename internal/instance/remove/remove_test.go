@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/OpenSlides/openslides-cli/internal/constants"
 )
 
 func TestRemoveInstance_DirectoryExists(t *testing.T) {
@@ -13,18 +15,18 @@ func TestRemoveInstance_DirectoryExists(t *testing.T) {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
 
-	projectDir := filepath.Join(tmpDir, "test-instance")
-	if err := os.MkdirAll(projectDir, 0755); err != nil {
-		t.Fatalf("Failed to create project dir: %v", err)
+	instanceDir := filepath.Join(tmpDir, "test-instance")
+	if err := os.MkdirAll(instanceDir, constants.InstanceDirPerm); err != nil {
+		t.Fatalf("Failed to create instance dir: %v", err)
 	}
 
-	secretsDir := filepath.Join(projectDir, "secrets")
-	if err := os.MkdirAll(secretsDir, 0755); err != nil {
+	secretsDir := filepath.Join(instanceDir, constants.SecretsDirName)
+	if err := os.MkdirAll(secretsDir, constants.SecretsDirPerm); err != nil {
 		t.Fatalf("Failed to create secrets dir: %v", err)
 	}
 
 	testFile := filepath.Join(secretsDir, "test_secret")
-	if err := os.WriteFile(testFile, []byte("secret"), 0600); err != nil {
+	if err := os.WriteFile(testFile, []byte("secret"), constants.SecretFilePerm); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
@@ -34,13 +36,13 @@ func TestRemoveInstance_DirectoryExists(t *testing.T) {
 		}
 	})
 
-	err = removeInstance(projectDir, true)
+	err = removeInstance(instanceDir, true)
 	if err != nil {
 		t.Fatalf("removeInstance failed: %v", err)
 	}
 
-	if _, err := os.Stat(projectDir); !os.IsNotExist(err) {
-		t.Errorf("Project directory still exists after removal")
+	if _, err := os.Stat(instanceDir); !os.IsNotExist(err) {
+		t.Errorf("Instance directory still exists after removal")
 	}
 }
 
@@ -80,7 +82,7 @@ func TestRemoveInstance_NotADirectory(t *testing.T) {
 	})
 
 	testFile := filepath.Join(tmpDir, "test-file")
-	if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
+	if err := os.WriteFile(testFile, []byte("test"), constants.StackFilePerm); err != nil {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
@@ -101,31 +103,33 @@ func TestRemoveInstance_RemovesNestedStructure(t *testing.T) {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
 
-	projectDir := filepath.Join(tmpDir, "complex-instance")
+	instanceDir := filepath.Join(tmpDir, "complex-instance")
 
-	dirs := []string{
-		filepath.Join(projectDir, "secrets"),
-		filepath.Join(projectDir, "config"),
-		filepath.Join(projectDir, "data", "postgres"),
-		filepath.Join(projectDir, "data", "redis"),
+	// Create directories with appropriate permissions
+	dirs := map[string]os.FileMode{
+		filepath.Join(instanceDir, constants.SecretsDirName): constants.SecretsDirPerm,
+		filepath.Join(instanceDir, constants.StackDirName):   constants.StackDirPerm,
+		filepath.Join(instanceDir, "data", "postgres"):       constants.InstanceDirPerm,
+		filepath.Join(instanceDir, "data", "redis"):          constants.InstanceDirPerm,
 	}
 
-	for _, dir := range dirs {
-		if err := os.MkdirAll(dir, 0755); err != nil {
+	for dir, perm := range dirs {
+		if err := os.MkdirAll(dir, perm); err != nil {
 			t.Fatalf("Failed to create dir %s: %v", dir, err)
 		}
 	}
 
-	files := []string{
-		filepath.Join(projectDir, "secrets", "postgres_password"),
-		filepath.Join(projectDir, "secrets", "superadmin"),
-		filepath.Join(projectDir, "config", "docker-compose.yml"),
-		filepath.Join(projectDir, "data", "postgres", "pg_data.db"),
-		filepath.Join(projectDir, "data", "redis", "dump.rdb"),
+	// Create files with appropriate permissions
+	files := map[string]os.FileMode{
+		filepath.Join(instanceDir, constants.SecretsDirName, constants.PgPasswordFile):   constants.SecretFilePerm,
+		filepath.Join(instanceDir, constants.SecretsDirName, constants.AdminSecretsFile): constants.SecretFilePerm,
+		filepath.Join(instanceDir, constants.StackDirName, "deployment.yaml"):            constants.StackFilePerm,
+		filepath.Join(instanceDir, "data", "postgres", "pg_data.db"):                     constants.StackFilePerm,
+		filepath.Join(instanceDir, "data", "redis", "dump.rdb"):                          constants.StackFilePerm,
 	}
 
-	for _, file := range files {
-		if err := os.WriteFile(file, []byte("test data"), 0644); err != nil {
+	for file, perm := range files {
+		if err := os.WriteFile(file, []byte("test data"), perm); err != nil {
 			t.Fatalf("Failed to create file %s: %v", file, err)
 		}
 	}
@@ -136,13 +140,13 @@ func TestRemoveInstance_RemovesNestedStructure(t *testing.T) {
 		}
 	})
 
-	err = removeInstance(projectDir, true)
+	err = removeInstance(instanceDir, true)
 	if err != nil {
 		t.Fatalf("removeInstance failed: %v", err)
 	}
 
-	if _, err := os.Stat(projectDir); !os.IsNotExist(err) {
-		t.Error("Project directory still exists after removal")
+	if _, err := os.Stat(instanceDir); !os.IsNotExist(err) {
+		t.Error("Instance directory still exists after removal")
 	}
 
 	if _, err := os.Stat(tmpDir); os.IsNotExist(err) {
@@ -156,9 +160,9 @@ func TestRemoveInstance_WithForceFlag(t *testing.T) {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
 
-	projectDir := filepath.Join(tmpDir, "test-instance")
-	if err := os.MkdirAll(projectDir, 0755); err != nil {
-		t.Fatalf("Failed to create project dir: %v", err)
+	instanceDir := filepath.Join(tmpDir, "test-instance")
+	if err := os.MkdirAll(instanceDir, constants.InstanceDirPerm); err != nil {
+		t.Fatalf("Failed to create instance dir: %v", err)
 	}
 
 	t.Cleanup(func() {
@@ -167,13 +171,13 @@ func TestRemoveInstance_WithForceFlag(t *testing.T) {
 		}
 	})
 
-	err = removeInstance(projectDir, true)
+	err = removeInstance(instanceDir, true)
 	if err != nil {
 		t.Fatalf("removeInstance with force=true failed: %v", err)
 	}
 
-	if _, err := os.Stat(projectDir); !os.IsNotExist(err) {
-		t.Error("Project directory still exists after removal")
+	if _, err := os.Stat(instanceDir); !os.IsNotExist(err) {
+		t.Error("Instance directory still exists after removal")
 	}
 }
 
@@ -183,9 +187,9 @@ func TestRemoveInstance_EmptyDirectory(t *testing.T) {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
 
-	projectDir := filepath.Join(tmpDir, "empty-instance")
-	if err := os.MkdirAll(projectDir, 0755); err != nil {
-		t.Fatalf("Failed to create project dir: %v", err)
+	instanceDir := filepath.Join(tmpDir, "empty-instance")
+	if err := os.MkdirAll(instanceDir, constants.InstanceDirPerm); err != nil {
+		t.Fatalf("Failed to create instance dir: %v", err)
 	}
 
 	t.Cleanup(func() {
@@ -194,12 +198,12 @@ func TestRemoveInstance_EmptyDirectory(t *testing.T) {
 		}
 	})
 
-	err = removeInstance(projectDir, true)
+	err = removeInstance(instanceDir, true)
 	if err != nil {
 		t.Fatalf("removeInstance failed on empty directory: %v", err)
 	}
 
-	if _, err := os.Stat(projectDir); !os.IsNotExist(err) {
+	if _, err := os.Stat(instanceDir); !os.IsNotExist(err) {
 		t.Error("Empty directory still exists after removal")
 	}
 }
@@ -210,17 +214,17 @@ func TestRemoveInstance_WithSymlinks(t *testing.T) {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
 
-	projectDir := filepath.Join(tmpDir, "test-instance")
-	if err := os.MkdirAll(projectDir, 0755); err != nil {
-		t.Fatalf("Failed to create project dir: %v", err)
+	instanceDir := filepath.Join(tmpDir, "test-instance")
+	if err := os.MkdirAll(instanceDir, constants.InstanceDirPerm); err != nil {
+		t.Fatalf("Failed to create instance dir: %v", err)
 	}
 
 	targetFile := filepath.Join(tmpDir, "target.txt")
-	if err := os.WriteFile(targetFile, []byte("target"), 0644); err != nil {
+	if err := os.WriteFile(targetFile, []byte("target"), constants.StackFilePerm); err != nil {
 		t.Fatalf("Failed to create target file: %v", err)
 	}
 
-	symlinkPath := filepath.Join(projectDir, "link")
+	symlinkPath := filepath.Join(instanceDir, "link")
 	if err := os.Symlink(targetFile, symlinkPath); err != nil {
 		t.Fatalf("Failed to create symlink: %v", err)
 	}
@@ -231,13 +235,13 @@ func TestRemoveInstance_WithSymlinks(t *testing.T) {
 		}
 	})
 
-	err = removeInstance(projectDir, true)
+	err = removeInstance(instanceDir, true)
 	if err != nil {
 		t.Fatalf("removeInstance failed: %v", err)
 	}
 
-	if _, err := os.Stat(projectDir); !os.IsNotExist(err) {
-		t.Error("Project directory still exists after removal")
+	if _, err := os.Stat(instanceDir); !os.IsNotExist(err) {
+		t.Error("Instance directory still exists after removal")
 	}
 
 	if _, err := os.Stat(targetFile); os.IsNotExist(err) {

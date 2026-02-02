@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/OpenSlides/openslides-cli/internal/constants"
 )
 
 func TestNewConfig(t *testing.T) {
@@ -81,12 +83,12 @@ defaults:
 		tmpdir := t.TempDir()
 
 		config1 := filepath.Join(tmpdir, "config1.yml")
-		if err := os.WriteFile(config1, []byte("host: 127.0.0.1\nport: 8000\n"), 0644); err != nil {
+		if err := os.WriteFile(config1, []byte("host: 127.0.0.1\nport: 8000\n"), constants.StackFilePerm); err != nil {
 			t.Fatalf("failed to write config1: %v", err)
 		}
 
 		config2 := filepath.Join(tmpdir, "config2.yml")
-		if err := os.WriteFile(config2, []byte("port: 9000\nstackName: test-stack\n"), 0644); err != nil {
+		if err := os.WriteFile(config2, []byte("port: 9000\nstackName: test-stack\n"), constants.StackFilePerm); err != nil {
 			t.Fatalf("failed to write config2: %v", err)
 		}
 
@@ -117,7 +119,7 @@ services:
   client:
     tag: latest
     replicas: 3
-`), 0644); err != nil {
+`), constants.StackFilePerm); err != nil {
 			t.Fatalf("failed to write config1: %v", err)
 		}
 
@@ -127,7 +129,7 @@ services:
   client:
     foo: bar
     replicas: 5
-`), 0644); err != nil {
+`), constants.StackFilePerm); err != nil {
 			t.Fatalf("failed to write config2: %v", err)
 		}
 
@@ -168,7 +170,7 @@ services:
 services:
   client:
     tag: latest
-`), 0644); err != nil {
+`), constants.StackFilePerm); err != nil {
 			t.Fatalf("failed to write config1: %v", err)
 		}
 
@@ -180,7 +182,7 @@ services:
       deeply:
         nested:
           value: 42
-`), 0644); err != nil {
+`), constants.StackFilePerm); err != nil {
 			t.Fatalf("failed to write config2: %v", err)
 		}
 
@@ -215,7 +217,7 @@ services:
 defaults:
   containerRegistry: registry.example.com
   tag: latest
-`), 0644); err != nil {
+`), constants.StackFilePerm); err != nil {
 			t.Fatalf("failed to write config1: %v", err)
 		}
 
@@ -229,7 +231,7 @@ services:
     password: super-secret
   projector:
     replicas: 3
-`), 0644); err != nil {
+`), constants.StackFilePerm); err != nil {
 			t.Fatalf("failed to write config2: %v", err)
 		}
 
@@ -344,11 +346,11 @@ func TestGetFilename(t *testing.T) {
 
 func TestTemplateFunctions(t *testing.T) {
 	tmpdir := t.TempDir()
-	secretsDir := filepath.Join(tmpdir, "secrets")
-	if err := os.MkdirAll(secretsDir, 0755); err != nil {
+	secretsDir := filepath.Join(tmpdir, constants.SecretsDirName)
+	if err := os.MkdirAll(secretsDir, constants.SecretsDirPerm); err != nil {
 		t.Fatalf("failed to create secrets dir: %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(secretsDir, "test_secret"), []byte("secret123"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(secretsDir, "test_secret"), []byte("secret123"), constants.SecretFilePerm); err != nil {
 		t.Fatalf("failed to write test secret: %v", err)
 	}
 
@@ -477,7 +479,7 @@ func TestCreateDirAndFiles(t *testing.T) {
 
 	t.Run("template file", func(t *testing.T) {
 		tplFile := filepath.Join(tmpdir, "template.yml")
-		if err := os.WriteFile(tplFile, []byte("test: {{ .url }}"), 0644); err != nil {
+		if err := os.WriteFile(tplFile, []byte("test: {{ .url }}"), constants.StackFilePerm); err != nil {
 			t.Fatalf("failed to write template: %v", err)
 		}
 
@@ -503,13 +505,13 @@ func TestCreateDirAndFiles(t *testing.T) {
 
 	t.Run("template directory", func(t *testing.T) {
 		tplDir := filepath.Join(tmpdir, "templates")
-		if err := os.MkdirAll(tplDir, 0755); err != nil {
+		if err := os.MkdirAll(tplDir, constants.StackDirPerm); err != nil {
 			t.Fatalf("failed to create template dir: %v", err)
 		}
-		if err := os.WriteFile(filepath.Join(tplDir, "file1.yml"), []byte("content1"), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(tplDir, "file1.yml"), []byte("content1"), constants.StackFilePerm); err != nil {
 			t.Fatalf("failed to write file1: %v", err)
 		}
-		if err := os.WriteFile(filepath.Join(tplDir, "file2.yml"), []byte("content2"), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(tplDir, "file2.yml"), []byte("content2"), constants.StackFilePerm); err != nil {
 			t.Fatalf("failed to write file2: %v", err)
 		}
 
@@ -534,7 +536,7 @@ func TestCreateDirAndFiles(t *testing.T) {
 
 	t.Run("template with nested config access", func(t *testing.T) {
 		tplFile := filepath.Join(tmpdir, "nested-template.yml")
-		if err := os.WriteFile(tplFile, []byte("foo: {{ .services.client.foo }}\ntag: {{ .services.client.tag }}"), 0644); err != nil {
+		if err := os.WriteFile(tplFile, []byte("foo: {{ .services.client.foo }}\ntag: {{ .services.client.tag }}"), constants.StackFilePerm); err != nil {
 			t.Fatalf("failed to write template: %v", err)
 		}
 
@@ -570,7 +572,7 @@ func TestCreateDirAndFiles(t *testing.T) {
 	t.Run("template with or operator fallback pattern", func(t *testing.T) {
 		tplFile := filepath.Join(tmpdir, "or-template.yml")
 		if err := os.WriteFile(tplFile, []byte(`tag: {{ or .services.auth.tag .defaults.tag }}
-registry: {{ or .services.auth.containerRegistry .defaults.containerRegistry }}`), 0644); err != nil {
+registry: {{ or .services.auth.containerRegistry .defaults.containerRegistry }}`), constants.StackFilePerm); err != nil {
 			t.Fatalf("failed to write template: %v", err)
 		}
 
@@ -616,7 +618,7 @@ registry: {{ or .services.auth.containerRegistry .defaults.containerRegistry }}`
 projector:
   image: {{ or .services.projector.containerRegistry .defaults.containerRegistry }}/openslides-projector:{{ or .services.projector.tag .defaults.tag }}
   replicas: {{ or .services.projector.replicas 1 }}`
-		if err := os.WriteFile(tplFile, []byte(templateContent), 0644); err != nil {
+		if err := os.WriteFile(tplFile, []byte(templateContent), constants.StackFilePerm); err != nil {
 			t.Fatalf("failed to write template: %v", err)
 		}
 

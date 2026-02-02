@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"time"
 
+	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
 	"github.com/spf13/cobra"
@@ -20,12 +20,12 @@ Examples:
   osmanage k8s start ./my.instance.dir.org --skip-ready-check
   osmanage k8s start ./my.instance.dir.org --kubeconfig ~/.kube/config --timeout 30s`
 
-	tlsCertSecretYAML = "secrets/tls-letsencrypt-secret.yaml"
+	namespaceYAML = "namespace.yaml"
 )
 
 func StartCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "start <project-dir>",
+		Use:   "start <instance-dir>",
 		Short: StartHelp,
 		Long:  StartHelp + "\n\n" + StartHelpExtra,
 		Args:  cobra.ExactArgs(1),
@@ -33,12 +33,12 @@ func StartCmd() *cobra.Command {
 
 	kubeconfig := cmd.Flags().String("kubeconfig", "", "Path to kubeconfig file")
 	skipReadyCheck := cmd.Flags().Bool("skip-ready-check", false, "Skip waiting for instance to become ready")
-	timeout := cmd.Flags().Duration("timeout", 3*time.Minute, "Timeout for ready check")
+	timeout := cmd.Flags().Duration("timeout", constants.DefaultInstanceTimeout, "Timeout for instance health check")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		logger.Info("=== K8S START INSTANCE ===")
-		projectDir := args[0]
-		logger.Debug("Project directory: %s", projectDir)
+		instanceDir := args[0]
+		logger.Debug("Instance directory: %s", instanceDir)
 
 		k8sClient, err := client.New(*kubeconfig)
 		if err != nil {
@@ -47,22 +47,22 @@ func StartCmd() *cobra.Command {
 
 		ctx := context.Background()
 
-		namespacePath := filepath.Join(projectDir, "namespace.yaml")
+		namespacePath := filepath.Join(instanceDir, namespaceYAML)
 		namespace, err := applyManifest(ctx, k8sClient, namespacePath)
 		if err != nil {
 			return fmt.Errorf("applying namespace: %w", err)
 		}
 		logger.Info("Applied namespace: %s", namespace)
 
-		tlsSecretPath := filepath.Join(projectDir, tlsCertSecretYAML)
+		tlsSecretPath := filepath.Join(instanceDir, constants.SecretsDirName, constants.TlsCertSecretYAML)
 		if fileExists(tlsSecretPath) {
-			logger.Info("Found and applying %s", tlsCertSecretYAML)
+			logger.Info("Found and applying %s", tlsSecretPath)
 			if _, err := applyManifest(ctx, k8sClient, tlsSecretPath); err != nil {
 				return fmt.Errorf("applying TLS secret: %w", err)
 			}
 		}
 
-		stackDir := filepath.Join(projectDir, "stack")
+		stackDir := filepath.Join(instanceDir, constants.StackDirName)
 		logger.Info("Applying stack manifests from: %s", stackDir)
 		if err := applyDirectory(ctx, k8sClient, stackDir); err != nil {
 			return fmt.Errorf("applying stack: %w", err)
@@ -74,7 +74,7 @@ func StartCmd() *cobra.Command {
 		}
 
 		logger.Info("Waiting for instance to become ready...")
-		if err := waitForHealthy(ctx, k8sClient, namespace, *timeout); err != nil {
+		if err := waitForInstanceHealthy(ctx, k8sClient, namespace, *timeout); err != nil {
 			return fmt.Errorf("waiting for ready: %w", err)
 		}
 

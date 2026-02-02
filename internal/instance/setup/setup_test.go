@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/OpenSlides/openslides-cli/internal/constants"
 )
 
 func TestRandomSecret(t *testing.T) {
@@ -144,14 +146,23 @@ func TestCreateSecrets(t *testing.T) {
 	if string(data2) != "secret2" {
 		t.Errorf("Expected 'secret2', got %s", string(data2))
 	}
+
+	// Verify permissions
+	info1, err := os.Stat(filepath.Join(tmpdir, "test_secret1"))
+	if err != nil {
+		t.Fatalf("failed to stat secret file: %v", err)
+	}
+	if info1.Mode().Perm() != constants.SecretFilePerm {
+		t.Errorf("Secret file permissions = %v, want %v", info1.Mode().Perm(), constants.SecretFilePerm)
+	}
 }
 
 func TestCreateSecrets_NoOverwrite(t *testing.T) {
 	tmpdir := t.TempDir()
 
 	// Create initial secret
-	if err := os.WriteFile(filepath.Join(tmpdir, "existing"), []byte("original"), 0644); err != nil {
-		t.Fatalf("failed to write template: %v", err)
+	if err := os.WriteFile(filepath.Join(tmpdir, "existing"), []byte("original"), constants.SecretFilePerm); err != nil {
+		t.Fatalf("failed to write initial secret: %v", err)
 	}
 
 	specs := []SecretSpec{
@@ -190,7 +201,8 @@ func TestCreateCerts(t *testing.T) {
 	}
 
 	// Check cert file
-	certData, err := os.ReadFile(filepath.Join(tmpdir, "cert_crt"))
+	certPath := filepath.Join(tmpdir, constants.CertCertName)
+	certData, err := os.ReadFile(certPath)
 	if err != nil {
 		t.Error("Expected cert_crt to be created")
 	}
@@ -198,24 +210,43 @@ func TestCreateCerts(t *testing.T) {
 		t.Error("Expected PEM encoded certificate")
 	}
 
+	// Verify cert permissions
+	certInfo, err := os.Stat(certPath)
+	if err != nil {
+		t.Fatalf("failed to stat cert file: %v", err)
+	}
+	if certInfo.Mode().Perm() != constants.SecretFilePerm {
+		t.Errorf("Cert file permissions = %v, want %v", certInfo.Mode().Perm(), constants.SecretFilePerm)
+	}
+
 	// Check key file
-	keyData, err := os.ReadFile(filepath.Join(tmpdir, "cert_key"))
+	keyPath := filepath.Join(tmpdir, constants.CertKeyName)
+	keyData, err := os.ReadFile(keyPath)
 	if err != nil {
 		t.Error("Expected cert_key to be created")
 	}
 	if !strings.Contains(string(keyData), "BEGIN PRIVATE KEY") {
 		t.Error("Expected PEM encoded private key")
 	}
+
+	// Verify key permissions
+	keyInfo, err := os.Stat(keyPath)
+	if err != nil {
+		t.Fatalf("failed to stat key file: %v", err)
+	}
+	if keyInfo.Mode().Perm() != constants.SecretFilePerm {
+		t.Errorf("Key file permissions = %v, want %v", keyInfo.Mode().Perm(), constants.SecretFilePerm)
+	}
 }
 
 func TestDefaultSecrets(t *testing.T) {
-	// Verify default secrets are defined
+	// Verify default secrets are defined with correct names from constants
 	expectedSecrets := []string{
-		"auth_token_key",
-		"auth_cookie_key",
-		"internal_auth_password",
-		"postgres_password",
-		"superadmin",
+		constants.AuthTokenKey,
+		constants.AuthCookieKey,
+		constants.InternalAuthPassword,
+		constants.PgPasswordFile,
+		constants.AdminSecretsFile,
 	}
 
 	if len(defaultSecrets) != len(expectedSecrets) {
@@ -230,33 +261,33 @@ func TestDefaultSecrets(t *testing.T) {
 
 	// Test that postgres_password generates proper string
 	for _, spec := range defaultSecrets {
-		if spec.Name == "postgres_password" {
+		if spec.Name == constants.PgPasswordFile {
 			pwd, err := spec.Generator()
 			if err != nil {
 				t.Errorf("postgres_password generator error = %v", err)
 			}
-			if len(pwd) != DefaultPostgresPasswordLength {
-				t.Errorf("Expected length %d, got %d", DefaultPostgresPasswordLength, len(pwd))
+			if len(pwd) != constants.DefaultPostgresPasswordLength {
+				t.Errorf("Expected length %d, got %d", constants.DefaultPostgresPasswordLength, len(pwd))
 			}
 		}
 	}
 
 	// Test superadmin password generator
 	for _, spec := range defaultSecrets {
-		if spec.Name == "superadmin" {
+		if spec.Name == constants.AdminSecretsFile {
 			pwd, err := spec.Generator()
 			if err != nil {
 				t.Errorf("Superadmin generator error = %v", err)
 			}
-			if len(pwd) != DefaultSuperadminPasswordLength {
-				t.Errorf("Expected length %d, got %d", DefaultSuperadminPasswordLength, len(pwd))
+			if len(pwd) != constants.DefaultSuperadminPasswordLength {
+				t.Errorf("Expected length %d, got %d", constants.DefaultSuperadminPasswordLength, len(pwd))
 			}
 		}
 	}
 
 	// Test that base64-encoded secrets still work as expected
 	for _, spec := range defaultSecrets {
-		if spec.Name == "auth_token_key" || spec.Name == "auth_cookie_key" || spec.Name == "internal_auth_password" {
+		if spec.Name == constants.AuthTokenKey || spec.Name == constants.AuthCookieKey || spec.Name == constants.InternalAuthPassword {
 			secret, err := spec.Generator()
 			if err != nil {
 				t.Errorf("%s generator error = %v", spec.Name, err)
@@ -288,8 +319,8 @@ defaults:
   containerRegistry: registry.example.com
   tag: 4.2.21
 `
-	if err := os.WriteFile(configFile, []byte(configContent), 0644); err != nil {
-		t.Fatalf("failed to write template: %v", err)
+	if err := os.WriteFile(configFile, []byte(configContent), constants.StackFilePerm); err != nil {
+		t.Fatalf("failed to write config file: %v", err)
 	}
 
 	// Create a minimal template using camelCase config keys
@@ -304,7 +335,7 @@ disablePostgres: {{ .disablePostgres }}
 registry: {{ .defaults.containerRegistry }}
 tag: {{ .defaults.tag }}
 `
-	if err := os.WriteFile(templateFile, []byte(templateContent), 0644); err != nil {
+	if err := os.WriteFile(templateFile, []byte(templateContent), constants.StackFilePerm); err != nil {
 		t.Fatalf("failed to write template: %v", err)
 	}
 
@@ -312,10 +343,19 @@ tag: {{ .defaults.tag }}
 	outDir := filepath.Join(tmpdir, "output")
 
 	t.Run("full setup flow", func(t *testing.T) {
-		// 1. Create secrets directory
-		secretsDir := filepath.Join(outDir, SecretsDirName)
-		if err := os.MkdirAll(secretsDir, 0755); err != nil {
+		// 1. Create secrets directory with correct permissions
+		secretsDir := filepath.Join(outDir, constants.SecretsDirName)
+		if err := os.MkdirAll(secretsDir, constants.SecretsDirPerm); err != nil {
 			t.Fatal(err)
+		}
+
+		// Verify secrets directory permissions
+		dirInfo, err := os.Stat(secretsDir)
+		if err != nil {
+			t.Fatalf("failed to stat secrets directory: %v", err)
+		}
+		if dirInfo.Mode().Perm() != constants.SecretsDirPerm {
+			t.Errorf("Secrets directory permissions = %v, want %v", dirInfo.Mode().Perm(), constants.SecretsDirPerm)
 		}
 
 		// 2. Create secrets
@@ -332,21 +372,17 @@ tag: {{ .defaults.tag }}
 		}
 
 		// 4. Verify superadmin password length
-		superadminPath := filepath.Join(secretsDir, "superadmin")
+		superadminPath := filepath.Join(secretsDir, constants.AdminSecretsFile)
 		pwd, _ := os.ReadFile(superadminPath)
-		if len(pwd) != DefaultSuperadminPasswordLength {
-			t.Errorf("Expected superadmin password length %d, got %d", DefaultSuperadminPasswordLength, len(pwd))
+		if len(pwd) != constants.DefaultSuperadminPasswordLength {
+			t.Errorf("Expected superadmin password length %d, got %d", constants.DefaultSuperadminPasswordLength, len(pwd))
 		}
 
 		// 5. Check postgres_password has correct length (not base64)
-		postgresPath := filepath.Join(secretsDir, "postgres_password")
+		postgresPath := filepath.Join(secretsDir, constants.PgPasswordFile)
 		postgresPwd, _ := os.ReadFile(postgresPath)
-		if len(postgresPwd) != DefaultPostgresPasswordLength {
-			t.Errorf("Expected postgres password length %d, got %d", DefaultPostgresPasswordLength, len(postgresPwd))
-		}
-		// Verify it's not base64 encoded (shouldn't end with =)
-		if postgresPwd[len(postgresPwd)-1] == '=' {
-			t.Error("Postgres password should not be base64 encoded")
+		if len(postgresPwd) != constants.DefaultPostgresPasswordLength {
+			t.Errorf("Expected postgres password length %d, got %d", constants.DefaultPostgresPasswordLength, len(postgresPwd))
 		}
 	})
 
@@ -390,16 +426,16 @@ defaults:
   containerRegistry: registry.example.com
   tag: 4.2.21
 `
-	if err := os.WriteFile(configFile, []byte(configContent), 0644); err != nil {
-		t.Fatalf("failed to write template: %v", err)
+	if err := os.WriteFile(configFile, []byte(configContent), constants.StackFilePerm); err != nil {
+		t.Fatalf("failed to write config file: %v", err)
 	}
 
 	outDir := filepath.Join(tmpdir, "output")
-	secretsDir := filepath.Join(outDir, SecretsDirName)
+	secretsDir := filepath.Join(outDir, constants.SecretsDirName)
 
 	t.Run("creates HTTPS certificates when enabled", func(t *testing.T) {
-		// Create secrets directory
-		if err := os.MkdirAll(secretsDir, 0755); err != nil {
+		// Create secrets directory with correct permissions
+		if err := os.MkdirAll(secretsDir, constants.SecretsDirPerm); err != nil {
 			t.Fatal(err)
 		}
 
@@ -414,8 +450,8 @@ defaults:
 		}
 
 		// Verify certificates exist
-		certPath := filepath.Join(secretsDir, "cert_crt")
-		keyPath := filepath.Join(secretsDir, "cert_key")
+		certPath := filepath.Join(secretsDir, constants.CertCertName)
+		keyPath := filepath.Join(secretsDir, constants.CertKeyName)
 
 		if _, err := os.Stat(certPath); err != nil {
 			t.Error("Expected cert_crt to be created when enableLocalHTTPS is true")

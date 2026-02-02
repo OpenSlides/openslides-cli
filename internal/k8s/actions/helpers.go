@@ -6,10 +6,10 @@ import (
 	"strings"
 )
 
-// extractNamespace gets the namespace from project directory path
-// Example: "/real/path/to/my.project.dir.url" -> "myprojectdirurl"
-func extractNamespace(projectDir string) string {
-	dirName := filepath.Base(projectDir)
+// extractNamespace gets the namespace from instance directory path
+// Example: "/real/path/to/my.instance.dir.url" -> "myinstancedirurl"
+func extractNamespace(instanceDir string) string {
+	dirName := filepath.Base(instanceDir)
 	namespace := strings.ReplaceAll(dirName, ".", "")
 	return namespace
 }

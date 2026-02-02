@@ -15,6 +15,14 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
+const (
+	// fieldManager identifies this client in Server-Side Apply operations
+	fieldManager string = "osmanage"
+
+	// forceConflicts takes ownership of fields from other managers when conflicts occur
+	forceConflicts bool = true
+)
+
 // applyManifest applies a single YAML manifest file using RESTMapper
 func applyManifest(ctx context.Context, k8sClient *client.Client, manifestPath string) (string, error) {
 	logger.Debug("Applying manifest: %s", manifestPath)
@@ -62,8 +70,8 @@ func applyManifest(ctx context.Context, k8sClient *client.Client, manifestPath s
 			obj.GetName(),
 			&obj,
 			metav1.ApplyOptions{
-				FieldManager: "osmanage",
-				Force:        true,
+				FieldManager: fieldManager,
+				Force:        forceConflicts,
 			},
 		)
 	} else {
@@ -73,8 +81,8 @@ func applyManifest(ctx context.Context, k8sClient *client.Client, manifestPath s
 			obj.GetName(),
 			&obj,
 			metav1.ApplyOptions{
-				FieldManager: "osmanage",
-				Force:        true,
+				FieldManager: fieldManager,
+				Force:        forceConflicts,
 			},
 		)
 	}

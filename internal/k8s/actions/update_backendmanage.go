@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
 	"github.com/spf13/cobra"
@@ -20,14 +21,11 @@ Examples:
   osmanage k8s update-backendmanage ./my.instance.dir.org --kubeconfig ~/.kube/config --tag 4.2.23 --container-registry myRegistry
   osmanage k8s update-backendmanage ./my.instance.dir.org --tag 4.2.23 --container-registry myRegistry --timeout 30s
   osmanage k8s update-backendmanage ./my.instance.dir.org --tag 4.2.23 --container-registry myRegistry --revert --timeout 30s`
-
-	backendmanageDeployment = "backendmanage"
-	backendmanageContainer  = "backendmanage"
 )
 
 func UpdateBackendmanageCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update-backendmanage <project-dir>",
+		Use:   "update-backendmanage <instance-dir>",
 		Short: UpdateBackendmanageHelp,
 		Long:  UpdateBackendmanageHelp + "\n\n" + UpdateBackendmanageHelpExtra,
 		Args:  cobra.ExactArgs(1),
@@ -37,7 +35,7 @@ func UpdateBackendmanageCmd() *cobra.Command {
 	containerRegistry := cmd.Flags().String("container-registry", "", "Container registry (required)")
 	kubeconfig := cmd.Flags().String("kubeconfig", "", "Path to kubeconfig file")
 	revert := cmd.Flags().Bool("revert", false, "Changes image back with given tag and registry")
-	timeout := cmd.Flags().Duration("timeout", 3*time.Minute, "Timeout for deployment readiness check")
+	timeout := cmd.Flags().Duration("timeout", constants.DefaultDeploymentTimeout, "Timeout for deployment rollout check")
 
 	_ = cmd.MarkFlagRequired("tag")
 	_ = cmd.MarkFlagRequired("container-registry")
@@ -51,8 +49,8 @@ func UpdateBackendmanageCmd() *cobra.Command {
 		}
 
 		logger.Info("=== K8S UPDATE/REVERT BACKENDMANAGE ===")
-		projectDir := args[0]
-		namespace := extractNamespace(projectDir)
+		instanceDir := args[0]
+		namespace := extractNamespace(instanceDir)
 
 		logger.Info("Namespace: %s", namespace)
 
@@ -87,11 +85,11 @@ func updateBackendmanage(ctx context.Context, k8sClient *client.Client, namespac
 
 	logger.Info("Updating deployment to image: %s", image)
 
-	patch := fmt.Appendf(nil, `{"spec":{"template":{"spec":{"containers":[{"name":"%s","image":"%s"}]}}}}`, backendmanageContainer, image)
+	patch := fmt.Appendf(nil, `{"spec":{"template":{"spec":{"containers":[{"name":"%s","image":"%s"}]}}}}`, constants.BackendmanageContainerName, image)
 
 	updated, err := k8sClient.Clientset().AppsV1().Deployments(namespace).Patch(
 		ctx,
-		backendmanageDeployment,
+		constants.BackendmanageDeploymentName,
 		types.StrategicMergePatchType,
 		patch,
 		metav1.PatchOptions{},
@@ -103,7 +101,7 @@ func updateBackendmanage(ctx context.Context, k8sClient *client.Client, namespac
 	logger.Info("Patch applied (generation: %d)", updated.Generation)
 
 	logger.Info("Waiting for rollout to complete...")
-	if err := waitForDeploymentReady(ctx, k8sClient, namespace, backendmanageDeployment, timeout); err != nil {
+	if err := waitForDeploymentReady(ctx, k8sClient, namespace, constants.BackendmanageDeploymentName, timeout); err != nil {
 		return fmt.Errorf("rollout failed: %w", err)
 	}
 
@@ -115,11 +113,11 @@ func revertBackendmanage(ctx context.Context, k8sClient *client.Client, namespac
 
 	logger.Info("Reverting deployment to image: %s", image)
 
-	patch := fmt.Appendf(nil, `{"spec":{"template":{"spec":{"containers":[{"name":"%s","image":"%s"}]}}}}`, backendmanageContainer, image)
+	patch := fmt.Appendf(nil, `{"spec":{"template":{"spec":{"containers":[{"name":"%s","image":"%s"}]}}}}`, constants.BackendmanageContainerName, image)
 
 	updated, err := k8sClient.Clientset().AppsV1().Deployments(namespace).Patch(
 		ctx,
-		backendmanageDeployment,
+		constants.BackendmanageDeploymentName,
 		types.StrategicMergePatchType,
 		patch,
 		metav1.PatchOptions{},
@@ -131,7 +129,7 @@ func revertBackendmanage(ctx context.Context, k8sClient *client.Client, namespac
 	logger.Info("Patch applied (generation: %d)", updated.Generation)
 
 	logger.Info("Waiting for rollout to complete...")
-	if err := waitForDeploymentReady(ctx, k8sClient, namespace, backendmanageDeployment, timeout); err != nil {
+	if err := waitForDeploymentReady(ctx, k8sClient, namespace, constants.BackendmanageDeploymentName, timeout); err != nil {
 		return fmt.Errorf("rollout failed: %w", err)
 	}
 

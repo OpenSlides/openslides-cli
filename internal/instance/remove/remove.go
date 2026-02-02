@@ -21,7 +21,7 @@ Examples:
 
 func Cmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "remove <project-dir>",
+		Use:   "remove <instance-dir>",
 		Short: RemoveHelp,
 		Long:  RemoveHelp + "\n\n" + RemoveHelpExtra,
 		Args:  cobra.ExactArgs(1),
@@ -31,10 +31,10 @@ func Cmd() *cobra.Command {
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		logger.Info("=== K8S REMOVE INSTANCE ===")
-		projectDir := args[0]
-		logger.Debug("Project directory: %s", projectDir)
+		instanceDir := args[0]
+		logger.Debug("Instance directory: %s", instanceDir)
 
-		if err := removeInstance(projectDir, *force); err != nil {
+		if err := removeInstance(instanceDir, *force); err != nil {
 			return fmt.Errorf("removing instance: %w", err)
 		}
 
@@ -45,22 +45,22 @@ func Cmd() *cobra.Command {
 	return cmd
 }
 
-// removeInstance removes the entire project directory
-func removeInstance(projectDir string, force bool) error {
-	info, err := os.Stat(projectDir)
+// removeInstance removes the entire instance directory
+func removeInstance(instanceDir string, force bool) error {
+	info, err := os.Stat(instanceDir)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("%s does not exist", projectDir)
+			return fmt.Errorf("%s does not exist", instanceDir)
 		}
 		return fmt.Errorf("checking directory: %w", err)
 	}
 
 	if !info.IsDir() {
-		return fmt.Errorf("%s is not a directory", projectDir)
+		return fmt.Errorf("%s is not a directory", instanceDir)
 	}
 
 	if !force {
-		logger.Warn("This will permanently delete: %s", projectDir)
+		logger.Warn("This will permanently delete: %s", instanceDir)
 		logger.Warn("All configuration files, secrets, and data will be lost!")
 
 		fmt.Print("Are you sure you want to continue? [y/N]: ")
@@ -73,9 +73,9 @@ func removeInstance(projectDir string, force bool) error {
 		}
 	}
 
-	logger.Info("Removing instance directory: %s", projectDir)
+	logger.Info("Removing instance directory: %s", instanceDir)
 
-	if err := os.RemoveAll(projectDir); err != nil {
+	if err := os.RemoveAll(instanceDir); err != nil {
 		return fmt.Errorf("removing directory: %w", err)
 	}
 

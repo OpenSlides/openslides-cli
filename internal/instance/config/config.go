@@ -12,6 +12,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
 	"github.com/OpenSlides/openslides-cli/internal/utils"
 
@@ -38,14 +39,12 @@ Examples:
   osmanage config ./my.instance.dir.org --template ./custom.tmpl --config ./config.yaml
   osmanage config ./my.instance.dir.org -t ./k8s-templates -c base.yaml -c overrides.yaml
   osmanage config ./my.instance.dir.org --force`
-
-	secretsDirRoot string = "secrets"
 )
 
 // Cmd returns the subcommand.
 func Cmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "config <project-dir>",
+		Use:   "config <instance-dir>",
 		Short: ConfigHelp,
 		Long:  ConfigHelp + "\n\n" + ConfigHelpExtra,
 		Args:  cobra.ExactArgs(1),
@@ -136,8 +135,8 @@ func createFromTemplateFile(baseDir string, force bool, tplFile string, cfg map[
 		return fmt.Errorf("reading template file: %w", err)
 	}
 
-	if err := os.MkdirAll(baseDir, os.ModePerm); err != nil {
-		return fmt.Errorf("creating directory: %w", err)
+	if err := os.MkdirAll(baseDir, constants.InstanceDirPerm); err != nil {
+		return fmt.Errorf("creating instance directory: %w", err)
 	}
 
 	// Extract filename from config if present, otherwise use a default
@@ -150,8 +149,8 @@ func createFromTemplateDir(baseDir string, force bool, tplDir string, cfg map[st
 
 	tplFS := os.DirFS(tplDir)
 
-	if err := os.MkdirAll(baseDir, os.ModePerm); err != nil {
-		return fmt.Errorf("creating directory: %w", err)
+	if err := os.MkdirAll(baseDir, constants.InstanceDirPerm); err != nil {
+		return fmt.Errorf("creating instance directory: %w", err)
 	}
 
 	return createFromFS(baseDir, force, tplFS, cfg)
@@ -166,8 +165,10 @@ func createFromFS(baseDir string, force bool, tplFS fs.FS, cfg map[string]any) e
 		targetPath := filepath.Join(baseDir, path)
 
 		if d.IsDir() {
-			logger.Debug("Creating directory: %s", targetPath)
-			return os.MkdirAll(targetPath, os.ModePerm)
+			// Use appropriate permissions based on directory name
+			perm := getDirPermissions(filepath.Base(targetPath))
+			logger.Debug("Creating directory: %s (perms: %04o)", targetPath, perm)
+			return os.MkdirAll(targetPath, perm)
 		}
 
 		logger.Debug("Processing template: %s", path)
@@ -178,6 +179,18 @@ func createFromFS(baseDir string, force bool, tplFS fs.FS, cfg map[string]any) e
 
 		return createDeploymentFile(targetPath, force, data, cfg, baseDir)
 	})
+}
+
+// getDirPermissions returns appropriate permissions based on directory name
+func getDirPermissions(dirName string) fs.FileMode {
+	switch dirName {
+	case constants.SecretsDirName:
+		return constants.SecretsDirPerm
+	case constants.StackDirName:
+		return constants.StackDirPerm
+	default:
+		return constants.InstanceDirPerm
+	}
 }
 
 func createDeploymentFile(filename string, force bool, tplData []byte, cfg map[string]any, baseDir string) error {
@@ -194,7 +207,7 @@ func createDeploymentFile(filename string, force bool, tplData []byte, cfg map[s
 
 	dir := filepath.Dir(filename)
 	name := filepath.Base(filename)
-	return utils.CreateFile(dir, force, name, buf.Bytes())
+	return utils.CreateFile(dir, force, name, buf.Bytes(), constants.StackFilePerm)
 }
 
 // getFilename extracts the filename from config, or returns a default
@@ -220,7 +233,7 @@ func (tf *TemplateFunctions) GetFuncMap() template.FuncMap {
 
 // ReadSecret reads a secret file from the secrets directory and returns it base64 encoded
 func (tf *TemplateFunctions) ReadSecret(name string) (string, error) {
-	secretPath := filepath.Join(tf.baseDir, secretsDirRoot, name)
+	secretPath := filepath.Join(tf.baseDir, constants.SecretsDirName, name)
 	data, err := os.ReadFile(secretPath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {

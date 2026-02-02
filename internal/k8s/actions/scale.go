@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
-	"time"
 
+	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
 	"github.com/spf13/cobra"
@@ -25,7 +25,7 @@ Examples:
 
 func ScaleCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "scale <project-dir>",
+		Use:   "scale <instance-dir>",
 		Short: ScaleHelp,
 		Long:  ScaleHelp + "\n\n" + ScaleHelpExtra,
 		Args:  cobra.ExactArgs(1),
@@ -34,7 +34,7 @@ func ScaleCmd() *cobra.Command {
 	service := cmd.Flags().String("service", "", "Service deployment to scale (required)")
 	kubeconfig := cmd.Flags().String("kubeconfig", "", "Path to kubeconfig file")
 	skipReadyCheck := cmd.Flags().Bool("skip-ready-check", false, "Skip waiting for deployment to become ready")
-	timeout := cmd.Flags().Duration("timeout", 3*time.Minute, "Timeout for ready check")
+	timeout := cmd.Flags().Duration("timeout", constants.DefaultDeploymentTimeout, "Timeout for deployment rollout check")
 
 	_ = cmd.MarkFlagRequired("service")
 
@@ -44,11 +44,11 @@ func ScaleCmd() *cobra.Command {
 		}
 
 		logger.Info("=== K8S SCALE SERVICE ===")
-		projectDir := args[0]
-		logger.Debug("Project directory: %s", projectDir)
+		instanceDir := args[0]
+		logger.Debug("Instance directory: %s", instanceDir)
 		logger.Info("Service: %s", *service)
 
-		namespace := extractNamespace(projectDir)
+		namespace := extractNamespace(instanceDir)
 		logger.Info("Namespace: %s", namespace)
 
 		k8sClient, err := client.New(*kubeconfig)
@@ -59,8 +59,8 @@ func ScaleCmd() *cobra.Command {
 		ctx := context.Background()
 
 		// Construct path to deployment file
-		deploymentFile := fmt.Sprintf("%s-deployment.yaml", *service)
-		deploymentPath := filepath.Join(projectDir, "stack", deploymentFile)
+		deploymentFile := fmt.Sprintf(constants.DeploymentFileTemplate, *service)
+		deploymentPath := filepath.Join(instanceDir, constants.StackDirName, deploymentFile)
 
 		logger.Info("Applying deployment manifest: %s", deploymentPath)
 		if _, err := applyManifest(ctx, k8sClient, deploymentPath); err != nil {
@@ -73,7 +73,7 @@ func ScaleCmd() *cobra.Command {
 		}
 
 		logger.Info("Waiting for deployment to become ready...")
-		// Wait for the specific deployment (service name is deployment name)
+		// Wait for the specific deployment (OpenSlides service name is deployment name)
 		if err := waitForDeploymentReady(ctx, k8sClient, namespace, *service, *timeout); err != nil {
 			return fmt.Errorf("waiting for deployment ready: %w", err)
 		}
