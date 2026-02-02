@@ -2,6 +2,7 @@ package create
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 
@@ -28,8 +29,8 @@ Examples:
 
 	adminSecretsFile             = "superadmin"
 	pgPasswordFile               = "postgres_password"
-	secretDirPerm    os.FileMode = 0700
-	secretFilePerm   os.FileMode = 0600
+	secretDirPerm    fs.FileMode = 0700
+	secretFilePerm   fs.FileMode = 0600
 )
 
 func Cmd() *cobra.Command {
