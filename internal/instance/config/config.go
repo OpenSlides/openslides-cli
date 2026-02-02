@@ -22,21 +22,36 @@ import (
 
 const (
 	ConfigHelp      = "(Re)creates deployment configuration files"
-	ConfigHelpExtra = `This command (re)creates the deployment file(s) in the given directory.
-For Docker Compose, this creates a docker-compose.yml file.
-For Kubernetes, this creates a directory with multiple YAML manifests.`
+	ConfigHelpExtra = `(Re)creates deployment configuration files from templates.
+
+Generates deployment files (Docker Compose or Kubernetes manifests) using
+templates and YAML configuration files. Multiple config files are deep-merged
+in order, with later files overriding earlier ones.
+
+Template functions available:
+  • marshalContent - Marshal YAML content with indentation
+  • envMapToK8S     - Convert environment map to Kubernetes format
+  • readSecret     - Read and base64-encode secrets from secrets/ directory
+
+Examples:
+  osmanage config ./my.instance.dir.org
+  osmanage config ./my.instance.dir.org --template ./custom.tmpl --config ./config.yaml
+  osmanage config ./my.instance.dir.org -t ./k8s-templates -c base.yaml -c overrides.yaml
+  osmanage config ./my.instance.dir.org --force`
+
+	secretsDirRoot string = "secrets"
 )
 
 // Cmd returns the subcommand.
 func Cmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "config directory",
+		Use:   "config <project-dir>",
 		Short: ConfigHelp,
 		Long:  ConfigHelp + "\n\n" + ConfigHelpExtra,
 		Args:  cobra.ExactArgs(1),
 	}
 
-	force := cmd.Flags().BoolP("force", "f", true, "overwrite existing files")
+	force := cmd.Flags().BoolP("force", "f", false, "overwrite existing files")
 	customTemplate := cmd.Flags().StringP("template", "t", "", "custom template file or directory")
 	configFiles := cmd.Flags().StringArrayP("config", "c", nil, "custom YAML config file (can be used multiple times)")
 	cmd.MarkFlagsRequiredTogether("template", "config")
@@ -205,7 +220,7 @@ func (tf *TemplateFunctions) GetFuncMap() template.FuncMap {
 
 // ReadSecret reads a secret file from the secrets directory and returns it base64 encoded
 func (tf *TemplateFunctions) ReadSecret(name string) (string, error) {
-	secretPath := filepath.Join(tf.baseDir, "secrets", name)
+	secretPath := filepath.Join(tf.baseDir, secretsDirRoot, name)
 	data, err := os.ReadFile(secretPath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
