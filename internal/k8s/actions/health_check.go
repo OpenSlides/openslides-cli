@@ -7,12 +7,16 @@ import (
 
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
+	"github.com/schollz/progressbar/v3"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+// Width of the progress bar for wait functions
+const progressBarWidth = 40
 
 // HealthStatus represents the health status of an instance
 type HealthStatus struct {
@@ -104,6 +108,8 @@ func waitForHealthy(ctx context.Context, k8sClient *client.Client, namespace str
 	defer cancel()
 
 	var lastStatus *HealthStatus
+	var bar *progressbar.ProgressBar
+
 	for {
 		select {
 		case <-ticker.C:
@@ -114,14 +120,26 @@ func waitForHealthy(ctx context.Context, k8sClient *client.Client, namespace str
 			}
 			lastStatus = status
 
-			logger.Debug("Health check: %d/%d pods ready", status.Ready, status.Total)
+			if bar == nil && status.Total > 0 {
+				bar = createProgressBar(status.Total, "Pods ready")
+			}
+
+			if bar != nil {
+				bar.Set(status.Ready)
+			}
 
 			if status.Healthy {
+				if bar != nil {
+					bar.Finish()
+				}
 				logger.Info("Instance is healthy: %d/%d pods ready", status.Ready, status.Total)
 				return nil
 			}
 
 		case <-timeoutCtx.Done():
+			if bar != nil {
+				bar.Finish()
+			}
 			logger.Warn("Timeout reached. Current status:")
 			if lastStatus != nil {
 				printHealthStatus(namespace, lastStatus)
@@ -129,6 +147,22 @@ func waitForHealthy(ctx context.Context, k8sClient *client.Client, namespace str
 			return fmt.Errorf("timeout waiting for instance to become healthy")
 		}
 	}
+}
+
+func createProgressBar(max int, description string) *progressbar.ProgressBar {
+	return progressbar.NewOptions(max,
+		progressbar.OptionSetDescription(description),
+		progressbar.OptionSetWidth(progressBarWidth),
+		progressbar.OptionShowCount(),
+		progressbar.OptionSetTheme(progressbar.Theme{
+			Saucer:        "█",
+			SaucerPadding: "░",
+			BarStart:      "[",
+			BarEnd:        "]",
+		}),
+		progressbar.OptionThrottle(100*time.Millisecond),
+		progressbar.OptionClearOnFinish(),
+	)
 }
 
 // isPodReady checks if a pod is ready
