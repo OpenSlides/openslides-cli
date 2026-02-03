@@ -18,8 +18,22 @@ const (
 	SetHelpExtra = `This command calls an OpenSlides backend action with the given JSON
 formatted payload. Provide the payload directly or use the --file flag with a
 file or use this flag with - to read from stdin. Only the following update actions are
-supported:
-    `
+supported: [agenda_item, committee, group, meeting, motion, organization_tag, organization, projector, theme, topic, user]
+
+Examples:
+  osmanage set user '[{"id": 5, "first_name": "Jane", "last_name": "Smith"}]'
+	--address <myBackendManageIP>:9002 \
+	--password-file ./my.instance.dir.org/secrets/internal_auth_password
+
+  osmanage set user \
+    --file user.json \
+	--address <myBackendManageIP>:9002 \
+	--password-file ./my.instance.dir.org/secrets/internal_auth_password
+
+  echo '[{"id": 5, "first_name": "Jane", "last_name": "Smith"}]' | osmanage set user \
+    --file - \
+	--address <myBackendManageIP>:9002 \
+	--password-file ./my.instance.dir.org/secrets/internal_auth_password`
 )
 
 var actionMap = map[string]string{
@@ -44,11 +58,21 @@ func Cmd() *cobra.Command {
 		Args:  cobra.RangeArgs(1, 2),
 	}
 
-	address := cmd.Flags().StringP("address", "a", "localhost:9002", "address of the OpenSlides backendManage service")
-	passwordFile := cmd.Flags().String("password-file", "secrets/internal_auth_password", "file with password for authorization")
+	address := cmd.Flags().StringP("address", "a", "", "address of the OpenSlides backendManage service (required)")
+	passwordFile := cmd.Flags().String("password-file", "", "file with password for authorization (required)")
 	payloadFile := cmd.Flags().StringP("file", "f", "", "JSON file with the payload, or - for stdin")
 
+	_ = cmd.MarkFlagRequired("address")
+	_ = cmd.MarkFlagRequired("password-file")
+
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		if *address == "" {
+			return fmt.Errorf("--address cannot be empty")
+		}
+		if *passwordFile == "" {
+			return fmt.Errorf("--password-file cannot be empty")
+		}
+
 		logger.Info("=== SET ACTION ===")
 
 		action := args[0]

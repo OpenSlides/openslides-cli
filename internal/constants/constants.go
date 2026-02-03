@@ -129,3 +129,18 @@ const (
 	// BackendmanagePatchTemplate is the JSON patch template for updating the backendmanage image.
 	BackendmanagePatchTemplate string = `{"spec":{"template":{"spec":{"containers":[{"name":"%s","image":"%s"}]}}}}`
 )
+
+// OpenSlides backend API endpoints and defaults
+const (
+	// BackendHTTPScheme is the HTTP scheme used for backend connections
+	BackendHTTPScheme string = "http://"
+
+	// BackendHandleRequestPath is the API endpoint for sending actions
+	BackendHandleRequestPath string = "/internal/handle_request"
+
+	// BackendMigrationsPath is the API endpoint for migrations commands
+	BackendMigrationsPath string = "/internal/migrations"
+
+	// BackendContentType is the Content-Type header for backend requests
+	BackendContentType string = "application/json"
+)

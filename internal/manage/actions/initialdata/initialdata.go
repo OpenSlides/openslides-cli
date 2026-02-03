@@ -20,7 +20,20 @@ Provide initial data via --file flag with a JSON file path, or use --file=- to r
 If no file is provided, empty initialization data will be used.
 
 This command also sets the superadmin (user 1) password from the superadmin password file.
-It returns an error if the datastore is not empty.`
+It returns an error if the datastore is not empty.
+
+Examples:
+  osmanage initial-data \
+    --address <myBackendManageIP>:9002 \
+	--password-file ./my.instance.dir.org/secrets/initial_auth_password \
+	--superadmin-password-file ./my.instance.dir.org/secrets/superadmin
+
+  osmanage initial-data \
+    --file initial.json
+    --address <myBackendManageIP>:9002 \
+	--password-file ./my.instance.dir.org/secrets/initial_auth_password \
+	--superadmin-password-file ./my.instance.dir.org/secrets/superadmin
+`
 )
 
 func Cmd() *cobra.Command {
@@ -31,12 +44,26 @@ func Cmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 
-	address := cmd.Flags().StringP("address", "a", "localhost:9002", "address of the OpenSlides backendManage service")
-	passwordFile := cmd.Flags().String("password-file", "secrets/internal_auth_password", "file with password for authorization")
-	superadminPasswordFile := cmd.Flags().String("superadmin-password-file", "secrets/superadmin", "file with superadmin password")
+	address := cmd.Flags().StringP("address", "a", "", "address of the OpenSlides backendManage service (required)")
+	passwordFile := cmd.Flags().String("password-file", "", "file with password for authorization (required)")
+	superadminPasswordFile := cmd.Flags().String("superadmin-password-file", "", "file with superadmin password (required)")
 	dataFile := cmd.Flags().StringP("file", "f", "", "JSON file with initial data, or - for stdin")
 
+	_ = cmd.MarkFlagRequired("address")
+	_ = cmd.MarkFlagRequired("password-file")
+	_ = cmd.MarkFlagRequired("superadmin-password-file")
+
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		if *address == "" {
+			return fmt.Errorf("--address cannot be empty")
+		}
+		if *passwordFile == "" {
+			return fmt.Errorf("--password-file cannot be empty")
+		}
+		if *superadminPasswordFile == "" {
+			return fmt.Errorf("--superadmin-password-file cannot be empty")
+		}
+
 		logger.Info("=== INITIAL DATA ===")
 
 		var data []byte

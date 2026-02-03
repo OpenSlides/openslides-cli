@@ -15,7 +15,23 @@ const (
 	CreateUserHelp      = "Creates a new user in OpenSlides"
 	CreateUserHelpExtra = `This command creates a new user with the given user data in JSON format.
 Provide the user data as an argument, or use the --file flag with a file path,
-or use --file=- to read from stdin.`
+or use --file=- to read from stdin.
+
+Examples:
+  osmanage create-user '{"username": "myuser", "default_password": "mypwd"}' \
+    --address <myBackendManageIP>:9002 \
+    --password-file ./my.instance.dir.org/secrets/internal_auth_password
+
+  osmanage create-user
+    --file user.json \
+    --address <myBackendManageIP>:9002 \
+    --password-file ./my.instance.dir.org/secrets/internal_auth_password
+
+  echo '{"username": "myuser", "default_password": "mypwd"}' | osmanage create-user \
+    --file - \
+    --address <myBackendManageIP>:9002 \
+    --password-file ./my.instance.dir.org/secrets/internal_auth_password
+`
 )
 
 func Cmd() *cobra.Command {
@@ -26,11 +42,21 @@ func Cmd() *cobra.Command {
 		Args:  cobra.RangeArgs(0, 1),
 	}
 
-	address := cmd.Flags().StringP("address", "a", "localhost:9002", "address of the OpenSlides backendManage service")
-	passwordFile := cmd.Flags().String("password-file", "secrets/internal_auth_password", "file with password for authorization")
+	address := cmd.Flags().StringP("address", "a", "", "address of the OpenSlides backendManage service (required)")
+	passwordFile := cmd.Flags().String("password-file", "", "file with password for authorization (required)")
 	userFile := cmd.Flags().StringP("file", "f", "", "JSON file with user data, or - for stdin")
 
+	_ = cmd.MarkFlagRequired("address")
+	_ = cmd.MarkFlagRequired("password-file")
+
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		if *address == "" {
+			return fmt.Errorf("--address cannot be empty")
+		}
+		if *passwordFile == "" {
+			return fmt.Errorf("--password-file cannot be empty")
+		}
+
 		logger.Info("=== CREATE USER ===")
 
 		var input string

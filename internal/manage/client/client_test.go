@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/OpenSlides/openslides-cli/internal/constants"
 )
 
 func TestNew(t *testing.T) {
@@ -30,8 +32,8 @@ func TestBuildURL(t *testing.T) {
 		path string
 		want string
 	}{
-		{"handle request", handleRequestPath, "http://localhost:9002/internal/handle_request"},
-		{"migrations", migrationsPath, "http://localhost:9002/internal/migrations"},
+		{"handle request", constants.BackendHandleRequestPath, "http://localhost:9002/internal/handle_request"},
+		{"migrations", constants.BackendMigrationsPath, "http://localhost:9002/internal/migrations"},
 		{"custom path", "/custom", "http://localhost:9002/custom"},
 	}
 
@@ -49,14 +51,14 @@ func TestSendAction(t *testing.T) {
 	t.Run("successful request", func(t *testing.T) {
 		var receivedAuth string
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path != "/internal/handle_request" {
-				t.Errorf("Expected path /internal/handle_request, got %s", r.URL.Path)
+			if r.URL.Path != constants.BackendHandleRequestPath {
+				t.Errorf("Expected path %s, got %s", constants.BackendHandleRequestPath, r.URL.Path)
 			}
 			if r.Method != "POST" {
 				t.Errorf("Expected POST, got %s", r.Method)
 			}
-			if r.Header.Get("Content-Type") != "application/json" {
-				t.Error("Expected Content-Type: application/json")
+			if r.Header.Get("Content-Type") != constants.BackendContentType {
+				t.Errorf("Expected Content-Type: %s", constants.BackendContentType)
 			}
 
 			receivedAuth = r.Header.Get("Authorization")
@@ -80,7 +82,7 @@ func TestSendAction(t *testing.T) {
 		}))
 		defer server.Close()
 
-		address := strings.TrimPrefix(server.URL, "http://")
+		address := strings.TrimPrefix(server.URL, constants.BackendHTTPScheme)
 		cl := New(address, "test-password")
 
 		resp, err := cl.SendAction("test.action", []byte(`[{"id":1}]`))
@@ -107,7 +109,7 @@ func TestSendAction(t *testing.T) {
 		}))
 		defer server.Close()
 
-		address := strings.TrimPrefix(server.URL, "http://")
+		address := strings.TrimPrefix(server.URL, constants.BackendHTTPScheme)
 		cl := New(address, "test-password")
 
 		resp, err := cl.SendAction("test.action", []byte(`[{"id":1}]`))
@@ -151,8 +153,8 @@ func TestSendAction(t *testing.T) {
 func TestSendMigrations(t *testing.T) {
 	t.Run("successful migrations request", func(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path != "/internal/migrations" {
-				t.Errorf("Expected path /internal/migrations, got %s", r.URL.Path)
+			if r.URL.Path != constants.BackendMigrationsPath {
+				t.Errorf("Expected path %s, got %s", constants.BackendMigrationsPath, r.URL.Path)
 			}
 			if r.Method != "POST" {
 				t.Errorf("Expected POST, got %s", r.Method)
@@ -173,7 +175,7 @@ func TestSendMigrations(t *testing.T) {
 		}))
 		defer server.Close()
 
-		address := strings.TrimPrefix(server.URL, "http://")
+		address := strings.TrimPrefix(server.URL, constants.BackendHTTPScheme)
 		cl := New(address, "test-password")
 
 		resp, err := cl.SendMigrations("stats")
@@ -196,7 +198,7 @@ func TestSendMigrations(t *testing.T) {
 		}))
 		defer server.Close()
 
-		address := strings.TrimPrefix(server.URL, "http://")
+		address := strings.TrimPrefix(server.URL, constants.BackendHTTPScheme)
 		cl := New(address, "test-password")
 
 		resp, err := cl.SendMigrations("invalid")

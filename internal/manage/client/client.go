@@ -10,13 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
-)
-
-const (
-	httpScheme        = "http://"
-	handleRequestPath = "/internal/handle_request"
-	migrationsPath    = "/internal/migrations"
 )
 
 type Client struct {
@@ -36,7 +31,7 @@ func New(address, password string) *Client {
 
 // buildURL constructs the full URL from the client's address and the given path.
 func (c *Client) buildURL(path string) string {
-	return httpScheme + c.address + path
+	return constants.BackendHTTPScheme + c.address + path
 }
 
 // escapeForShell escapes single quotes in a string for safe use in shell commands.
@@ -90,7 +85,7 @@ func (c *Client) SendAction(action string, rawData []byte) (*http.Response, erro
 		return nil, fmt.Errorf("marshalling payload: %w", err)
 	}
 
-	url := c.buildURL(handleRequestPath)
+	url := c.buildURL(constants.BackendHandleRequestPath)
 
 	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
@@ -99,11 +94,11 @@ func (c *Client) SendAction(action string, rawData []byte) (*http.Response, erro
 	}
 
 	authHeader := base64.StdEncoding.EncodeToString([]byte(c.password))
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", constants.BackendContentType)
 	req.Header.Set("Authorization", authHeader)
 
 	logCurlCommand("POST", url, map[string]string{
-		"Content-Type":  "application/json",
+		"Content-Type":  constants.BackendContentType,
 		"Authorization": authHeader,
 	}, body)
 
@@ -135,7 +130,7 @@ func (c *Client) SendMigrations(command string) (*http.Response, error) {
 		return nil, fmt.Errorf("marshalling payload: %w", err)
 	}
 
-	url := c.buildURL(migrationsPath)
+	url := c.buildURL(constants.BackendMigrationsPath)
 
 	req, err := http.NewRequest("POST", url, bytes.NewReader(body))
 	if err != nil {
@@ -144,11 +139,11 @@ func (c *Client) SendMigrations(command string) (*http.Response, error) {
 	}
 
 	authHeader := base64.StdEncoding.EncodeToString([]byte(c.password))
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", constants.BackendContentType)
 	req.Header.Set("Authorization", authHeader)
 
 	logCurlCommand("POST", url, map[string]string{
-		"Content-Type":  "application/json",
+		"Content-Type":  constants.BackendContentType,
 		"Authorization": authHeader,
 	}, body)
 
