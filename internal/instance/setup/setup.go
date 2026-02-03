@@ -133,7 +133,7 @@ func randomSecret() ([]byte, error) {
 	buf := new(bytes.Buffer)
 	b64e := base64.NewEncoder(base64.StdEncoding, buf)
 
-	if _, err := io.Copy(b64e, io.LimitReader(rand.Reader, 32)); err != nil {
+	if _, err := io.Copy(b64e, io.LimitReader(rand.Reader, constants.DefaultSecretBytesLength)); err != nil {
 		if err := b64e.Close(); err != nil {
 			return nil, fmt.Errorf("closing base64 encoder: %w", err)
 		}
@@ -147,14 +147,13 @@ func randomSecret() ([]byte, error) {
 }
 
 func randomString(length int) ([]byte, error) {
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}:;<>,.?"
-
 	if length <= 0 {
 		return nil, fmt.Errorf("length must be positive, got %d", length)
 	}
 
 	result := make([]byte, length)
 
+	charset := constants.PasswordCharset
 	maxIndex := len(charset)
 
 	randomBytes := make([]byte, length)

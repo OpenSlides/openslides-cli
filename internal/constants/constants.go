@@ -10,18 +10,47 @@ import (
 
 // Instance directory structure
 const (
+	// NamespaceYAML inside the instance root directory is applied to create instance namespace
+	NamespaceYAML string = "namespace.yaml"
+
 	// StackDirName is the directory containing Kubernetes manifests
 	StackDirName string = "stack"
+
+	// DeploymentFileTemplate for OpenSlides deployment filenames inside the stack dir, i. e. autoupdate-deployment.yaml
+	DeploymentFileTemplate string = "%s-deployment.yaml"
 
 	// SecretsDirName is the directory containing sensitive files
 	SecretsDirName string = "secrets"
 
-	// TLS certificate secret name and filename for HTTPS
-	TlsCertSecret     string = "tls-letsencrypt"             // Kubernetes Secret resource name
-	TlsCertSecretYAML string = "tls-letsencrypt-secret.yaml" // Secret manifest filename
+	// AdminSecretsFile contains the superadmin password
+	AdminSecretsFile string = "superadmin"
 
-	// The template string for OpenSlides deployment filenames i. e. autoupdate-deployment.yaml
-	DeploymentFileTemplate string = "%s-deployment.yaml"
+	// PgPasswordFile contains the PostgreSQL database password
+	PgPasswordFile string = "postgres_password"
+
+	// AuthTokenKey contains the authentication token secret
+	AuthTokenKey string = "auth_token_key"
+
+	// AuthCookieKey contains the cookie signing secret
+	AuthCookieKey string = "auth_cookie_key"
+
+	// InternalAuthPassword contains the internal service authentication password
+	InternalAuthPassword string = "internal_auth_password"
+
+	// TlsCertSecret is kubernetes secret name for HTTPS
+	TlsCertSecret string = "tls-letsencrypt"
+
+	// TlsCertSecretYAML is the manifest file for the kubernetes secret enabling HTTPS
+	TlsCertSecretYAML string = "tls-letsencrypt-secret.yaml"
+
+	// DefaultConfigFile is the filename used, if none is set in config file(s)
+	DefaultConfigFile string = "os-config.yaml"
+
+	// CertCertName is filename for the HTTPS certificate file
+	CertCertName string = "cert_crt"
+
+	// CertKeyName is filename for the HTTPS key file
+	CertKeyName string = "cert_key"
 )
 
 // File permissions
@@ -42,34 +71,25 @@ const (
 	StackFilePerm fs.FileMode = 0644
 )
 
-// Password generation defaults for setup
+// Secret generation defaults
 const (
+	// DefaultSuperadminPasswordLength is the default length for superadmin passwords
 	DefaultSuperadminPasswordLength int = 20
-	DefaultPostgresPasswordLength   int = 40
-)
 
-// Certificate file names (for HTTPS) for setup
-const (
-	CertCertName string = "cert_crt" // Certificate file
-	CertKeyName  string = "cert_key" // Private key file
-)
+	// DefaultPostgresPasswordLength is the default length for database passwords
+	DefaultPostgresPasswordLength int = 40
 
-// Secret file names
-const (
-	// AdminSecretsFile contains the superadmin password
-	AdminSecretsFile string = "superadmin"
+	// DefaultSecretBytesLength is the number of random bytes used for base64-encoded secrets.
+	// These 32 bytes produce a 44-character base64 string used for:
+	// - auth_token_key
+	// - auth_cookie_key
+	// - internal_auth_password
+	DefaultSecretBytesLength int64 = 32
 
-	// PgPasswordFile contains the PostgreSQL database password
-	PgPasswordFile string = "postgres_password"
-
-	// AuthTokenKey contains the authentication token secret
-	AuthTokenKey string = "auth_token_key"
-
-	// AuthCookieKey contains the cookie signing secret
-	AuthCookieKey string = "auth_cookie_key"
-
-	// InternalAuthPassword contains the internal service authentication password
-	InternalAuthPassword string = "internal_auth_password"
+	// PasswordCharset defines allowed characters for randomly generated passwords.
+	// Includes lowercase, uppercase, digits, and safe special characters.
+	// Used for generating postgres_password and superadmin passwords.
+	PasswordCharset string = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]"
 )
 
 // Default timeouts for Kubernetes operations
@@ -79,8 +99,33 @@ const (
 	DefaultNamespaceTimeout  time.Duration = 5 * time.Minute // Wait for namespace deletion (includes finalizers)
 )
 
-// OpenSlides K8s resource names
+// constants for wait functions in health_check.go
 const (
+	// progress bar settings
+	ProgressBarWidth int           = 40
+	Saucer           string        = "█"
+	SaucerPadding    string        = "░"
+	BarStart         string        = "["
+	BarEnd           string        = "]"
+	ThrottleDuration time.Duration = 100 * time.Millisecond
+
+	// wait function settings
+	TickerDuration time.Duration = 2 * time.Second // checks health conditions every tick
+	IconReady      string        = "✓"             // for pod/deployment status printouts
+	IconNotReady   string        = "✗"
+)
+
+// OpenSlides K8s resource names and templates
+const (
+	// BackendmanageDeploymentName is the Kubernetes Deployment name for backendmanage
 	BackendmanageDeploymentName string = "backendmanage"
-	BackendmanageContainerName  string = "backendmanage"
+
+	// BackendmanageContainerName is the container name within the backendmanage deployment
+	BackendmanageContainerName string = "backendmanage"
+
+	// BackendmanageImageTemplate is the format string for backendmanage container images.
+	BackendmanageImageTemplate string = "%s/openslides-backend:%s"
+
+	// BackendmanagePatchTemplate is the JSON patch template for updating the backendmanage image.
+	BackendmanagePatchTemplate string = `{"spec":{"template":{"spec":{"containers":[{"name":"%s","image":"%s"}]}}}}`
 )

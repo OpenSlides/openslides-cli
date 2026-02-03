@@ -318,8 +318,8 @@ func TestGetFilename(t *testing.T) {
 			"other": "value",
 		}
 		result := getFilename(cfg)
-		if result != "output.yml" {
-			t.Errorf("Expected output.yml, got %s", result)
+		if result != constants.DefaultConfigFile {
+			t.Errorf("Expected %s, got %s", constants.DefaultConfigFile, result)
 		}
 	})
 
@@ -328,8 +328,8 @@ func TestGetFilename(t *testing.T) {
 			"filename": "",
 		}
 		result := getFilename(cfg)
-		if result != "output.yml" {
-			t.Errorf("Expected output.yml for empty filename, got %s", result)
+		if result != constants.DefaultConfigFile {
+			t.Errorf("Expected %s for empty filename, got %s", constants.DefaultConfigFile, result)
 		}
 	})
 
@@ -338,8 +338,8 @@ func TestGetFilename(t *testing.T) {
 			"filename": 123,
 		}
 		result := getFilename(cfg)
-		if result != "output.yml" {
-			t.Errorf("Expected output.yml for non-string filename, got %s", result)
+		if result != constants.DefaultConfigFile {
+			t.Errorf("Expected %s for non-string filename, got %s", constants.DefaultConfigFile, result)
 		}
 	})
 }
@@ -469,7 +469,7 @@ func TestCreateDirAndFiles(t *testing.T) {
 
 	t.Run("invalid template path", func(t *testing.T) {
 		cfg := map[string]any{
-			"filename": "output.yml",
+			"filename": constants.DefaultConfigFile,
 		}
 		err := CreateDirAndFiles(tmpdir, false, "nonexistent-template", cfg)
 		if err == nil {
@@ -517,7 +517,7 @@ func TestCreateDirAndFiles(t *testing.T) {
 
 		outDir := filepath.Join(tmpdir, "output2")
 		cfg := map[string]any{
-			"filename": "output.yml",
+			"filename": constants.DefaultConfigFile,
 		}
 
 		err := CreateDirAndFiles(outDir, true, tplDir, cfg)

@@ -81,11 +81,11 @@ func UpdateBackendmanageCmd() *cobra.Command {
 }
 
 func updateBackendmanage(ctx context.Context, k8sClient *client.Client, namespace, tag, containerRegistry string, timeout time.Duration) error {
-	image := fmt.Sprintf("%s/openslides-backend:%s", containerRegistry, tag)
+	image := fmt.Sprintf(constants.BackendmanageImageTemplate, containerRegistry, tag)
 
 	logger.Info("Updating deployment to image: %s", image)
 
-	patch := fmt.Appendf(nil, `{"spec":{"template":{"spec":{"containers":[{"name":"%s","image":"%s"}]}}}}`, constants.BackendmanageContainerName, image)
+	patch := fmt.Appendf(nil, constants.BackendmanagePatchTemplate, constants.BackendmanageContainerName, image)
 
 	updated, err := k8sClient.Clientset().AppsV1().Deployments(namespace).Patch(
 		ctx,
@@ -109,11 +109,11 @@ func updateBackendmanage(ctx context.Context, k8sClient *client.Client, namespac
 }
 
 func revertBackendmanage(ctx context.Context, k8sClient *client.Client, namespace, tag, containerRegistry string, timeout time.Duration) error {
-	image := fmt.Sprintf("%s/openslides-backend:%s", containerRegistry, tag)
+	image := fmt.Sprintf(constants.BackendmanageImageTemplate, containerRegistry, tag)
 
 	logger.Info("Reverting deployment to image: %s", image)
 
-	patch := fmt.Appendf(nil, `{"spec":{"template":{"spec":{"containers":[{"name":"%s","image":"%s"}]}}}}`, constants.BackendmanageContainerName, image)
+	patch := fmt.Appendf(nil, constants.BackendmanagePatchTemplate, constants.BackendmanageContainerName, image)
 
 	updated, err := k8sClient.Clientset().AppsV1().Deployments(namespace).Patch(
 		ctx,

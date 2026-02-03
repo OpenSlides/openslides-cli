@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
 	"github.com/schollz/progressbar/v3"
@@ -13,11 +14,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
-
-const (
-	// Width of the progress bar for wait functions
-	progressBarWidth int = 40
 )
 
 // HealthStatus represents the health status of an instance
@@ -73,9 +69,9 @@ func printHealthStatus(namespace string, status *HealthStatus) {
 
 	for _, pod := range status.Pods {
 		ready := isPodReady(&pod)
-		icon := "✗"
+		icon := constants.IconNotReady
 		if ready {
-			icon = "✓"
+			icon = constants.IconReady
 		}
 		fmt.Printf("  %s %-50s %s\n", icon, pod.Name, pod.Status.Phase)
 	}
@@ -103,7 +99,7 @@ func checkHealth(ctx context.Context, k8sClient *client.Client, namespace string
 func waitForInstanceHealthy(ctx context.Context, k8sClient *client.Client, namespace string, timeout time.Duration) error {
 	logger.Info("Waiting for instance to become healthy (timeout: %v)", timeout)
 
-	ticker := time.NewTicker(2 * time.Second)
+	ticker := time.NewTicker(constants.TickerDuration)
 	defer ticker.Stop()
 
 	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
@@ -160,15 +156,15 @@ func waitForInstanceHealthy(ctx context.Context, k8sClient *client.Client, names
 func createProgressBar(max int, description string) *progressbar.ProgressBar {
 	return progressbar.NewOptions(max,
 		progressbar.OptionSetDescription(description),
-		progressbar.OptionSetWidth(progressBarWidth),
+		progressbar.OptionSetWidth(constants.ProgressBarWidth),
 		progressbar.OptionShowCount(),
 		progressbar.OptionSetTheme(progressbar.Theme{
-			Saucer:        "█",
-			SaucerPadding: "░",
-			BarStart:      "[",
-			BarEnd:        "]",
+			Saucer:        constants.Saucer,
+			SaucerPadding: constants.SaucerPadding,
+			BarStart:      constants.BarStart,
+			BarEnd:        constants.BarEnd,
 		}),
-		progressbar.OptionThrottle(100*time.Millisecond),
+		progressbar.OptionThrottle(constants.ThrottleDuration),
 		progressbar.OptionClearOnFinish(),
 	)
 }
@@ -212,9 +208,9 @@ func printDeploymentStatus(namespace, name string, deployment *appsv1.Deployment
 	if len(deployment.Status.Conditions) > 0 {
 		fmt.Println("\nConditions:")
 		for _, condition := range deployment.Status.Conditions {
-			icon := "✓"
+			icon := constants.IconReady
 			if condition.Status != corev1.ConditionTrue {
-				icon = "✗"
+				icon = constants.IconNotReady
 			}
 			fmt.Printf("  %s %-20s %s\n", icon, condition.Type, condition.Message)
 		}
@@ -226,7 +222,7 @@ func printDeploymentStatus(namespace, name string, deployment *appsv1.Deployment
 func waitForDeploymentReady(ctx context.Context, k8sClient *client.Client, namespace, deploymentName string, timeout time.Duration) error {
 	logger.Debug("Waiting for deployment %s to be ready (timeout: %v)", deploymentName, timeout)
 
-	ticker := time.NewTicker(2 * time.Second)
+	ticker := time.NewTicker(constants.TickerDuration)
 	defer ticker.Stop()
 
 	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
@@ -277,7 +273,7 @@ func waitForDeploymentReady(ctx context.Context, k8sClient *client.Client, names
 func waitForNamespaceDeletion(ctx context.Context, k8sClient *client.Client, namespace string, timeout time.Duration) error {
 	clientset := k8sClient.Clientset()
 
-	ticker := time.NewTicker(2 * time.Second)
+	ticker := time.NewTicker(constants.TickerDuration)
 	defer ticker.Stop()
 
 	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)

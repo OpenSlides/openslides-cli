@@ -69,7 +69,7 @@ func TestRandomString(t *testing.T) {
 	})
 
 	t.Run("contains only allowed characters", func(t *testing.T) {
-		const allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+[]{}:;<>,.?"
+		allowedChars := constants.PasswordCharset
 
 		str, err := randomString(100)
 		if err != nil {

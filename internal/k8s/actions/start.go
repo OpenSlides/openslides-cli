@@ -19,8 +19,6 @@ Examples:
   osmanage k8s start ./my.instance.dir.org
   osmanage k8s start ./my.instance.dir.org --skip-ready-check
   osmanage k8s start ./my.instance.dir.org --kubeconfig ~/.kube/config --timeout 30s`
-
-	namespaceYAML = "namespace.yaml"
 )
 
 func StartCmd() *cobra.Command {
@@ -47,7 +45,7 @@ func StartCmd() *cobra.Command {
 
 		ctx := context.Background()
 
-		namespacePath := filepath.Join(instanceDir, namespaceYAML)
+		namespacePath := filepath.Join(instanceDir, constants.NamespaceYAML)
 		namespace, err := applyManifest(ctx, k8sClient, namespacePath)
 		if err != nil {
 			return fmt.Errorf("applying namespace: %w", err)

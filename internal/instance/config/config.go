@@ -215,7 +215,7 @@ func getFilename(cfg map[string]any) string {
 	if fn, ok := cfg["filename"].(string); ok && fn != "" {
 		return fn
 	}
-	return "output.yml"
+	return constants.DefaultConfigFile
 }
 
 type TemplateFunctions struct {
