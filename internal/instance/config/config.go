@@ -249,13 +249,20 @@ func marshalContent(ws int, v any) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("marshalling content: %w", err)
 	}
-	result := "\n"
+
+	indent := strings.Repeat(" ", ws)
+	var result strings.Builder
+	result.WriteString("\n")
+
 	for line := range strings.SplitSeq(string(data), "\n") {
 		if len(line) != 0 {
-			result += fmt.Sprintf("%s%s\n", strings.Repeat(" ", ws), line)
+			result.WriteString(indent)
+			result.WriteString(line)
+			result.WriteByte('\n')
 		}
 	}
-	return strings.TrimRight(result, "\n"), nil
+
+	return strings.TrimRight(result.String(), "\n"), nil
 }
 
 func envMapToK8S(v map[string]any) []map[string]string {
