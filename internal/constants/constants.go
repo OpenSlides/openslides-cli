@@ -144,3 +144,71 @@ const (
 	// BackendContentType is the Content-Type header for backend requests
 	BackendContentType string = "application/json"
 )
+
+// PostgreSQL datastore environment variable keys (used by get command)
+const (
+	// EnvDatabaseHost is the environment variable for PostgreSQL host
+	EnvDatabaseHost string = "DATABASE_HOST"
+
+	// EnvDatabasePort is the environment variable for PostgreSQL port
+	EnvDatabasePort string = "DATABASE_PORT"
+
+	// EnvDatabaseUser is the environment variable for PostgreSQL user
+	EnvDatabaseUser string = "DATABASE_USER"
+
+	// EnvDatabaseName is the environment variable for PostgreSQL database name
+	EnvDatabaseName string = "DATABASE_NAME"
+
+	// EnvDatabasePasswordFile is the environment variable for PostgreSQL password file path
+	EnvDatabasePasswordFile string = "DATABASE_PASSWORD_FILE"
+
+	// EnvOpenSlidesDevelopment is the environment variable for development mode
+	EnvOpenSlidesDevelopment string = "OPENSLIDES_DEVELOPMENT"
+)
+
+// PostgreSQL datastore environment variable values
+const (
+	// DevelopmentModeDisabled is the value to disable OpenSlides development mode
+	DevelopmentModeDisabled string = "false"
+
+	// DevelopmentModeEnabled is the value to enable OpenSlides development mode
+	DevelopmentModeEnabled string = "true"
+)
+
+// OpenSlides datastore defaults
+const (
+	// DefaultOrganizationID is the organization ID in OpenSlides (always 1)
+	DefaultOrganizationID int = 1
+
+	// DefaultOrganizationFields are the default fields fetched for organization queries
+	DefaultOrganizationFields string = "id,name"
+)
+
+// Migration command defaults and configuration
+const (
+	// DefaultMigrationProgressInterval is the default interval for checking migration progress
+	DefaultMigrationProgressInterval time.Duration = 1 * time.Second
+
+	// MigrationStatusRunning indicates a migration is currently in progress
+	MigrationStatusRunning string = "migration_running"
+
+	// MigrationMaxRetries is the maximum number of retry attempts for failed migration requests
+	MigrationMaxRetries int = 5
+
+	// MigrationRetryDelay is the delay between retry attempts
+	MigrationRetryDelay time.Duration = 5 * time.Second
+
+	// MigrationTotalTimeout is the maximum time allowed for all retry attempts
+	MigrationTotalTimeout time.Duration = 3 * time.Minute
+)
+
+// Migration stats field names (for ordered output)
+var MigrationStatsFields = []string{
+	"current_migration_index",
+	"target_migration_index",
+	"positions",
+	"events",
+	"partially_migrated_positions",
+	"fully_migrated_positions",
+	"status",
+}
