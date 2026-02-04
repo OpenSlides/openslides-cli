@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
@@ -39,7 +40,7 @@ func ScaleCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("service")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		if *service == "" {
+		if strings.TrimSpace(*service) == "" {
 			return fmt.Errorf("--service cannot be empty")
 		}
 

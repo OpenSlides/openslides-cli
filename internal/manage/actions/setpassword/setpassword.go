@@ -3,6 +3,7 @@ package setpassword
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/OpenSlides/openslides-cli/internal/logger"
 	"github.com/OpenSlides/openslides-cli/internal/manage/client"
@@ -35,13 +36,7 @@ func Cmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("password")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		if *address == "" {
-			return fmt.Errorf("--address cannot be empty")
-		}
-		if *passwordFile == "" {
-			return fmt.Errorf("--password-file cannot be empty")
-		}
-		if *password == "" {
+		if strings.TrimSpace(*password) == "" {
 			return fmt.Errorf("--password cannot be empty")
 		}
 		if *userID == 0 {

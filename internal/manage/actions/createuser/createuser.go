@@ -50,13 +50,6 @@ func Cmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("password-file")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		if *address == "" {
-			return fmt.Errorf("--address cannot be empty")
-		}
-		if *passwordFile == "" {
-			return fmt.Errorf("--password-file cannot be empty")
-		}
-
 		logger.Info("=== CREATE USER ===")
 
 		var input string

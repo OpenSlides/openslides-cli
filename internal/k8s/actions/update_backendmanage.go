@@ -3,6 +3,7 @@ package actions
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/OpenSlides/openslides-cli/internal/constants"
@@ -41,10 +42,10 @@ func UpdateBackendmanageCmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("container-registry")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		if *tag == "" {
+		if strings.TrimSpace(*tag) == "" {
 			return fmt.Errorf("--tag cannot be empty")
 		}
-		if *containerRegistry == "" {
+		if strings.TrimSpace(*containerRegistry) == "" {
 			return fmt.Errorf("--container-registry cannot be empty")
 		}
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
@@ -43,10 +44,10 @@ func Cmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("superadmin-password")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		if *dbPassword == "" {
+		if strings.TrimSpace(*dbPassword) == "" {
 			return fmt.Errorf("--db-password cannot be empty")
 		}
-		if *superadminPassword == "" {
+		if strings.TrimSpace(*superadminPassword) == "" {
 			return fmt.Errorf("--superadmin-password cannot be empty")
 		}
 

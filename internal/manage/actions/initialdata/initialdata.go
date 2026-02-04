@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/OpenSlides/openslides-cli/internal/logger"
 	"github.com/OpenSlides/openslides-cli/internal/manage/client"
@@ -54,13 +55,7 @@ func Cmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("superadmin-password-file")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		if *address == "" {
-			return fmt.Errorf("--address cannot be empty")
-		}
-		if *passwordFile == "" {
-			return fmt.Errorf("--password-file cannot be empty")
-		}
-		if *superadminPasswordFile == "" {
+		if strings.TrimSpace(*superadminPasswordFile) == "" {
 			return fmt.Errorf("--superadmin-password-file cannot be empty")
 		}
 
