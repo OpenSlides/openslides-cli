@@ -181,6 +181,7 @@ func TestGetNodeCondition_Exists(t *testing.T) {
 	condition := GetNodeCondition(node, corev1.NodeReady)
 	if condition == nil {
 		t.Fatal("Expected to find Ready condition")
+		return
 	}
 
 	if condition.Type != corev1.NodeReady {
@@ -240,6 +241,7 @@ func TestGetNodeCondition_MultipleConditions(t *testing.T) {
 	condition := GetNodeCondition(node, corev1.NodeDiskPressure)
 	if condition == nil {
 		t.Fatal("Expected to find DiskPressure condition")
+		return
 	}
 
 	if condition.Type != corev1.NodeDiskPressure {

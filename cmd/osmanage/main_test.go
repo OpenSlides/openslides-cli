@@ -19,6 +19,7 @@ func TestRootCmd(t *testing.T) {
 	logLevelFlag := cmd.PersistentFlags().Lookup("log-level")
 	if logLevelFlag == nil {
 		t.Fatal("Expected log-level flag to exist")
+		return
 	}
 	if logLevelFlag.DefValue != "warn" {
 		t.Errorf("Expected default log-level 'info', got %s", logLevelFlag.DefValue)
