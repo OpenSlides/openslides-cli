@@ -15,6 +15,7 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
+	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
 
 	"github.com/OpenSlides/openslides-go/datastore"
@@ -28,10 +29,29 @@ const (
 Use options to narrow down output.
 
 Examples:
-  osmanage get user --fields first_name,last_name --filter id=1
-  osmanage get user --filter is_active=true
-  osmanage get meeting --fields name,start_time --filter-raw '{"field":"start_time","operator":">=","value":1609459200}'
-  osmanage get user --filter-raw '{"and_filter":[{"field":"first_name","operator":"~=","value":"Ad"},{"field":"is_active","operator":"=","value":true}]}'
+  # Filter by field
+  osmanage get user --filter is_active=true \
+    --postgres-host localhost --postgres-port 5432 \
+    --postgres-user openslides --postgres-database openslides \
+    --postgres-password-file ./secrets/postgres_password
+
+  # Select specific fields
+  osmanage get user --fields first_name,last_name,email \
+    --postgres-host localhost --postgres-port 5432 \
+    --postgres-user openslides --postgres-database openslides \
+    --postgres-password-file ./secrets/postgres_password
+
+  # Complex filter with operators
+  osmanage get meeting --filter-raw '{"field":"start_time","operator":">=","value":1609459200}' \
+    --postgres-host localhost --postgres-port 5432 \
+    --postgres-user openslides --postgres-database openslides \
+    --postgres-password-file ./secrets/postgres_password
+
+  # Combined AND filter
+  osmanage get user --filter-raw '{"and_filter":[{"field":"first_name","operator":"~=","value":"^Ad"},{"field":"is_active","operator":"=","value":true}]}' \
+    --postgres-host localhost --postgres-port 5432 \
+    --postgres-user openslides --postgres-database openslides \
+    --postgres-password-file ./secrets/postgres_password
 
 Supported operators in filter-raw:
   =   : Equal
@@ -41,6 +61,11 @@ Supported operators in filter-raw:
   >=  : Greater than or equal
   <=  : Less than or equal
   ~=  : Regex match (pattern matching)
+
+Supported collections:
+  - user
+  - meeting
+  - organization
 
 Note: Filtering is done in-memory after fetching. Field selection reduces memory usage by only loading requested fields.`
 )
@@ -64,11 +89,18 @@ func Cmd() *cobra.Command {
 	}
 
 	// PostgreSQL connection flags
-	postgresHost := cmd.Flags().String("postgres-host", "localhost", "PostgreSQL host")
-	postgresPort := cmd.Flags().String("postgres-port", "5432", "PostgreSQL port")
-	postgresUser := cmd.Flags().String("postgres-user", "instance_user", "PostgreSQL user")
-	postgresDatabase := cmd.Flags().String("postgres-database", "instance_db", "PostgreSQL database")
-	postgresPasswordFile := cmd.Flags().String("postgres-password-file", "/secrets/postgres-password", "PostgreSQL password file")
+	postgresHost := cmd.Flags().String("postgres-host", "", "PostgreSQL host (required)")
+	postgresPort := cmd.Flags().String("postgres-port", "", "PostgreSQL port (required)")
+	postgresUser := cmd.Flags().String("postgres-user", "", "PostgreSQL user (required)")
+	postgresDatabase := cmd.Flags().String("postgres-database", "", "PostgreSQL database (required)")
+	postgresPasswordFile := cmd.Flags().String("postgres-password-file", "", "PostgreSQL password file (required)")
+
+	// Mark PostgreSQL flags as required
+	_ = cmd.MarkFlagRequired("postgres-host")
+	_ = cmd.MarkFlagRequired("postgres-port")
+	_ = cmd.MarkFlagRequired("postgres-user")
+	_ = cmd.MarkFlagRequired("postgres-database")
+	_ = cmd.MarkFlagRequired("postgres-password-file")
 
 	// Query flags
 	fields := cmd.Flags().StringSlice("fields", nil, "only include the provided fields in output")
@@ -102,12 +134,12 @@ func Cmd() *cobra.Command {
 
 		// Create environment map for datastore connection
 		envMap := map[string]string{
-			"DATABASE_HOST":          *postgresHost,
-			"DATABASE_PORT":          *postgresPort,
-			"DATABASE_USER":          *postgresUser,
-			"DATABASE_NAME":          *postgresDatabase,
-			"DATABASE_PASSWORD_FILE": *postgresPasswordFile,
-			"OPENSLIDES_DEVELOPMENT": "false",
+			constants.EnvDatabaseHost:          *postgresHost,
+			constants.EnvDatabasePort:          *postgresPort,
+			constants.EnvDatabaseUser:          *postgresUser,
+			constants.EnvDatabaseName:          *postgresDatabase,
+			constants.EnvDatabasePasswordFile:  *postgresPasswordFile,
+			constants.EnvOpenSlidesDevelopment: constants.DevelopmentModeDisabled,
 		}
 
 		// Initialize datastore flow
@@ -163,7 +195,7 @@ func queryUsers(ctx context.Context, fetch *dsfetch.Fetch, filter map[string]str
 
 	// Get user IDs from organization
 	var userIDs []int
-	fetch.Organization_UserIDs(1).Lazy(&userIDs)
+	fetch.Organization_UserIDs(constants.DefaultOrganizationID).Lazy(&userIDs)
 	if err := fetch.Execute(ctx); err != nil {
 		return nil, fmt.Errorf("fetching user IDs: %w", err)
 	}
@@ -213,8 +245,8 @@ func queryMeetings(ctx context.Context, fetch *dsfetch.Fetch, filter map[string]
 
 	// Get active and archived meeting IDs
 	var activeMeetingIDs, archivedMeetingIDs []int
-	fetch.Organization_ActiveMeetingIDs(1).Lazy(&activeMeetingIDs)
-	fetch.Organization_ArchivedMeetingIDs(1).Lazy(&archivedMeetingIDs)
+	fetch.Organization_ActiveMeetingIDs(constants.DefaultOrganizationID).Lazy(&activeMeetingIDs)
+	fetch.Organization_ArchivedMeetingIDs(constants.DefaultOrganizationID).Lazy(&archivedMeetingIDs)
 
 	if err := fetch.Execute(ctx); err != nil {
 		return nil, fmt.Errorf("fetching meeting IDs: %w", err)
@@ -264,21 +296,22 @@ func queryMeetings(ctx context.Context, fetch *dsfetch.Fetch, filter map[string]
 func queryOrganization(ctx context.Context, fetch *dsfetch.Fetch, fields []string, existsOnly bool) (any, error) {
 	if existsOnly {
 		var orgID int
-		fetch.Organization_ID(1).Lazy(&orgID)
+		fetch.Organization_ID(constants.DefaultOrganizationID).Lazy(&orgID)
 		if err := fetch.Execute(ctx); err != nil {
 			return false, nil
 		}
-		return orgID == 1, nil
+		return orgID == constants.DefaultOrganizationID, nil
 	}
 
 	fieldsToFetch := fields
 	if len(fieldsToFetch) == 0 {
-		fieldsToFetch = []string{"id", "name"}
+		// Use default organization fields
+		fieldsToFetch = strings.Split(constants.DefaultOrganizationFields, ",")
 	}
 
 	org := make(map[string]any)
 	for _, field := range fieldsToFetch {
-		value, err := fetchField(fetch, "organization", 1, field)
+		value, err := fetchField(fetch, "organization", constants.DefaultOrganizationID, field)
 		if err != nil {
 			return nil, fmt.Errorf("fetching organization field %s: %w", field, err)
 		}
