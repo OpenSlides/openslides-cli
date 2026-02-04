@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/OpenSlides/openslides-cli/internal/constants"
 )
 
 func TestMigrationResponse_Faulty(t *testing.T) {
@@ -43,7 +45,7 @@ func TestMigrationResponse_Running(t *testing.T) {
 		status  string
 		running bool
 	}{
-		{"running", "migration_running", true},
+		{"running", constants.MigrationStatusRunning, true},
 		{"completed", "completed", false},
 		{"failed", "failed", false},
 		{"empty", "", false},
@@ -72,6 +74,7 @@ func TestMigrationResponse_GetOutput(t *testing.T) {
 			t.Errorf("Expected 'Migration completed', got %s", output)
 		}
 	})
+
 	t.Run("stats command", func(t *testing.T) {
 		stats := map[string]any{
 			"current_migration_index":      68,
@@ -93,6 +96,7 @@ func TestMigrationResponse_GetOutput(t *testing.T) {
 		}
 
 		// Verify all expected fields are present
+		// Using subset of MigrationStatsFields for validation
 		expectedFields := []string{
 			"current_migration_index",
 			"target_migration_index",
@@ -106,6 +110,7 @@ func TestMigrationResponse_GetOutput(t *testing.T) {
 			}
 		}
 	})
+
 	t.Run("faulty response", func(t *testing.T) {
 		resp := MigrationResponse{
 			Success:   false,
@@ -133,7 +138,7 @@ func TestMigrationResponse_FormatStats(t *testing.T) {
 			"fully_migrated_positions":     0,
 		}
 		statsJSON, _ := json.Marshal(stats)
-		resp := MigrationResponse{Stats: statsJSON}
+		resp := &MigrationResponse{Stats: statsJSON}
 
 		output, err := resp.formatStats()
 		if err != nil {
@@ -171,7 +176,7 @@ func TestMigrationResponse_FormatStats(t *testing.T) {
 			"current_migration_index": 70,
 		}
 		statsJSON, _ := json.Marshal(stats)
-		resp := MigrationResponse{Stats: statsJSON}
+		resp := &MigrationResponse{Stats: statsJSON}
 
 		output, err := resp.formatStats()
 		if err != nil {
@@ -188,7 +193,7 @@ func TestMigrationResponse_FormatStats(t *testing.T) {
 	})
 
 	t.Run("invalid JSON", func(t *testing.T) {
-		resp := MigrationResponse{Stats: json.RawMessage("invalid json")}
+		resp := &MigrationResponse{Stats: json.RawMessage("invalid json")}
 
 		_, err := resp.formatStats()
 		if err == nil {
@@ -209,6 +214,8 @@ func TestIsRetryableError(t *testing.T) {
 		{"timeout", "i/o timeout", true},
 		{"eof", "unexpected EOF", true},
 		{"server error 503", "server returned 503", true},
+		{"server error 502", "bad gateway 502", true},
+		{"server error 504", "gateway timeout 504", true},
 		{"client error 404", "404 not found", false},
 		{"auth error", "unauthorized", false},
 		{"parse error", "invalid JSON", false},
