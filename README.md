@@ -203,7 +203,7 @@ osmanage config <instance-dir> [flags]
 - `-f, --force`: Overwrite existing files
 
 **Behavior:**
-- Merges multiple YAML config files (later files override earlier ones)
+- Merges multiple YAML config files (later file's fields override earlier ones)
 - Renders templates with merged configuration
 - Creates or overwrites deployment files in the instance directory
 

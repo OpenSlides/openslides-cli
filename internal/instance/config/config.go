@@ -27,7 +27,7 @@ const (
 
 Generates deployment files (Docker Compose or Kubernetes manifests) using
 templates and YAML configuration files. Multiple config files are deep-merged
-in order, with later files overriding earlier ones.
+in order, with later file's fields overriding earlier ones.
 
 Template functions available:
   • marshalContent - Marshal YAML content with indentation
