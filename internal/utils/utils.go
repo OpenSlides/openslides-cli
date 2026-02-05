@@ -11,11 +11,9 @@ import (
 	"github.com/OpenSlides/openslides-cli/internal/logger"
 )
 
-const fileMode fs.FileMode = 0666
-
 // CreateFile creates a file in the given directory with the given content.
 // Use a truthy value for force to override an existing file.
-func CreateFile(dir string, force bool, name string, content []byte) error {
+func CreateFile(dir string, force bool, name string, content []byte, perm fs.FileMode) error {
 	p := path.Join(dir, name)
 
 	pExists, err := fileExists(p)
@@ -27,7 +25,7 @@ func CreateFile(dir string, force bool, name string, content []byte) error {
 		return nil
 	}
 
-	if err := os.WriteFile(p, content, fileMode); err != nil {
+	if err := os.WriteFile(p, content, perm); err != nil {
 		return fmt.Errorf("creating and writing to file %q: %w", p, err)
 	}
 	return nil

@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/OpenSlides/openslides-cli/internal/constants"
 )
 
 func TestReadFromFileOrStdin(t *testing.T) {
@@ -118,7 +120,7 @@ func TestCreateFile(t *testing.T) {
 
 	t.Run("create new file", func(t *testing.T) {
 		content := []byte("test content")
-		err := CreateFile(tmpdir, false, "test.txt", content)
+		err := CreateFile(tmpdir, false, "test.txt", content, constants.StackFilePerm)
 		if err != nil {
 			t.Errorf("CreateFile() error = %v", err)
 		}
@@ -130,17 +132,26 @@ func TestCreateFile(t *testing.T) {
 		if string(data) != string(content) {
 			t.Errorf("File content = %s, want %s", string(data), string(content))
 		}
+
+		// Verify permissions
+		fileInfo, err := os.Stat(filepath.Join(tmpdir, "test.txt"))
+		if err != nil {
+			t.Fatalf("failed to stat file: %v", err)
+		}
+		if fileInfo.Mode().Perm() != constants.StackFilePerm {
+			t.Errorf("File permissions = %v, want %v", fileInfo.Mode().Perm(), constants.StackFilePerm)
+		}
 	})
 
 	t.Run("don't overwrite without force", func(t *testing.T) {
 		filename := "existing.txt"
 		original := []byte("original")
-		if err := CreateFile(tmpdir, false, filename, original); err != nil {
+		if err := CreateFile(tmpdir, false, filename, original, constants.StackFilePerm); err != nil {
 			t.Fatalf("failed to create initial file: %v", err)
 		}
 
 		newContent := []byte("new content")
-		if err := CreateFile(tmpdir, false, filename, newContent); err != nil {
+		if err := CreateFile(tmpdir, false, filename, newContent, constants.StackFilePerm); err != nil {
 			t.Fatalf("CreateFile() error = %v", err)
 		}
 
@@ -156,12 +167,12 @@ func TestCreateFile(t *testing.T) {
 	t.Run("overwrite with force", func(t *testing.T) {
 		filename := "force.txt"
 		original := []byte("original")
-		if err := CreateFile(tmpdir, true, filename, original); err != nil {
+		if err := CreateFile(tmpdir, true, filename, original, constants.StackFilePerm); err != nil {
 			t.Fatalf("failed to create initial file: %v", err)
 		}
 
 		newContent := []byte("new content")
-		if err := CreateFile(tmpdir, true, filename, newContent); err != nil {
+		if err := CreateFile(tmpdir, true, filename, newContent, constants.StackFilePerm); err != nil {
 			t.Fatalf("CreateFile() error = %v", err)
 		}
 
@@ -171,6 +182,56 @@ func TestCreateFile(t *testing.T) {
 		}
 		if string(data) != string(newContent) {
 			t.Error("File was not overwritten with force flag")
+		}
+	})
+
+	t.Run("create secret file with secret permissions", func(t *testing.T) {
+		filename := "secret.txt"
+		content := []byte("super secret")
+		err := CreateFile(tmpdir, false, filename, content, constants.SecretFilePerm)
+		if err != nil {
+			t.Errorf("CreateFile() error = %v", err)
+		}
+
+		// Verify permissions
+		fileInfo, err := os.Stat(filepath.Join(tmpdir, filename))
+		if err != nil {
+			t.Fatalf("failed to stat file: %v", err)
+		}
+		if fileInfo.Mode().Perm() != constants.SecretFilePerm {
+			t.Errorf("Secret file permissions = %v, want %v", fileInfo.Mode().Perm(), constants.SecretFilePerm)
+		}
+	})
+
+	t.Run("different permissions for different file types", func(t *testing.T) {
+		// Create a manifest file with stack permissions
+		manifestFile := "deployment.yaml"
+		if err := CreateFile(tmpdir, false, manifestFile, []byte("manifest"), constants.StackFilePerm); err != nil {
+			t.Fatalf("failed to create manifest file: %v", err)
+		}
+
+		// Create a secret file with secret permissions
+		secretFile := "password"
+		if err := CreateFile(tmpdir, false, secretFile, []byte("secret"), constants.SecretFilePerm); err != nil {
+			t.Fatalf("failed to create secret file: %v", err)
+		}
+
+		// Verify manifest permissions (0644)
+		manifestInfo, err := os.Stat(filepath.Join(tmpdir, manifestFile))
+		if err != nil {
+			t.Fatalf("failed to stat manifest: %v", err)
+		}
+		if manifestInfo.Mode().Perm() != constants.StackFilePerm {
+			t.Errorf("Manifest permissions = %v, want %v", manifestInfo.Mode().Perm(), constants.StackFilePerm)
+		}
+
+		// Verify secret permissions (0600)
+		secretInfo, err := os.Stat(filepath.Join(tmpdir, secretFile))
+		if err != nil {
+			t.Fatalf("failed to stat secret: %v", err)
+		}
+		if secretInfo.Mode().Perm() != constants.SecretFilePerm {
+			t.Errorf("Secret permissions = %v, want %v", secretInfo.Mode().Perm(), constants.SecretFilePerm)
 		}
 	})
 }
