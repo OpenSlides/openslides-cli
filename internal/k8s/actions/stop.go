@@ -10,6 +10,7 @@ import (
 	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
+	"github.com/OpenSlides/openslides-cli/internal/utils"
 	"github.com/spf13/cobra"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -49,7 +50,7 @@ func StopCmd() *cobra.Command {
 
 		ctx := context.Background()
 
-		namespace := extractNamespace(instanceDir)
+		namespace := utils.ExtractNamespace(instanceDir)
 		if err := saveTLSSecret(ctx, k8sClient, namespace, instanceDir); err != nil {
 			logger.Warn("Failed to save TLS secret: %v", err)
 		}

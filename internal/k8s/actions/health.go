@@ -7,6 +7,7 @@ import (
 	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
+	"github.com/OpenSlides/openslides-cli/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +35,7 @@ func HealthCmd() *cobra.Command {
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		logger.Info("=== K8S HEALTH CHECK ===")
 		instanceDir := args[0]
-		namespace := extractNamespace(instanceDir)
+		namespace := utils.ExtractNamespace(instanceDir)
 		logger.Debug("Namespace: %s", namespace)
 
 		k8sClient, err := client.New(*kubeconfig)

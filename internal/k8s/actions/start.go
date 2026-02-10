@@ -8,6 +8,7 @@ import (
 	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
+	"github.com/OpenSlides/openslides-cli/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -53,7 +54,11 @@ func StartCmd() *cobra.Command {
 		logger.Info("Applied namespace: %s", namespace)
 
 		tlsSecretPath := filepath.Join(instanceDir, constants.SecretsDirName, constants.TlsCertSecretYAML)
-		if fileExists(tlsSecretPath) {
+		tlsExists, err := utils.FileExists(tlsSecretPath)
+		if err != nil {
+			return fmt.Errorf("checking tls secret path %s: %w", tlsSecretPath, err)
+		}
+		if tlsExists {
 			logger.Info("Found and applying %s", tlsSecretPath)
 			if _, err := applyManifest(ctx, k8sClient, tlsSecretPath); err != nil {
 				return fmt.Errorf("applying TLS secret: %w", err)

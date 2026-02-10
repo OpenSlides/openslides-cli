@@ -7,6 +7,8 @@ import (
 	"io/fs"
 	"os"
 	"path"
+	"path/filepath"
+	"strings"
 
 	"github.com/OpenSlides/openslides-cli/internal/logger"
 )
@@ -16,7 +18,7 @@ import (
 func CreateFile(dir string, force bool, name string, content []byte, perm fs.FileMode) error {
 	p := path.Join(dir, name)
 
-	pExists, err := fileExists(p)
+	pExists, err := FileExists(p)
 	if err != nil {
 		return fmt.Errorf("checking file existance: %w", err)
 	}
@@ -33,7 +35,7 @@ func CreateFile(dir string, force bool, name string, content []byte, perm fs.Fil
 
 // fileExists is a small helper function to check if a file already exists. It is not
 // save in concurrent usage.
-func fileExists(p string) (bool, error) {
+func FileExists(p string) (bool, error) {
 	_, err := os.Stat(p)
 	if err == nil {
 		return true, nil
@@ -103,4 +105,18 @@ func ReadPassword(passwordFile string) (string, error) {
 	password := string(data)
 	logger.Debug("Password read successfully (%d bytes)", len(password))
 	return password, nil
+}
+
+// extractNamespace gets the namespace from instance directory path
+// Example: "/real/path/to/my.instance.dir.url" -> "myinstancedirurl"
+func ExtractNamespace(instanceDir string) string {
+	dirName := filepath.Base(instanceDir)
+	namespace := strings.ReplaceAll(dirName, ".", "")
+	return namespace
+}
+
+// isYAMLFile checks if filename has YAML extension
+func IsYAMLFile(filename string) bool {
+	ext := filepath.Ext(filename)
+	return ext == ".yaml" || ext == ".yml"
 }
