@@ -8,6 +8,7 @@ import (
 
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
+	"github.com/OpenSlides/openslides-cli/internal/utils"
 
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -107,7 +108,7 @@ func applyDirectory(ctx context.Context, k8sClient *client.Client, dirPath strin
 			continue
 		}
 
-		if !isYAMLFile(file.Name()) {
+		if !utils.IsYAMLFile(file.Name()) {
 			logger.Debug("Skipping non-YAML file: %s", file.Name())
 			continue
 		}

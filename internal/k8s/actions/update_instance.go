@@ -8,6 +8,7 @@ import (
 	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
+	"github.com/OpenSlides/openslides-cli/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -39,7 +40,7 @@ func UpdateInstanceCmd() *cobra.Command {
 
 		logger.Debug("Instance directory: %s", instanceDir)
 
-		namespace := extractNamespace(instanceDir)
+		namespace := utils.ExtractNamespace(instanceDir)
 		logger.Info("Namespace: %s", namespace)
 
 		k8sClient, err := client.New(*kubeconfig)
