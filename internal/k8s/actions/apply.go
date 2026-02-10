@@ -38,6 +38,11 @@ func applyManifest(ctx context.Context, k8sClient *client.Client, manifestPath s
 		return "", fmt.Errorf("parsing YAML: %w", err)
 	}
 
+	if obj.GetKind() == "" {
+		logger.Debug("Skipping manifest with no kind: %s", manifestPath)
+		return "", nil
+	}
+
 	namespace := obj.GetNamespace()
 	if namespace == "" && obj.GetKind() == "Namespace" {
 		namespace = obj.GetName()

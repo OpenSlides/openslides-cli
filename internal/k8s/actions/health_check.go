@@ -31,7 +31,18 @@ func getHealthStatus(ctx context.Context, k8sClient *client.Client, namespace st
 		return nil, fmt.Errorf("listing pods: %w", err)
 	}
 
-	total := len(pods.Items)
+	var filteredPods []corev1.Pod
+	for _, pod := range pods.Items {
+		if pod.Status.Phase == corev1.PodSucceeded {
+			continue
+		}
+		if pod.DeletionTimestamp != nil {
+			continue
+		}
+		filteredPods = append(filteredPods, pod)
+	}
+
+	total := len(filteredPods)
 	if total == 0 {
 		return &HealthStatus{
 			Healthy: false,
@@ -42,7 +53,7 @@ func getHealthStatus(ctx context.Context, k8sClient *client.Client, namespace st
 	}
 
 	ready := 0
-	for _, pod := range pods.Items {
+	for _, pod := range filteredPods {
 		if isPodReady(&pod) {
 			ready++
 		}
@@ -52,7 +63,7 @@ func getHealthStatus(ctx context.Context, k8sClient *client.Client, namespace st
 		Healthy: ready == total,
 		Ready:   ready,
 		Total:   total,
-		Pods:    pods.Items,
+		Pods:    filteredPods,
 	}, nil
 }
 
@@ -120,6 +131,8 @@ func waitForInstanceHealthy(ctx context.Context, k8sClient *client.Client, names
 
 			if bar == nil && status.Total > 0 {
 				bar = createProgressBar(status.Total, "Pods ready")
+			} else if bar != nil {
+				bar.ChangeMax(status.Total)
 			}
 
 			if bar != nil {
@@ -133,6 +146,7 @@ func waitForInstanceHealthy(ctx context.Context, k8sClient *client.Client, names
 					if err := bar.Finish(); err != nil {
 						return fmt.Errorf("finishing progress bar: %w", err)
 					}
+					fmt.Println()
 				}
 				logger.Info("Instance is healthy: %d/%d pods ready", status.Ready, status.Total)
 				return nil
@@ -143,6 +157,7 @@ func waitForInstanceHealthy(ctx context.Context, k8sClient *client.Client, names
 				if err := bar.Finish(); err != nil {
 					return fmt.Errorf("finishing progress bar: %w", err)
 				}
+				fmt.Println()
 			}
 			logger.Warn("Timeout reached. Current status:")
 			if lastStatus != nil {
@@ -154,10 +169,9 @@ func waitForInstanceHealthy(ctx context.Context, k8sClient *client.Client, names
 }
 
 func createProgressBar(max int, description string) *progressbar.ProgressBar {
-	return progressbar.NewOptions(max,
+	opts := []progressbar.Option{
 		progressbar.OptionSetDescription(description),
 		progressbar.OptionSetWidth(constants.ProgressBarWidth),
-		progressbar.OptionShowCount(),
 		progressbar.OptionSetTheme(progressbar.Theme{
 			Saucer:        constants.Saucer,
 			SaucerPadding: constants.SaucerPadding,
@@ -165,8 +179,15 @@ func createProgressBar(max int, description string) *progressbar.ProgressBar {
 			BarEnd:        constants.BarEnd,
 		}),
 		progressbar.OptionThrottle(constants.ThrottleDuration),
-		progressbar.OptionClearOnFinish(),
-	)
+	}
+
+	if max > 0 {
+		opts = append(opts, progressbar.OptionShowCount())
+	} else {
+		opts = append(opts, progressbar.OptionSpinnerType(constants.SpinnerType))
+	}
+
+	return progressbar.NewOptions(max, opts...)
 }
 
 // isPodReady checks if a pod is ready
@@ -229,6 +250,8 @@ func waitForDeploymentReady(ctx context.Context, k8sClient *client.Client, names
 	defer cancel()
 
 	var lastDeployment *appsv1.Deployment
+	var bar *progressbar.ProgressBar
+
 	for {
 		select {
 		case <-ticker.C:
@@ -240,31 +263,57 @@ func waitForDeploymentReady(ctx context.Context, k8sClient *client.Client, names
 
 			lastDeployment = deployment
 
-			if deployment.Status.ObservedGeneration >= deployment.Generation &&
-				deployment.Status.UpdatedReplicas == *deployment.Spec.Replicas &&
-				deployment.Status.AvailableReplicas == *deployment.Spec.Replicas &&
-				deployment.Status.ReadyReplicas == *deployment.Spec.Replicas &&
-				deployment.Status.Replicas == *deployment.Spec.Replicas {
+			desired := int(*deployment.Spec.Replicas)
+			updated := int(deployment.Status.UpdatedReplicas)
+			ready := int(deployment.Status.ReadyReplicas)
+			available := int(deployment.Status.AvailableReplicas)
+			total := int(deployment.Status.Replicas)
+			observedGen := deployment.Status.ObservedGeneration
+			gen := deployment.Generation
 
-				logger.Info("Deployment %s is ready with %d replicas", deploymentName, *deployment.Spec.Replicas)
+			if bar == nil && desired > 0 {
+				bar = createProgressBar(-1, fmt.Sprintf("Waiting for %s deployment rollout", deploymentName))
+			}
+
+			if bar != nil {
+				_ = bar.Add(1)
+			}
+
+			if observedGen >= gen &&
+				updated == desired &&
+				available == desired &&
+				ready == desired &&
+				total == desired {
+				if bar != nil {
+					if err := bar.Finish(); err != nil {
+						return fmt.Errorf("finishing progress bar: %w", err)
+					}
+					fmt.Println()
+				}
+				logger.Info("Deployment %s is ready with %d replicas", deploymentName, desired)
 				return nil
 			}
 
-			logger.Debug("Deployment %s: %d/%d replicas ready, %d total (generation: %d/%d)",
+			logger.Debug("Deployment %s: %d/%d updated, %d/%d ready, %d total (generation: %d/%d)",
 				deploymentName,
-				deployment.Status.ReadyReplicas,
-				*deployment.Spec.Replicas,
-				deployment.Status.Replicas,
-				deployment.Status.ObservedGeneration,
-				deployment.Generation)
+				updated, desired,
+				ready, desired,
+				total,
+				observedGen, gen)
 
 		case <-timeoutCtx.Done():
+			if bar != nil {
+				if err := bar.Finish(); err != nil {
+					return fmt.Errorf("finishing progress bar: %w", err)
+				}
+				fmt.Println()
+			}
 			logger.Warn("Timeout reached. Deployment status:")
 			if lastDeployment != nil {
 				printDeploymentStatus(namespace, deploymentName, lastDeployment)
 			}
 
-			return fmt.Errorf("timeout waiting for deployment %s to become ready", deploymentName)
+			return fmt.Errorf("timeout waiting for deployment %s rollout", deploymentName)
 		}
 	}
 }
@@ -272,24 +321,38 @@ func waitForDeploymentReady(ctx context.Context, k8sClient *client.Client, names
 // waitForNamespaceDeletion waits for a namespace to be completely deleted
 func waitForNamespaceDeletion(ctx context.Context, k8sClient *client.Client, namespace string, timeout time.Duration) error {
 	clientset := k8sClient.Clientset()
-
 	ticker := time.NewTicker(constants.TickerDuration)
 	defer ticker.Stop()
 
 	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
+	bar := createProgressBar(-1, fmt.Sprintf("Stopping %s", namespace))
+
 	for {
 		select {
 		case <-ticker.C:
+			_ = bar.Add(1)
 			_, err := clientset.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
 			if err != nil {
+				if !errors.IsNotFound(err) {
+					logger.Warn("Error checking namespace: %v", err)
+					continue
+				}
+				if err := bar.Finish(); err != nil {
+					return fmt.Errorf("finishing progress bar: %w", err)
+				}
+				fmt.Println()
 				logger.Debug("Namespace %s successfully deleted", namespace)
 				return nil
 			}
 			logger.Debug("Namespace %s still terminating...", namespace)
 
 		case <-timeoutCtx.Done():
+			if err := bar.Finish(); err != nil {
+				return fmt.Errorf("finishing progress bar: %w", err)
+			}
+			fmt.Println()
 			return fmt.Errorf("timeout waiting for namespace %s to be deleted", namespace)
 		}
 	}

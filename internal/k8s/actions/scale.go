@@ -74,13 +74,12 @@ func ScaleCmd() *cobra.Command {
 			return nil
 		}
 
-		logger.Info("Waiting for deployment to become ready...")
 		// Wait for the specific deployment (OpenSlides service name is deployment name)
 		if err := waitForDeploymentReady(ctx, k8sClient, namespace, *service, *timeout); err != nil {
 			return fmt.Errorf("waiting for deployment ready: %w", err)
 		}
 
-		logger.Info("Service scaled successfully")
+		logger.Info("%s service scaled successfully", *service)
 		return nil
 	}
 

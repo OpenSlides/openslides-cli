@@ -108,6 +108,7 @@ const (
 	BarStart         string        = "["
 	BarEnd           string        = "]"
 	ThrottleDuration time.Duration = 100 * time.Millisecond
+	SpinnerType      int           = 14
 
 	// wait function settings
 	TickerDuration time.Duration = 2 * time.Second // checks health conditions every tick
