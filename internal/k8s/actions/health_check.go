@@ -108,8 +108,6 @@ func checkHealth(ctx context.Context, k8sClient *client.Client, namespace string
 
 // waitForInstanceHealthy waits for instance to become healthy
 func waitForInstanceHealthy(ctx context.Context, k8sClient *client.Client, namespace string, timeout time.Duration) error {
-	logger.Info("Waiting for instance to become healthy (timeout: %v)", timeout)
-
 	ticker := time.NewTicker(constants.TickerDuration)
 	defer ticker.Stop()
 
