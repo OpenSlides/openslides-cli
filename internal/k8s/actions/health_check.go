@@ -130,19 +130,30 @@ func waitForInstanceHealthy(ctx context.Context, k8sClient *client.Client, names
 			lastStatus = status
 
 			if bar == nil && status.Total > 0 {
-				bar = createProgressBar(status.Total, "Pods ready")
+				bar = createProgressBar(status.Total, "Pods ready", status.Total)
 			} else if bar != nil {
 				bar.ChangeMax(status.Total)
 			}
-
-			if bar != nil {
+			if bar != nil && !bar.IsFinished() {
+				for _, pod := range status.Pods {
+					icon := constants.IconReady
+					if !isPodReady(&pod) {
+						icon = constants.IconNotReady
+					}
+					if err := bar.AddDetail(fmt.Sprintf("%s %s", icon, pod.Name)); err != nil {
+						return fmt.Errorf("adding detail on pending pods: %w", err)
+					}
+				}
+				if err := bar.AddDetail(""); err != nil {
+					return fmt.Errorf("adding trailing newline detail: %w", err)
+				}
 				if err := bar.Set(status.Ready); err != nil {
 					return fmt.Errorf("setting progress bar: %w", err)
 				}
 			}
 
 			if status.Healthy {
-				if bar != nil {
+				if bar != nil && !bar.IsFinished() {
 					if err := bar.Finish(); err != nil {
 						return fmt.Errorf("finishing progress bar: %w", err)
 					}
@@ -153,7 +164,7 @@ func waitForInstanceHealthy(ctx context.Context, k8sClient *client.Client, names
 			}
 
 		case <-timeoutCtx.Done():
-			if bar != nil {
+			if bar != nil && !bar.IsFinished() {
 				if err := bar.Finish(); err != nil {
 					return fmt.Errorf("finishing progress bar: %w", err)
 				}
@@ -168,10 +179,11 @@ func waitForInstanceHealthy(ctx context.Context, k8sClient *client.Client, names
 	}
 }
 
-func createProgressBar(max int, description string) *progressbar.ProgressBar {
+func createProgressBar(max int, description string, maxDetailRow int) *progressbar.ProgressBar {
 	opts := []progressbar.Option{
 		progressbar.OptionSetDescription(description),
 		progressbar.OptionSetWidth(constants.ProgressBarWidth),
+		progressbar.OptionSetMaxDetailRow(maxDetailRow + constants.AddDetailLineBuffer),
 		progressbar.OptionSetTheme(progressbar.Theme{
 			Saucer:        constants.Saucer,
 			SaucerPadding: constants.SaucerPadding,
@@ -272,7 +284,7 @@ func waitForDeploymentReady(ctx context.Context, k8sClient *client.Client, names
 			gen := deployment.Generation
 
 			if bar == nil && desired > 0 {
-				bar = createProgressBar(-1, fmt.Sprintf("Waiting for %s deployment rollout", deploymentName))
+				bar = createProgressBar(-1, fmt.Sprintf("Waiting for %s deployment rollout", deploymentName), 0)
 			}
 
 			if bar != nil {
@@ -327,7 +339,7 @@ func waitForNamespaceDeletion(ctx context.Context, k8sClient *client.Client, nam
 	timeoutCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	bar := createProgressBar(-1, fmt.Sprintf("Stopping %s", namespace))
+	bar := createProgressBar(-1, fmt.Sprintf("Stopping %s", namespace), 0)
 
 	for {
 		select {
