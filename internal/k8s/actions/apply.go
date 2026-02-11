@@ -39,7 +39,7 @@ func applyManifest(ctx context.Context, k8sClient *client.Client, manifestPath s
 	}
 
 	if obj.GetKind() == "" {
-		logger.Debug("Skipping manifest with no kind: %s", manifestPath)
+		logger.Info("Skipping manifest with no kind: %s", manifestPath)
 		return "", nil
 	}
 
