@@ -251,5 +251,5 @@ func GetKindPriority(kind string) int {
 	if priority, exists := priorities[kind]; exists {
 		return priority
 	}
-	return 100 // Unknown kinds applied last
+	return 100
 }

@@ -110,7 +110,6 @@ func applyDirectory(ctx context.Context, k8sClient *client.Client, dirPath strin
 		return fmt.Errorf("reading directory: %w", err)
 	}
 
-	// Filter YAML files
 	var yamlFiles []os.DirEntry
 	for _, file := range files {
 		if file.IsDir() {
@@ -124,14 +123,12 @@ func applyDirectory(ctx context.Context, k8sClient *client.Client, dirPath strin
 		yamlFiles = append(yamlFiles, file)
 	}
 
-	// Sort by resource kind priority
 	sort.Slice(yamlFiles, func(i, j int) bool {
 		kindI := getKindFromFile(filepath.Join(dirPath, yamlFiles[i].Name()))
 		kindJ := getKindFromFile(filepath.Join(dirPath, yamlFiles[j].Name()))
 		return constants.GetKindPriority(kindI) < constants.GetKindPriority(kindJ)
 	})
 
-	// Apply in sorted order
 	for _, file := range yamlFiles {
 		manifestPath := filepath.Join(dirPath, file.Name())
 		if _, err := applyManifest(ctx, k8sClient, manifestPath); err != nil {
@@ -150,12 +147,10 @@ func getKindFromFile(path string) string {
 		return ""
 	}
 
-	var obj struct {
-		Kind string `yaml:"kind"`
-	}
+	var obj unstructured.Unstructured
 	if err := yaml.Unmarshal(data, &obj); err != nil {
 		return ""
 	}
 
-	return obj.Kind
+	return obj.GetKind()
 }
