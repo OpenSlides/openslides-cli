@@ -3,6 +3,8 @@ package actions
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/OpenSlides/openslides-cli/internal/constants"
@@ -36,9 +38,6 @@ func getHealthStatus(ctx context.Context, k8sClient *client.Client, namespace st
 		if pod.Status.Phase == corev1.PodSucceeded {
 			continue
 		}
-		if pod.DeletionTimestamp != nil {
-			continue
-		}
 		filteredPods = append(filteredPods, pod)
 	}
 
@@ -59,8 +58,10 @@ func getHealthStatus(ctx context.Context, k8sClient *client.Client, namespace st
 		}
 	}
 
+	healthy := ready == total
+
 	return &HealthStatus{
-		Healthy: ready == total,
+		Healthy: healthy,
 		Ready:   ready,
 		Total:   total,
 		Pods:    filteredPods,
@@ -128,34 +129,30 @@ func waitForInstanceHealthy(ctx context.Context, k8sClient *client.Client, names
 			lastStatus = status
 
 			if bar == nil && status.Total > 0 {
-				bar = createProgressBar(status.Total, "Pods ready", status.Total)
+				bar = createProgressBar(status.Total, "Pods ready", constants.AddDetailLineBuffer)
 			} else if bar != nil {
 				bar.ChangeMax(status.Total)
 			}
 			if bar != nil && !bar.IsFinished() {
-				for _, pod := range status.Pods {
-					icon := constants.IconReady
-					if !isPodReady(&pod) {
-						icon = constants.IconNotReady
+				notReady := getNotReadyNames(status.Pods)
+				if len(notReady) > 0 {
+					if err := bar.AddDetail(fmt.Sprintf("%s Pending: %s", constants.IconNotReady, strings.Join(notReady, ", "))); err != nil {
+						return fmt.Errorf("adding pending pods detail: %w", err)
 					}
-					if err := bar.AddDetail(fmt.Sprintf("%s %s", icon, pod.Name)); err != nil {
-						return fmt.Errorf("adding detail on pending pods: %w", err)
+				} else {
+					if err := bar.AddDetail(""); err != nil {
+						return fmt.Errorf("adding empty detail: %w", err)
 					}
-				}
-				if err := bar.AddDetail(""); err != nil {
-					return fmt.Errorf("adding trailing newline detail: %w", err)
 				}
 				if err := bar.Set(status.Ready); err != nil {
 					return fmt.Errorf("setting progress bar: %w", err)
 				}
 			}
-
 			if status.Healthy {
 				if bar != nil && !bar.IsFinished() {
 					if err := bar.Finish(); err != nil {
 						return fmt.Errorf("finishing progress bar: %w", err)
 					}
-					fmt.Println()
 				}
 				logger.Info("Instance is healthy: %d/%d pods ready", status.Ready, status.Total)
 				return nil
@@ -166,7 +163,6 @@ func waitForInstanceHealthy(ctx context.Context, k8sClient *client.Client, names
 				if err := bar.Finish(); err != nil {
 					return fmt.Errorf("finishing progress bar: %w", err)
 				}
-				fmt.Println()
 			}
 			logger.Warn("Timeout reached. Current status:")
 			if lastStatus != nil {
@@ -181,7 +177,8 @@ func createProgressBar(max int, description string, maxDetailRow int) *progressb
 	opts := []progressbar.Option{
 		progressbar.OptionSetDescription(description),
 		progressbar.OptionSetWidth(constants.ProgressBarWidth),
-		progressbar.OptionSetMaxDetailRow(maxDetailRow + constants.AddDetailLineBuffer),
+		progressbar.OptionSetWriter(os.Stdout),
+		progressbar.OptionSetMaxDetailRow(maxDetailRow),
 		progressbar.OptionSetTheme(progressbar.Theme{
 			Saucer:        constants.Saucer,
 			SaucerPadding: constants.SaucerPadding,
@@ -189,6 +186,9 @@ func createProgressBar(max int, description string, maxDetailRow int) *progressb
 			BarEnd:        constants.BarEnd,
 		}),
 		progressbar.OptionThrottle(constants.ThrottleDuration),
+		progressbar.OptionOnCompletion(func() {
+			fmt.Println()
+		}),
 	}
 
 	if max > 0 {
@@ -202,12 +202,33 @@ func createProgressBar(max int, description string, maxDetailRow int) *progressb
 
 // isPodReady checks if a pod is ready
 func isPodReady(pod *corev1.Pod) bool {
+	if pod.DeletionTimestamp != nil {
+		return false
+	}
+
 	for _, condition := range pod.Status.Conditions {
-		if condition.Type == corev1.PodReady {
-			return condition.Status == corev1.ConditionTrue
+		if condition.Type == corev1.PodReady && condition.Status == corev1.ConditionTrue {
+			for _, container := range pod.Status.ContainerStatuses {
+				if !container.Ready {
+					return false
+				}
+			}
+			return true
 		}
 	}
+
 	return false
+}
+
+// getNotReadyNames
+func getNotReadyNames(pods []corev1.Pod) []string {
+	var names []string
+	for _, pod := range pods {
+		if !isPodReady(&pod) {
+			names = append(names, pod.Name)
+		}
+	}
+	return names
 }
 
 // namespaceIsActive checks if a namespace exists and is active
@@ -298,7 +319,6 @@ func waitForDeploymentReady(ctx context.Context, k8sClient *client.Client, names
 					if err := bar.Finish(); err != nil {
 						return fmt.Errorf("finishing progress bar: %w", err)
 					}
-					fmt.Println()
 				}
 				logger.Info("Deployment %s is ready with %d replicas", deploymentName, desired)
 				return nil
@@ -316,7 +336,6 @@ func waitForDeploymentReady(ctx context.Context, k8sClient *client.Client, names
 				if err := bar.Finish(); err != nil {
 					return fmt.Errorf("finishing progress bar: %w", err)
 				}
-				fmt.Println()
 			}
 			logger.Warn("Timeout reached. Deployment status:")
 			if lastDeployment != nil {
@@ -352,7 +371,6 @@ func waitForNamespaceDeletion(ctx context.Context, k8sClient *client.Client, nam
 				if err := bar.Finish(); err != nil {
 					return fmt.Errorf("finishing progress bar: %w", err)
 				}
-				fmt.Println()
 				logger.Debug("Namespace %s successfully deleted", namespace)
 				return nil
 			}
@@ -362,7 +380,6 @@ func waitForNamespaceDeletion(ctx context.Context, k8sClient *client.Client, nam
 			if err := bar.Finish(); err != nil {
 				return fmt.Errorf("finishing progress bar: %w", err)
 			}
-			fmt.Println()
 			return fmt.Errorf("timeout waiting for namespace %s to be deleted", namespace)
 		}
 	}

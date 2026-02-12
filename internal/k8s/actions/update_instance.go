@@ -76,7 +76,6 @@ func UpdateInstanceCmd() *cobra.Command {
 			return nil
 		}
 
-		logger.Info("Waiting for instance to become ready...")
 		if err := waitForInstanceHealthy(ctx, k8sClient, namespace, *timeout); err != nil {
 			return fmt.Errorf("waiting for instance health: %w", err)
 		}

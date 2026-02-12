@@ -109,7 +109,7 @@ const (
 	BarEnd           string        = "]"
 	ThrottleDuration time.Duration = 100 * time.Millisecond
 	SpinnerType      int           = 14
-	// add extra line at the end of progress bar detail buffer for newline via addDetail("")
+	// add extra line at the end of progress bar detail buffer for pending pod names
 	AddDetailLineBuffer int = 1
 
 	// wait function settings

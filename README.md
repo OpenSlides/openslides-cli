@@ -348,7 +348,6 @@ Applied namespace: myinstancedirorg
 Applying stack manifests from: my.instance.dir.org/stack/
 ...
 
-Waiting for instance to become ready:
 [████████████████████████████████████████] Pods ready (13/13)
 
 Instance is healthy: 13/13 pods ready
