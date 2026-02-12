@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 
+	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
 	"github.com/OpenSlides/openslides-cli/internal/utils"
@@ -108,6 +110,8 @@ func applyDirectory(ctx context.Context, k8sClient *client.Client, dirPath strin
 		return fmt.Errorf("reading directory: %w", err)
 	}
 
+	// Filter YAML files
+	var yamlFiles []os.DirEntry
 	for _, file := range files {
 		if file.IsDir() {
 			continue
@@ -117,7 +121,18 @@ func applyDirectory(ctx context.Context, k8sClient *client.Client, dirPath strin
 			logger.Debug("Skipping non-YAML file: %s", file.Name())
 			continue
 		}
+		yamlFiles = append(yamlFiles, file)
+	}
 
+	// Sort by resource kind priority
+	sort.Slice(yamlFiles, func(i, j int) bool {
+		kindI := getKindFromFile(filepath.Join(dirPath, yamlFiles[i].Name()))
+		kindJ := getKindFromFile(filepath.Join(dirPath, yamlFiles[j].Name()))
+		return constants.GetKindPriority(kindI) < constants.GetKindPriority(kindJ)
+	})
+
+	// Apply in sorted order
+	for _, file := range yamlFiles {
 		manifestPath := filepath.Join(dirPath, file.Name())
 		if _, err := applyManifest(ctx, k8sClient, manifestPath); err != nil {
 			logger.Warn("Failed to apply %s: %v", file.Name(), err)
@@ -126,4 +141,21 @@ func applyDirectory(ctx context.Context, k8sClient *client.Client, dirPath strin
 	}
 
 	return nil
+}
+
+// getKindFromFile reads the Kind field from a YAML file
+func getKindFromFile(path string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+
+	var obj struct {
+		Kind string `yaml:"kind"`
+	}
+	if err := yaml.Unmarshal(data, &obj); err != nil {
+		return ""
+	}
+
+	return obj.Kind
 }
