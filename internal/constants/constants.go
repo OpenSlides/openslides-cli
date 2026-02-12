@@ -108,6 +108,9 @@ const (
 	BarStart         string        = "["
 	BarEnd           string        = "]"
 	ThrottleDuration time.Duration = 100 * time.Millisecond
+	SpinnerType      int           = 14
+	// add extra line at the end of progress bar detail buffer for pending pod names
+	AddDetailLineBuffer int = 1
 
 	// wait function settings
 	TickerDuration time.Duration = 2 * time.Second // checks health conditions every tick
