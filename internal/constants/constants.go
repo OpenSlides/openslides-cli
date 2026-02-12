@@ -215,3 +215,41 @@ var MigrationStatsFields = []string{
 	"fully_migrated_positions",
 	"status",
 }
+
+// getKindPriority returns the installation priority for a resource kind
+// Lower number = applied first (follows Helm 2.10 install order)
+func GetKindPriority(kind string) int {
+	priorities := map[string]int{
+		"Namespace":                0,
+		"ResourceQuota":            1,
+		"LimitRange":               2,
+		"PodSecurityPolicy":        3,
+		"Secret":                   4,
+		"ConfigMap":                5,
+		"StorageClass":             6,
+		"PersistentVolume":         7,
+		"PersistentVolumeClaim":    8,
+		"ServiceAccount":           9,
+		"CustomResourceDefinition": 10,
+		"ClusterRole":              11,
+		"ClusterRoleBinding":       12,
+		"Role":                     13,
+		"RoleBinding":              14,
+		"Service":                  15,
+		"DaemonSet":                16,
+		"Pod":                      17,
+		"ReplicationController":    18,
+		"ReplicaSet":               19,
+		"Deployment":               20,
+		"StatefulSet":              21,
+		"Job":                      22,
+		"CronJob":                  23,
+		"Ingress":                  24,
+		"APIService":               25,
+	}
+
+	if priority, exists := priorities[kind]; exists {
+		return priority
+	}
+	return 100
+}
