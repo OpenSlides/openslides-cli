@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package cluster;
+
+option go_package = "github.com/OpenSlides/openslides-cli/proto/cluster";
+
+service ClusterService {
+  rpc GetClusterStatus(ClusterStatusRequest) returns (ClusterStatusResponse);
+}
+
+message ClusterStatusRequest {
+  string kubeconfig = 1;
+}
+
+message ClusterStatusResponse {
+  string status = 1;
+  int32 total_nodes = 2;
+  int32 ready_nodes = 3;
+}

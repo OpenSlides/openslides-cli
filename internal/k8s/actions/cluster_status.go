@@ -53,7 +53,7 @@ func ClusterStatusCmd() *cobra.Command {
 
 		ctx := context.Background()
 
-		status, err := checkClusterStatus(ctx, k8sClient)
+		status, err := CheckClusterStatus(ctx, k8sClient)
 		if err != nil {
 			return fmt.Errorf("checking cluster status: %w", err)
 		}
@@ -88,7 +88,7 @@ func ClusterStatusCmd() *cobra.Command {
 }
 
 // checkClusterStatus checks the overall cluster health
-func checkClusterStatus(ctx context.Context, k8sClient *client.Client) (*ClusterStatus, error) {
+func CheckClusterStatus(ctx context.Context, k8sClient *client.Client) (*ClusterStatus, error) {
 	nodes, err := k8sClient.Clientset().CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("listing nodes: %w", err)

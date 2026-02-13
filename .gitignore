@@ -15,6 +15,10 @@ coverage.txt
 go.work
 go.work.sum
 
+# Generated proto files
+proto/**/*.pb.go
+proto/**/*.pb.gw.go
+
 # IDE
 .vscode/
 .idea/
