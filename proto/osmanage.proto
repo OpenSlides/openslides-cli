@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-package cluster;
+package osmanage;
 
-option go_package = "github.com/OpenSlides/openslides-cli/proto/cluster";
+option go_package = "github.com/OpenSlides/openslides-cli/proto/osmanage";
 
-service ClusterService {
+service OsmanageService {
   rpc GetClusterStatus(ClusterStatusRequest) returns (ClusterStatusResponse);
 }
 

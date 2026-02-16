@@ -6,18 +6,10 @@ import (
 
 	"github.com/OpenSlides/openslides-cli/internal/k8s/actions"
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
-	pb "github.com/OpenSlides/openslides-cli/proto/cluster"
+	pb "github.com/OpenSlides/openslides-cli/proto/osmanage"
 )
 
-type ClusterServer struct {
-	pb.UnimplementedClusterServiceServer
-}
-
-func NewClusterServer() *ClusterServer {
-	return &ClusterServer{}
-}
-
-func (s *ClusterServer) GetClusterStatus(ctx context.Context, req *pb.ClusterStatusRequest) (*pb.ClusterStatusResponse, error) {
+func (s *OsmanageServiceServer) GetClusterStatus(ctx context.Context, req *pb.ClusterStatusRequest) (*pb.ClusterStatusResponse, error) {
 	k8sClient, err := client.New(req.Kubeconfig)
 	if err != nil {
 		return nil, fmt.Errorf("creating k8s client: %w", err)
