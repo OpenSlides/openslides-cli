@@ -6,6 +6,16 @@ option go_package = "github.com/OpenSlides/openslides-cli/proto/osmanage";
 
 service OsmanageService {
   rpc GetClusterStatus(ClusterStatusRequest) returns (ClusterStatusResponse);
+  
+  // Migration operations - streaming
+  rpc MigrationsMigrate(MigrationsRequest) returns (stream ProgressResponse);
+  rpc MigrationsFinalize(MigrationsRequest) returns (stream ProgressResponse);
+  
+  // Migration operations - unary
+  rpc MigrationsReset(MigrationsRequest) returns (MigrationsResponse);
+  rpc MigrationsClearCollectionfieldTables(MigrationsRequest) returns (MigrationsResponse);
+  rpc MigrationsStats(MigrationsRequest) returns (MigrationsResponse);
+  rpc MigrationsProgress(MigrationsRequest) returns (MigrationsResponse);
 }
 
 message ClusterStatusRequest {
@@ -16,4 +26,24 @@ message ClusterStatusResponse {
   string status = 1;
   int32 total_nodes = 2;
   int32 ready_nodes = 3;
+}
+
+message MigrationsRequest {
+  string address_backendmanage = 1;
+  string password_file_path = 2;
+}
+
+message MigrationsResponse {
+  bool success = 1;
+  string status = 2;
+  string output = 3;
+  string exception = 4;
+  bytes stats = 5;
+}
+
+message ProgressResponse {
+  string output = 1;
+  bool running = 2;
+  bool success = 3;
+  string exception = 4;
 }
