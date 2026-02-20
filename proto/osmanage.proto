@@ -6,6 +6,7 @@ option go_package = "github.com/OpenSlides/openslides-cli/proto/osmanage";
 
 service OsmanageService {
   rpc GetClusterStatus(ClusterStatusRequest) returns (ClusterStatusResponse);
+  rpc GetServiceAddress(ServiceAddressRequest) returns (ServiceAddressResponse);
   
   // Migration operations - streaming
   rpc MigrationsMigrate(MigrationsRequest) returns (stream ProgressResponse);
@@ -26,6 +27,17 @@ message ClusterStatusResponse {
   string status = 1;
   int32 total_nodes = 2;
   int32 ready_nodes = 3;
+}
+
+message ServiceAddressRequest {
+  string instance_dir_path = 1;
+  string service_name = 2;
+  string kubeconfig = 3;
+}
+
+message ServiceAddressResponse {
+  string address = 1;
+  string error = 2;
 }
 
 message MigrationsRequest {
