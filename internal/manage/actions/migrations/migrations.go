@@ -13,6 +13,7 @@ import (
 	"github.com/OpenSlides/openslides-cli/internal/logger"
 	"github.com/OpenSlides/openslides-cli/internal/manage/client"
 	"github.com/OpenSlides/openslides-cli/internal/utils"
+	pb "github.com/OpenSlides/openslides-cli/proto/osmanage"
 )
 
 const (
@@ -138,10 +139,10 @@ func createMigrationCmd(name, description string, withProgressTracking bool) *co
 			return fmt.Errorf("executing migration command: %w", err)
 		}
 
-		if withProgressTracking && progressInterval != nil && *progressInterval > 0 && response.Running() {
+		if withProgressTracking && progressInterval != nil && *progressInterval > 0 && Running(response) {
 			fmt.Println("Progress:")
 
-			printCallback := func(update ProgressUpdate) error {
+			printCallback := func(update *pb.MigrationsProgressResponse) error {
 				fmt.Print(update.Output)
 				return nil
 			}
@@ -149,7 +150,7 @@ func createMigrationCmd(name, description string, withProgressTracking bool) *co
 			return TrackMigrationProgress(cl, *progressInterval, printCallback)
 		}
 
-		output, err := response.GetOutput(name)
+		output, err := GetOutput(response, name)
 		if err != nil {
 			return fmt.Errorf("formatting output: %w", err)
 		}
@@ -161,25 +162,8 @@ func createMigrationCmd(name, description string, withProgressTracking bool) *co
 	return cmd
 }
 
-// MigrationResponse represents the response from a migration command
-type MigrationResponse struct {
-	Success   bool            `json:"success"`
-	Status    string          `json:"status"`
-	Output    string          `json:"output"`
-	Exception string          `json:"exception"`
-	Stats     json.RawMessage `json:"stats"`
-}
-
-// ProgressUpdate represents a single progress update during migration tracking
-type ProgressUpdate struct {
-	Output    string
-	Running   bool
-	Success   bool
-	Exception string
-}
-
 // ExecuteMigrationCommand sends a migration command to the backend with retry logic.
-func ExecuteMigrationCommand(cl *client.Client, command string) (*MigrationResponse, error) {
+func ExecuteMigrationCommand(cl *client.Client, command string) (*pb.MigrationsResponse, error) {
 	logger.Debug("Executing migration command: %s", command)
 
 	ctx, cancel := context.WithTimeout(context.Background(), constants.MigrationTotalTimeout)
@@ -224,14 +208,14 @@ func ExecuteMigrationCommand(cl *client.Client, command string) (*MigrationRespo
 			return nil, lastErr
 		}
 
-		var migrationResp MigrationResponse
+		var migrationResp pb.MigrationsResponse
 		if err := json.Unmarshal(body, &migrationResp); err != nil {
 			logger.Error("Failed to unmarshal migration response: %v", err)
 			return nil, fmt.Errorf("unmarshalling response: %w", err)
 		}
 
 		logger.Debug("Migration response - Success: %v, Status: %s, Running: %v",
-			migrationResp.Success, migrationResp.Status, migrationResp.Running())
+			migrationResp.Success, migrationResp.Status, Running(&migrationResp))
 
 		return &migrationResp, nil
 	}
@@ -240,8 +224,7 @@ func ExecuteMigrationCommand(cl *client.Client, command string) (*MigrationRespo
 }
 
 // TrackMigrationProgress polls migration progress and sends updates to the callback.
-// The callback receives ProgressUpdate structs for each poll iteration.
-func TrackMigrationProgress(cl *client.Client, interval time.Duration, callback func(ProgressUpdate) error) error {
+func TrackMigrationProgress(cl *client.Client, interval time.Duration, callback func(*pb.MigrationsProgressResponse) error) error {
 	logger.Debug("Starting progress tracking with interval: %v", interval)
 
 	for {
@@ -252,9 +235,9 @@ func TrackMigrationProgress(cl *client.Client, interval time.Duration, callback 
 			return fmt.Errorf("checking progress: %w", err)
 		}
 
-		update := ProgressUpdate{
+		update := &pb.MigrationsProgressResponse{
 			Output:    response.Output,
-			Running:   response.Running(),
+			Running:   Running(response),
 			Success:   response.Success,
 			Exception: response.Exception,
 		}
@@ -263,12 +246,12 @@ func TrackMigrationProgress(cl *client.Client, interval time.Duration, callback 
 			return fmt.Errorf("progress callback error: %w", err)
 		}
 
-		if response.Faulty() {
+		if Faulty(response) {
 			logger.Error("Migration command failed")
 			return fmt.Errorf("migration failed: %s", response.Exception)
 		}
 
-		if !response.Running() {
+		if !Running(response) {
 			logger.Info("Migration completed")
 			break
 		}
@@ -278,26 +261,26 @@ func TrackMigrationProgress(cl *client.Client, interval time.Duration, callback 
 }
 
 // GetOutput returns the formatted output for the migration response
-func (mr *MigrationResponse) GetOutput(command string) (string, error) {
-	if mr.Faulty() {
-		return mr.formatAll()
+func GetOutput(mr *pb.MigrationsResponse, command string) (string, error) {
+	if Faulty(mr) {
+		return formatAll(mr)
 	}
 	if command == "stats" {
-		return mr.formatStats()
+		return FormatStats(mr.Stats)
 	}
 	return mr.Output, nil
 }
 
-// formatStats formats the stats JSON into a readable string
-func (mr *MigrationResponse) formatStats() (string, error) {
-	var stats map[string]any
-	if err := json.Unmarshal(mr.Stats, &stats); err != nil {
+// FormatStats formats the stats bytes into a readable string (exported for gRPC use)
+func FormatStats(stats []byte) (string, error) {
+	var statsMap map[string]any
+	if err := json.Unmarshal(stats, &statsMap); err != nil {
 		return "", fmt.Errorf("unmarshalling stats: %w", err)
 	}
 
 	var sb strings.Builder
 	for _, field := range constants.MigrationStatsFields {
-		if value, ok := stats[field]; ok {
+		if value, ok := statsMap[field]; ok {
 			fmt.Fprintf(&sb, "%s: %v\n", field, value)
 		}
 	}
@@ -306,18 +289,18 @@ func (mr *MigrationResponse) formatStats() (string, error) {
 }
 
 // formatAll formats all response fields
-func (mr *MigrationResponse) formatAll() (string, error) {
+func formatAll(mr *pb.MigrationsResponse) (string, error) {
 	return fmt.Sprintf("Success: %v\nStatus: %s\nOutput: %s\nException: %s\n",
 		mr.Success, mr.Status, mr.Output, mr.Exception), nil
 }
 
 // Faulty returns true if the migration failed
-func (mr *MigrationResponse) Faulty() bool {
+func Faulty(mr *pb.MigrationsResponse) bool {
 	return !mr.Success || mr.Exception != ""
 }
 
 // Running returns true if the migration is currently in progress
-func (mr *MigrationResponse) Running() bool {
+func Running(mr *pb.MigrationsResponse) bool {
 	return mr.Status == constants.MigrationStatusRunning
 }
 

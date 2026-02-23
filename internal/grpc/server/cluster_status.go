@@ -9,7 +9,7 @@ import (
 	pb "github.com/OpenSlides/openslides-cli/proto/osmanage"
 )
 
-func (s *OsmanageServiceServer) GetClusterStatus(ctx context.Context, req *pb.ClusterStatusRequest) (*pb.ClusterStatusResponse, error) {
+func (s *OsmanageServiceServer) GetClusterStatus(ctx context.Context, req *pb.GetClusterStatusRequest) (*pb.GetClusterStatusResponse, error) {
 	k8sClient, err := client.New(req.Kubeconfig)
 	if err != nil {
 		return nil, fmt.Errorf("creating k8s client: %w", err)
@@ -22,7 +22,7 @@ func (s *OsmanageServiceServer) GetClusterStatus(ctx context.Context, req *pb.Cl
 
 	statusMsg := fmt.Sprintf("Cluster: %d/%d nodes ready", status.ReadyNodes, status.TotalNodes)
 
-	return &pb.ClusterStatusResponse{
+	return &pb.GetClusterStatusResponse{
 		Status:     statusMsg,
 		TotalNodes: int32(status.TotalNodes),
 		ReadyNodes: int32(status.ReadyNodes),

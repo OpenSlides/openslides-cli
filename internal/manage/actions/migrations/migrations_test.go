@@ -6,40 +6,41 @@ import (
 	"testing"
 
 	"github.com/OpenSlides/openslides-cli/internal/constants"
+	pb "github.com/OpenSlides/openslides-cli/proto/osmanage"
 )
 
-func TestMigrationResponse_Faulty(t *testing.T) {
+func TestFaulty(t *testing.T) {
 	tests := []struct {
 		name      string
-		resp      MigrationResponse
+		resp      *pb.MigrationsResponse
 		wantFault bool
 	}{
 		{
 			"success no exception",
-			MigrationResponse{Success: true, Exception: ""},
+			&pb.MigrationsResponse{Success: true, Exception: ""},
 			false,
 		},
 		{
 			"failure",
-			MigrationResponse{Success: false, Exception: ""},
+			&pb.MigrationsResponse{Success: false, Exception: ""},
 			true,
 		},
 		{
 			"success with exception",
-			MigrationResponse{Success: true, Exception: "error occurred"},
+			&pb.MigrationsResponse{Success: true, Exception: "error occurred"},
 			true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.resp.Faulty(); got != tt.wantFault {
+			if got := Faulty(tt.resp); got != tt.wantFault {
 				t.Errorf("Faulty() = %v, want %v", got, tt.wantFault)
 			}
 		})
 	}
 }
 
-func TestMigrationResponse_Running(t *testing.T) {
+func TestRunning(t *testing.T) {
 	tests := []struct {
 		name    string
 		status  string
@@ -52,21 +53,21 @@ func TestMigrationResponse_Running(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			resp := MigrationResponse{Status: tt.status}
-			if got := resp.Running(); got != tt.running {
+			resp := &pb.MigrationsResponse{Status: tt.status}
+			if got := Running(resp); got != tt.running {
 				t.Errorf("Running() = %v, want %v", got, tt.running)
 			}
 		})
 	}
 }
 
-func TestMigrationResponse_GetOutput(t *testing.T) {
+func TestGetOutput(t *testing.T) {
 	t.Run("normal output", func(t *testing.T) {
-		resp := MigrationResponse{
+		resp := &pb.MigrationsResponse{
 			Success: true,
 			Output:  "Migration completed",
 		}
-		output, err := resp.GetOutput("migrate")
+		output, err := GetOutput(resp, "migrate")
 		if err != nil {
 			t.Errorf("GetOutput() error = %v", err)
 		}
@@ -86,17 +87,16 @@ func TestMigrationResponse_GetOutput(t *testing.T) {
 			"status":                       "finalization_required",
 		}
 		statsJSON, _ := json.Marshal(stats)
-		resp := MigrationResponse{
+		resp := &pb.MigrationsResponse{
 			Success: true,
 			Stats:   statsJSON,
 		}
-		output, err := resp.GetOutput("stats")
+		output, err := GetOutput(resp, "stats")
 		if err != nil {
 			t.Errorf("GetOutput() error = %v", err)
 		}
 
 		// Verify all expected fields are present
-		// Using subset of MigrationStatsFields for validation
 		expectedFields := []string{
 			"current_migration_index",
 			"target_migration_index",
@@ -112,11 +112,11 @@ func TestMigrationResponse_GetOutput(t *testing.T) {
 	})
 
 	t.Run("faulty response", func(t *testing.T) {
-		resp := MigrationResponse{
+		resp := &pb.MigrationsResponse{
 			Success:   false,
 			Exception: "Migration failed",
 		}
-		output, err := resp.GetOutput("migrate")
+		output, err := GetOutput(resp, "migrate")
 		if err != nil {
 			t.Errorf("GetOutput() error = %v", err)
 		}
@@ -126,7 +126,7 @@ func TestMigrationResponse_GetOutput(t *testing.T) {
 	})
 }
 
-func TestMigrationResponse_FormatStats(t *testing.T) {
+func TestFormatStats(t *testing.T) {
 	t.Run("ordered output", func(t *testing.T) {
 		stats := map[string]any{
 			"status":                       "finalization_required",
@@ -138,11 +138,10 @@ func TestMigrationResponse_FormatStats(t *testing.T) {
 			"fully_migrated_positions":     0,
 		}
 		statsJSON, _ := json.Marshal(stats)
-		resp := &MigrationResponse{Stats: statsJSON}
 
-		output, err := resp.formatStats()
+		output, err := FormatStats(statsJSON)
 		if err != nil {
-			t.Errorf("formatStats() error = %v", err)
+			t.Errorf("FormatStats() error = %v", err)
 		}
 
 		// Verify order: current_migration_index should come before status
@@ -176,11 +175,10 @@ func TestMigrationResponse_FormatStats(t *testing.T) {
 			"current_migration_index": 70,
 		}
 		statsJSON, _ := json.Marshal(stats)
-		resp := &MigrationResponse{Stats: statsJSON}
 
-		output, err := resp.formatStats()
+		output, err := FormatStats(statsJSON)
 		if err != nil {
-			t.Errorf("formatStats() error = %v", err)
+			t.Errorf("FormatStats() error = %v", err)
 		}
 
 		// Should still include present fields
@@ -193,9 +191,9 @@ func TestMigrationResponse_FormatStats(t *testing.T) {
 	})
 
 	t.Run("invalid JSON", func(t *testing.T) {
-		resp := &MigrationResponse{Stats: json.RawMessage("invalid json")}
+		invalidJSON := []byte("invalid json")
 
-		_, err := resp.formatStats()
+		_, err := FormatStats(invalidJSON)
 		if err == nil {
 			t.Error("Expected error for invalid JSON")
 		}

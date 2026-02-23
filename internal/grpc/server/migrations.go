@@ -57,7 +57,7 @@ func (s *OsmanageServiceServer) MigrationsProgress(
 func executeMigrationStream(
 	req *pb.MigrationsRequest,
 	stream interface {
-		Send(*pb.ProgressResponse) error
+		Send(*pb.MigrationsProgressResponse) error
 		Context() context.Context
 	},
 	command string,
@@ -74,8 +74,8 @@ func executeMigrationStream(
 		return fmt.Errorf("starting migration: %w", err)
 	}
 
-	if !response.Running() {
-		return stream.Send(&pb.ProgressResponse{
+	if !migrations.Running(response) {
+		return stream.Send(&pb.MigrationsProgressResponse{
 			Output:    response.Output,
 			Running:   false,
 			Success:   response.Success,
@@ -83,19 +83,14 @@ func executeMigrationStream(
 		})
 	}
 
-	streamCallback := func(update migrations.ProgressUpdate) error {
+	streamCallback := func(update *pb.MigrationsProgressResponse) error {
 		select {
 		case <-stream.Context().Done():
 			return stream.Context().Err()
 		default:
 		}
 
-		return stream.Send(&pb.ProgressResponse{
-			Output:    update.Output,
-			Running:   update.Running,
-			Success:   update.Success,
-			Exception: update.Exception,
-		})
+		return stream.Send(update)
 	}
 
 	return migrations.TrackMigrationProgress(
@@ -119,11 +114,5 @@ func executeMigrationUnary(req *pb.MigrationsRequest, command string) (*pb.Migra
 		return nil, fmt.Errorf("executing migration command %q: %w", command, err)
 	}
 
-	return &pb.MigrationsResponse{
-		Success:   response.Success,
-		Status:    response.Status,
-		Output:    response.Output,
-		Exception: response.Exception,
-		Stats:     response.Stats,
-	}, nil
+	return response, nil
 }
