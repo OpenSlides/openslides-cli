@@ -2,10 +2,10 @@ package server
 
 import (
 	"context"
+	"strings"
 
 	"github.com/OpenSlides/openslides-cli/internal/k8s/actions"
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
-	"github.com/OpenSlides/openslides-cli/internal/utils"
 	pb "github.com/OpenSlides/openslides-cli/proto/osmanage"
 )
 
@@ -14,7 +14,7 @@ func (s *OsmanageServiceServer) GetServiceAddress(ctx context.Context, req *pb.S
 	if err != nil {
 		return &pb.ServiceAddressResponse{Error: err.Error()}, nil
 	}
-	namespace := utils.ExtractNamespace(req.InstanceDirPath)
+	namespace := strings.ReplaceAll(req.InstanceUrl, ".", "")
 
 	address, err := actions.GetServiceAddress(ctx, k8sClient.Clientset(), namespace, req.ServiceName)
 	if err != nil {

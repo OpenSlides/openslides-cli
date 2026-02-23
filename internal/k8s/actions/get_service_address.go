@@ -3,9 +3,9 @@ package actions
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
-	"github.com/OpenSlides/openslides-cli/internal/utils"
 	"github.com/spf13/cobra"
 
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -18,14 +18,14 @@ const (
 	GetServiceAddressHelpExtra = `Returns the service ClusterIP:Port for the given instance and service name.
 
 Examples:
-  osmanage k8s get-service-address ./my.instance.dir.org backendmanage
-  osmanage k8s get-service-address ./my.instance.dir.org backendmanage --kubeconfig ~/.kube/config`
+  osmanage k8s get-service-address my.instance.url.org backendmanage
+  osmanage k8s get-service-address my.instance.url.org backendmanage --kubeconfig ~/.kube/config`
 )
 
 // GetServiceAddressCmd creates the Cobra CLI command
 func GetServiceAddressCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-service-address <instance-dir> <service-name>",
+		Use:   "get-service-address <instance-url> <service-name>",
 		Short: GetServiceAddressHelp,
 		Long:  GetServiceAddressHelp + "\n\n" + GetServiceAddressHelpExtra,
 		Args:  cobra.ExactArgs(2),
@@ -34,10 +34,10 @@ func GetServiceAddressCmd() *cobra.Command {
 	kubeconfig := cmd.Flags().String("kubeconfig", "", "Path to kubeconfig file")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		instanceDir := args[0]
+		instanceUrl := args[0]
 		serviceName := args[1]
 
-		namespace := utils.ExtractNamespace(instanceDir)
+		namespace := strings.ReplaceAll(instanceUrl, ".", "")
 
 		k8sClient, err := client.New(*kubeconfig)
 		if err != nil {

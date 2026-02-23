@@ -30,7 +30,7 @@ message ClusterStatusResponse {
 }
 
 message ServiceAddressRequest {
-  string instance_dir_path = 1;
+  string instance_url = 1;
   string service_name = 2;
   string kubeconfig = 3;
 }
