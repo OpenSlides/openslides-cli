@@ -1,7 +1,6 @@
 package get
 
 import (
-	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -17,7 +16,7 @@ import (
 
 	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
-
+	pb "github.com/OpenSlides/openslides-cli/proto/osmanage"
 	"github.com/OpenSlides/openslides-go/datastore"
 	"github.com/OpenSlides/openslides-go/datastore/dsfetch"
 	"github.com/OpenSlides/openslides-go/environment"
@@ -108,6 +107,9 @@ func Cmd() *cobra.Command {
 	rawFilter := cmd.Flags().String("filter-raw", "", "complex filter in JSON format with operators (=, !=, >, <, >=, <=, ~=)")
 	exists := cmd.Flags().Bool("exists", false, "check only for existence (requires --filter or --filter-raw)")
 
+	// Filter and raw filter flags are mutually exclusive
+	cmd.MarkFlagsMutuallyExclusive("filter", "filter-raw")
+
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		logger.Info("=== GET COLLECTION ===")
 
@@ -119,60 +121,142 @@ func Cmd() *cobra.Command {
 			return fmt.Errorf("--exists requires --filter or --filter-raw")
 		}
 
-		if len(*filter) > 0 && *rawFilter != "" {
-			return fmt.Errorf("cannot use both --filter and --filter-raw")
+		// Build database config
+		dbConfig := &pb.DatabaseConfig{
+			Host:         *postgresHost,
+			Port:         *postgresPort,
+			User:         *postgresUser,
+			Database:     *postgresDatabase,
+			PasswordFile: *postgresPasswordFile,
 		}
 
-		// Parse raw filter if provided
-		var parsedRawFilter *RawFilter
-		if *rawFilter != "" {
-			parsedRawFilter = &RawFilter{}
-			if err := json.Unmarshal([]byte(*rawFilter), parsedRawFilter); err != nil {
-				return fmt.Errorf("parsing filter-raw: %w", err)
-			}
+		// Build query params
+		queryParams := &pb.QueryParams{
+			Collection: collection,
+			Fields:     *fields,
+			ExistsOnly: *exists,
 		}
 
-		// Create environment map for datastore connection
-		envMap := map[string]string{
-			constants.EnvDatabaseHost:          *postgresHost,
-			constants.EnvDatabasePort:          *postgresPort,
-			constants.EnvDatabaseUser:          *postgresUser,
-			constants.EnvDatabaseName:          *postgresDatabase,
-			constants.EnvDatabasePasswordFile:  *postgresPasswordFile,
-			constants.EnvOpenSlidesDevelopment: constants.DevelopmentModeDisabled,
+		// Set filter (mutually exclusive)
+		if len(*filter) > 0 {
+			queryParams.SimpleFilter = *filter
+		} else if *rawFilter != "" {
+			queryParams.RawFilter = []byte(*rawFilter)
 		}
 
-		// Initialize datastore flow
-		env := environment.ForTests(envMap)
-		dsFlow, err := datastore.NewFlowPostgres(env, nil)
-		if err != nil {
-			return fmt.Errorf("creating datastore flow: %w", err)
-		}
-
-		logger.Info("Connected to database successfully")
-
-		// Create fetcher
-		fetch := dsfetch.New(dsFlow)
-		ctx := context.Background()
-
-		// Execute query
-		result, err := executeQuery(ctx, fetch, collection, *filter, parsedRawFilter, *fields, *exists)
+		// Execute query using exported function
+		result, err := ExecuteGetCollection(context.Background(), dbConfig, queryParams)
 		if err != nil {
 			return fmt.Errorf("executing query: %w", err)
 		}
 
-		// Output as JSON
-		jsonBytes, err := json.MarshalIndent(result, "", "  ")
-		if err != nil {
-			return fmt.Errorf("marshaling result to JSON: %w", err)
+		// Print result
+		switch r := result.Result.(type) {
+		case *pb.GetCollectionResponse_Exists:
+			fmt.Printf("%v\n", r.Exists)
+		case *pb.GetCollectionResponse_JsonData:
+			fmt.Println(string(r.JsonData))
+		default:
+			return fmt.Errorf("unexpected result type")
 		}
 
-		fmt.Println(string(jsonBytes))
 		logger.Info("Query completed successfully")
 		return nil
 	}
 
 	return cmd
+}
+
+// ExecuteGetCollection executes a datastore query and returns the result.
+func ExecuteGetCollection(ctx context.Context, dbConfig *pb.DatabaseConfig, params *pb.QueryParams) (*pb.GetCollectionResponse, error) {
+	logger.Debug("Executing get models query for collection: %s", params.Collection)
+
+	// Validate required fields
+	if dbConfig == nil {
+		return &pb.GetCollectionResponse{
+			Success: false,
+			Error:   "database config is required",
+		}, nil
+	}
+	if params == nil {
+		return &pb.GetCollectionResponse{
+			Success: false,
+			Error:   "query params are required",
+		}, nil
+	}
+
+	// Parse raw filter if provided
+	var parsedRawFilter *RawFilter
+	if len(params.RawFilter) > 0 {
+		parsedRawFilter = &RawFilter{}
+		if err := json.Unmarshal(params.RawFilter, parsedRawFilter); err != nil {
+			return &pb.GetCollectionResponse{
+				Success: false,
+				Error:   fmt.Sprintf("parsing filter-raw: %v", err),
+			}, nil
+		}
+	}
+
+	// Create environment map for datastore connection
+	envMap := map[string]string{
+		constants.EnvDatabaseHost:          dbConfig.Host,
+		constants.EnvDatabasePort:          dbConfig.Port,
+		constants.EnvDatabaseUser:          dbConfig.User,
+		constants.EnvDatabaseName:          dbConfig.Database,
+		constants.EnvDatabasePasswordFile:  dbConfig.PasswordFile,
+		constants.EnvOpenSlidesDevelopment: constants.DevelopmentModeDisabled,
+	}
+
+	// Initialize datastore flow
+	env := environment.ForTests(envMap)
+	dsFlow, err := datastore.NewFlowPostgres(env, nil)
+	if err != nil {
+		return &pb.GetCollectionResponse{
+			Success: false,
+			Error:   fmt.Sprintf("creating datastore flow: %v", err),
+		}, nil
+	}
+
+	logger.Info("Connected to database successfully")
+
+	// Create fetcher
+	fetch := dsfetch.New(dsFlow)
+
+	// Execute query
+	rawResult, err := executeQuery(ctx, fetch, params.Collection, params.SimpleFilter, parsedRawFilter, params.Fields, params.ExistsOnly)
+	if err != nil {
+		return &pb.GetCollectionResponse{
+			Success: false,
+			Error:   fmt.Sprintf("executing query: %v", err),
+		}, nil
+	}
+
+	// Format result based on query type
+	response := &pb.GetCollectionResponse{Success: true}
+
+	if params.ExistsOnly {
+		// Result is a boolean
+		exists, ok := rawResult.(bool)
+		if !ok {
+			return &pb.GetCollectionResponse{
+				Success: false,
+				Error:   fmt.Sprintf("expected bool result for exists query, got %T", rawResult),
+			}, nil
+		}
+		response.Result = &pb.GetCollectionResponse_Exists{Exists: exists}
+	} else {
+		// Result is data - marshal to JSON bytes
+		jsonBytes, err := json.MarshalIndent(rawResult, "", "  ")
+		if err != nil {
+			return &pb.GetCollectionResponse{
+				Success: false,
+				Error:   fmt.Sprintf("marshaling result to JSON: %v", err),
+			}, nil
+		}
+		response.Result = &pb.GetCollectionResponse_JsonData{JsonData: jsonBytes}
+	}
+
+	return response, nil
 }
 
 func executeQuery(ctx context.Context, fetch *dsfetch.Fetch, collection string, filter map[string]string, rawFilter *RawFilter, fields []string, existsOnly bool) (any, error) {
@@ -537,13 +621,13 @@ func matchesCondition(record map[string]any, field, operator string, value any) 
 	case "!=":
 		return !reflect.DeepEqual(recordValue, value)
 	case ">":
-		return compareNumeric(recordValue, value, func(a, b float64) bool { return cmp.Compare(a, b) > 0 })
+		return compareNumeric(recordValue, value, func(a, b float64) bool { return a > b })
 	case "<":
-		return compareNumeric(recordValue, value, func(a, b float64) bool { return cmp.Compare(a, b) < 0 })
+		return compareNumeric(recordValue, value, func(a, b float64) bool { return a < b })
 	case ">=":
-		return compareNumeric(recordValue, value, func(a, b float64) bool { return cmp.Compare(a, b) >= 0 })
+		return compareNumeric(recordValue, value, func(a, b float64) bool { return a >= b })
 	case "<=":
-		return compareNumeric(recordValue, value, func(a, b float64) bool { return cmp.Compare(a, b) <= 0 })
+		return compareNumeric(recordValue, value, func(a, b float64) bool { return a <= b })
 	case "~=":
 		return matchesRegex(recordValue, value)
 	default:

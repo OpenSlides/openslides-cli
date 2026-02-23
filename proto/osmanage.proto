@@ -10,7 +10,7 @@ service OsmanageService {
   rpc GetServiceAddress(GetServiceAddressRequest) returns (GetServiceAddressResponse);
   
   // datastore query action (via openslides-go)
-  rpc GetModels(GetModelsRequest) returns (GetModelsResponse);
+  rpc GetCollection(GetCollectionRequest) returns (GetCollectionResponse);
   
   // migrations actions
   
@@ -64,12 +64,12 @@ message QueryParams {
   bytes raw_filter = 5;                  // Complex JSON filter (mutually exclusive with simple_filter)
 }
 
-message GetModelsRequest {
+message GetCollectionRequest {
   DatabaseConfig db_config = 1;   // Database connection configuration
   QueryParams query_params = 2;   // Query filtering and field selection
 }
 
-message GetModelsResponse {
+message GetCollectionResponse {
   bool success = 1;
   string error = 2;  // Empty on success
   
