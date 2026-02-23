@@ -5,39 +5,78 @@ package osmanage;
 option go_package = "github.com/OpenSlides/openslides-cli/proto/osmanage";
 
 service OsmanageService {
-  rpc GetClusterStatus(ClusterStatusRequest) returns (ClusterStatusResponse);
-  rpc GetServiceAddress(ServiceAddressRequest) returns (ServiceAddressResponse);
+  // k8s actions
+  rpc GetClusterStatus(GetClusterStatusRequest) returns (GetClusterStatusResponse);
+  rpc GetServiceAddress(GetServiceAddressRequest) returns (GetServiceAddressResponse);
   
-  // Migration operations - streaming
-  rpc MigrationsMigrate(MigrationsRequest) returns (stream ProgressResponse);
-  rpc MigrationsFinalize(MigrationsRequest) returns (stream ProgressResponse);
+  // datastore query action (via openslides-go)
+  rpc GetModels(GetModelsRequest) returns (GetModelsResponse);
   
-  // Migration operations - unary
+  // migrations actions
+  
+  // server side streaming
+  rpc MigrationsMigrate(MigrationsRequest) returns (stream MigrationsProgressResponse);
+  rpc MigrationsFinalize(MigrationsRequest) returns (stream MigrationsProgressResponse);
+  
+  // unary gRPC calls
   rpc MigrationsReset(MigrationsRequest) returns (MigrationsResponse);
   rpc MigrationsClearCollectionfieldTables(MigrationsRequest) returns (MigrationsResponse);
   rpc MigrationsStats(MigrationsRequest) returns (MigrationsResponse);
   rpc MigrationsProgress(MigrationsRequest) returns (MigrationsResponse);
 }
 
-message ClusterStatusRequest {
-  string kubeconfig = 1;
+message GetClusterStatusRequest {
+  string kubeconfig = 1;  // Empty = use default
 }
 
-message ClusterStatusResponse {
+message GetClusterStatusResponse {
   string status = 1;
   int32 total_nodes = 2;
   int32 ready_nodes = 3;
 }
 
-message ServiceAddressRequest {
+message GetServiceAddressRequest {
   string instance_url = 1;
   string service_name = 2;
-  string kubeconfig = 3;
+  string kubeconfig = 3;  // Empty = use default
 }
 
-message ServiceAddressResponse {
-  string address = 1;
-  string error = 2;
+message GetServiceAddressResponse {
+  string address = 1;  // Format: "IP:Port"
+  string error = 2;    // Empty on success
+}
+
+// PostgreSQL database connection configuration for datastore access
+message DatabaseConfig {
+  string host = 1;
+  string port = 2;
+  string user = 3;
+  string database = 4;
+  string password_file = 5;
+}
+
+// Query parameters for filtering and selecting datastore models
+message QueryParams {
+  string collection = 1;                 // Collection to query: "user", "meeting", or "organization"
+  repeated string fields = 2;            // Fields to return (empty = all fields)
+  bool exists_only = 3;                  // Return only existence check (bool) instead of data
+  map<string, string> simple_filter = 4; // Simple key=value filters (AND'd together)
+  bytes raw_filter = 5;                  // Complex JSON filter (mutually exclusive with simple_filter)
+}
+
+message GetModelsRequest {
+  DatabaseConfig db_config = 1;   // Database connection configuration
+  QueryParams query_params = 2;   // Query filtering and field selection
+}
+
+message GetModelsResponse {
+  bool success = 1;
+  string error = 2;  // Empty on success
+  
+  oneof result {
+    bool exists = 3;      // For exists_only queries
+    bytes json_data = 4;  // JSON-encoded model data
+  }
 }
 
 message MigrationsRequest {
@@ -50,10 +89,10 @@ message MigrationsResponse {
   string status = 2;
   string output = 3;
   string exception = 4;
-  bytes stats = 5;
+  bytes stats = 5;  // JSON-encoded migration statistics
 }
 
-message ProgressResponse {
+message MigrationsProgressResponse {
   string output = 1;
   bool running = 2;
   bool success = 3;
