@@ -89,7 +89,7 @@ message MigrationsResponse {
   string status = 2;
   string output = 3;
   string exception = 4;
-  bytes stats = 5;  // JSON-encoded migration statistics
+  string stats = 5;
 }
 
 message MigrationsProgressResponse {

@@ -162,6 +162,15 @@ func createMigrationCmd(name, description string, withProgressTracking bool) *co
 	return cmd
 }
 
+// Internal type for HTTP response (stats is JSON object)
+type migrationsHTTPResponse struct {
+	Success   bool            `json:"success"`
+	Status    string          `json:"status"`
+	Output    string          `json:"output"`
+	Exception string          `json:"exception"`
+	Stats     json.RawMessage `json:"stats"`
+}
+
 // ExecuteMigrationCommand sends a migration command to the backend with retry logic.
 func ExecuteMigrationCommand(cl *client.Client, command string) (*pb.MigrationsResponse, error) {
 	logger.Debug("Executing migration command: %s", command)
@@ -208,16 +217,24 @@ func ExecuteMigrationCommand(cl *client.Client, command string) (*pb.MigrationsR
 			return nil, lastErr
 		}
 
-		var migrationResp pb.MigrationsResponse
-		if err := json.Unmarshal(body, &migrationResp); err != nil {
+		var httpResp migrationsHTTPResponse
+		if err := json.Unmarshal(body, &httpResp); err != nil {
 			logger.Error("Failed to unmarshal migration response: %v", err)
 			return nil, fmt.Errorf("unmarshalling response: %w", err)
 		}
 
-		logger.Debug("Migration response - Success: %v, Status: %s, Running: %v",
-			migrationResp.Success, migrationResp.Status, Running(&migrationResp))
+		migrationResp := &pb.MigrationsResponse{
+			Success:   httpResp.Success,
+			Status:    httpResp.Status,
+			Output:    httpResp.Output,
+			Exception: httpResp.Exception,
+			Stats:     string(httpResp.Stats),
+		}
 
-		return &migrationResp, nil
+		logger.Debug("Migration response - Success: %v, Status: %s, Running: %v",
+			migrationResp.Success, migrationResp.Status, Running(migrationResp))
+
+		return migrationResp, nil
 	}
 
 	return nil, fmt.Errorf("migration command failed after %d retries: %w", constants.MigrationMaxRetries, lastErr)
@@ -272,9 +289,13 @@ func GetOutput(mr *pb.MigrationsResponse, command string) (string, error) {
 }
 
 // FormatStats formats the stats bytes into a readable string (exported for gRPC use)
-func FormatStats(stats []byte) (string, error) {
+func FormatStats(stats string) (string, error) {
+	if stats == "" {
+		return "", nil
+	}
+
 	var statsMap map[string]any
-	if err := json.Unmarshal(stats, &statsMap); err != nil {
+	if err := json.Unmarshal([]byte(stats), &statsMap); err != nil {
 		return "", fmt.Errorf("unmarshalling stats: %w", err)
 	}
 

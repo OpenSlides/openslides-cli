@@ -89,7 +89,7 @@ func TestGetOutput(t *testing.T) {
 		statsJSON, _ := json.Marshal(stats)
 		resp := &pb.MigrationsResponse{
 			Success: true,
-			Stats:   statsJSON,
+			Stats:   string(statsJSON),
 		}
 		output, err := GetOutput(resp, "stats")
 		if err != nil {
@@ -139,7 +139,7 @@ func TestFormatStats(t *testing.T) {
 		}
 		statsJSON, _ := json.Marshal(stats)
 
-		output, err := FormatStats(statsJSON)
+		output, err := FormatStats(string(statsJSON))
 		if err != nil {
 			t.Errorf("FormatStats() error = %v", err)
 		}
@@ -176,7 +176,7 @@ func TestFormatStats(t *testing.T) {
 		}
 		statsJSON, _ := json.Marshal(stats)
 
-		output, err := FormatStats(statsJSON)
+		output, err := FormatStats(string(statsJSON))
 		if err != nil {
 			t.Errorf("FormatStats() error = %v", err)
 		}
@@ -191,7 +191,7 @@ func TestFormatStats(t *testing.T) {
 	})
 
 	t.Run("invalid JSON", func(t *testing.T) {
-		invalidJSON := []byte("invalid json")
+		invalidJSON := "invalid json"
 
 		_, err := FormatStats(invalidJSON)
 		if err == nil {
