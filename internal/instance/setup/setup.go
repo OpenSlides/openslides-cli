@@ -74,37 +74,8 @@ func Cmd() *cobra.Command {
 		logger.Debug("Base directory: %s", baseDir)
 		logger.Debug("Force: %v, Custom: %s", *force, *customTemplate)
 
-		// Parse configuration
-		cfg, err := config.NewConfig(*configFiles)
-		if err != nil {
-			return fmt.Errorf("parsing configuration: %w", err)
-		}
-
-		// Create secrets directory
-		secretsDir := filepath.Join(baseDir, constants.SecretsDirName)
-		logger.Debug("Creating secrets directory: %s", secretsDir)
-		if err := os.MkdirAll(secretsDir, constants.SecretsDirPerm); err != nil {
-			return fmt.Errorf("creating secrets directory: %w", err)
-		}
-
-		// Create secrets
-		logger.Info("Creating secrets...")
-		if err := createSecrets(secretsDir, *force, defaultSecrets); err != nil {
-			return fmt.Errorf("creating secrets: %w", err)
-		}
-
-		// Create certificates if HTTPS is enabled
-		if enableLocalHTTPS, ok := cfg["enableLocalHTTPS"].(bool); ok && enableLocalHTTPS {
-			logger.Info("Creating SSL certificates...")
-			if err := createCerts(secretsDir, *force); err != nil {
-				return fmt.Errorf("creating certificates: %w", err)
-			}
-		}
-
-		// Create deployment files
-		logger.Info("Creating deployment files...")
-		if err := config.CreateDirAndFiles(baseDir, *force, *customTemplate, cfg); err != nil {
-			return fmt.Errorf("creating deployment files: %w", err)
+		if err := Run(baseDir, *force, *customTemplate, *configFiles, nil); err != nil {
+			return err
 		}
 
 		logger.Info("Setup completed successfully")
@@ -113,6 +84,41 @@ func Cmd() *cobra.Command {
 	}
 
 	return cmd
+}
+
+// Run creates secrets, optional SSL certificates, and deployment files for a new
+// instance. Merges configFiles and optional instanceConfig (merged last, wins on conflict)
+// before generating deployment files from the template into baseDir.
+func Run(baseDir string, force bool, customTemplate string, configFiles []string, instanceConfig []byte) error {
+	cfg, err := config.NewConfig(configFiles, instanceConfig)
+	if err != nil {
+		return fmt.Errorf("parsing configuration: %w", err)
+	}
+
+	secretsDir := filepath.Join(baseDir, constants.SecretsDirName)
+	logger.Debug("Creating secrets directory: %s", secretsDir)
+	if err := os.MkdirAll(secretsDir, constants.SecretsDirPerm); err != nil {
+		return fmt.Errorf("creating secrets directory: %w", err)
+	}
+
+	logger.Info("Creating secrets...")
+	if err := createSecrets(secretsDir, force, defaultSecrets); err != nil {
+		return fmt.Errorf("creating secrets: %w", err)
+	}
+
+	if enableLocalHTTPS, ok := cfg["enableLocalHTTPS"].(bool); ok && enableLocalHTTPS {
+		logger.Info("Creating SSL certificates...")
+		if err := createCerts(secretsDir, force); err != nil {
+			return fmt.Errorf("creating certificates: %w", err)
+		}
+	}
+
+	logger.Info("Creating deployment files...")
+	if err := config.CreateDirAndFiles(baseDir, force, customTemplate, cfg); err != nil {
+		return fmt.Errorf("creating deployment files: %w", err)
+	}
+
+	return nil
 }
 
 func createSecrets(dir string, force bool, secrets []SecretSpec) error {

@@ -59,16 +59,11 @@ func Cmd() *cobra.Command {
 		logger.Info("=== CONFIG ===")
 
 		baseDir := args[0]
-		logger.Debug("Base directory: %s", args[0])
+		logger.Debug("Base directory: %s", baseDir)
 		logger.Debug("Config files: %v", *configFiles)
 
-		config, err := NewConfig(*configFiles)
-		if err != nil {
-			return fmt.Errorf("parsing configuration: %w", err)
-		}
-
-		if err := CreateDirAndFiles(baseDir, *force, *customTemplate, config); err != nil {
-			return fmt.Errorf("creating deployment files: %w", err)
+		if err := Run(baseDir, *force, *customTemplate, *configFiles, nil); err != nil {
+			return err
 		}
 
 		logger.Info("Config files created successfully")
@@ -79,15 +74,26 @@ func Cmd() *cobra.Command {
 	return cmd
 }
 
+// Run merges configFiles and optional instanceConfig (merged last, wins on conflict)
+// into a config map, then generates deployment files from the template into baseDir.
+func Run(baseDir string, force bool, customTemplate string, configFiles []string, instanceConfig []byte) error {
+	cfg, err := NewConfig(configFiles, instanceConfig)
+	if err != nil {
+		return fmt.Errorf("parsing configuration: %w", err)
+	}
+	if err := CreateDirAndFiles(baseDir, force, customTemplate, cfg); err != nil {
+		return fmt.Errorf("creating deployment files: %w", err)
+	}
+	return nil
+}
+
 // NewConfig creates a configuration map by deep-merging all given files in order.
 // Later files override existing keys and add new keys.
-func NewConfig(configFileNames []string) (map[string]any, error) {
-	logger.Debug("Loading configuration from %d file(s)", len(configFileNames))
-
+func NewConfig(configFileNames []string, instanceConfig []byte) (map[string]any, error) {
 	config := make(map[string]any)
 
 	for _, filename := range configFileNames {
-		logger.Debug("Reading config file: %s", filename)
+
 		data, err := os.ReadFile(filename)
 		if err != nil {
 			return nil, fmt.Errorf("reading config file %q: %w", filename, err)
@@ -101,6 +107,16 @@ func NewConfig(configFileNames []string) (map[string]any, error) {
 		// Deep merge fileConfig into config
 		if err := mergo.Merge(&config, fileConfig, mergo.WithOverride); err != nil {
 			return nil, fmt.Errorf("merging config from %q: %w", filename, err)
+		}
+	}
+
+	if instanceConfig != nil {
+		var rawConfig map[string]any
+		if err := yaml.Unmarshal(instanceConfig, &rawConfig); err != nil {
+			return nil, fmt.Errorf("unmarshaling instance config: %w", err)
+		}
+		if err := mergo.Merge(&config, rawConfig, mergo.WithOverride); err != nil {
+			return nil, fmt.Errorf("merging instance config: %w", err)
 		}
 	}
 
