@@ -76,7 +76,7 @@ func UpdateInstanceCmd() *cobra.Command {
 			return nil
 		}
 
-		if err := waitForInstanceHealthy(ctx, k8sClient, namespace, *timeout); err != nil {
+		if err := WaitForInstanceHealthy(ctx, k8sClient, namespace, *timeout, nil); err != nil {
 			return fmt.Errorf("waiting for instance health: %w", err)
 		}
 

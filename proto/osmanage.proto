@@ -8,6 +8,7 @@ service OsmanageService {
   // k8s actions
   rpc GetClusterStatus(GetClusterStatusRequest) returns (GetClusterStatusResponse);
   rpc GetServiceAddress(GetServiceAddressRequest) returns (GetServiceAddressResponse);
+  rpc GetInstanceHealth(GetInstanceHealthRequest) returns (stream GetInstanceHealthResponse);
   
   // datastore query action (via openslides-go)
   rpc GetCollection(GetCollectionRequest) returns (GetCollectionResponse);
@@ -44,6 +45,29 @@ message GetServiceAddressRequest {
 message GetServiceAddressResponse {
   string address = 1;  // Format: "IP:Port"
   string error = 2;    // Empty on success
+}
+
+message GetInstanceHealthRequest {
+  string instance_url = 1;
+  string kubeconfig = 2;
+  bool wait = 3;
+  int32 timeout_seconds = 4;
+}
+
+message GetInstanceHealthResponse {
+  bool healthy = 1;
+  int32 ready_pods = 2;
+  int32 total_pods = 3;
+  int32 active_pods = 4;
+  repeated PodStatus pods = 5;
+  bool complete = 6;  // True on final message (healthy or timeout)
+  string error = 7;   // Error message if failed
+}
+
+message PodStatus {
+  string name = 1;
+  string phase = 2;   // Running, Pending, etc.
+  bool ready = 3;
 }
 
 // PostgreSQL database connection configuration for datastore access

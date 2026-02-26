@@ -14,7 +14,7 @@ func TestIsPodReady_Ready(t *testing.T) {
 			},
 		},
 	}
-	if !isPodReady(pod) {
+	if !IsPodReady(pod) {
 		t.Error("Expected pod to be ready")
 	}
 }
@@ -27,7 +27,7 @@ func TestIsPodReady_NotReady(t *testing.T) {
 			},
 		},
 	}
-	if isPodReady(pod) {
+	if IsPodReady(pod) {
 		t.Error("Expected pod to not be ready")
 	}
 }
@@ -36,7 +36,7 @@ func TestIsPodReady_NoCondition(t *testing.T) {
 	pod := &corev1.Pod{
 		Status: corev1.PodStatus{Conditions: []corev1.PodCondition{}},
 	}
-	if isPodReady(pod) {
+	if IsPodReady(pod) {
 		t.Error("Expected pod to not be ready when no Ready condition exists")
 	}
 }
@@ -50,7 +50,7 @@ func TestIsPodReady_MultipleConditions(t *testing.T) {
 			},
 		},
 	}
-	if !isPodReady(pod) {
+	if !IsPodReady(pod) {
 		t.Error("Expected pod to be ready even with multiple conditions")
 	}
 }
