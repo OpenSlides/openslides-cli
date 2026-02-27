@@ -13,6 +13,8 @@ service OsmanageService {
   rpc GetClusterStatus(GetClusterStatusRequest) returns (GetClusterStatusResponse);
   rpc GetServiceAddress(GetServiceAddressRequest) returns (GetServiceAddressResponse);
   rpc GetInstanceHealth(GetInstanceHealthRequest) returns (stream GetInstanceHealthResponse);
+  rpc UpdateBackendmanage(UpdateBackendmanageRequest) returns (stream UpdateBackendmanageResponse);
+  rpc ScaleService(ScaleServiceRequest) returns (stream ScaleServiceResponse);
   
   // datastore query action (via openslides-go)
   rpc GetCollection(GetCollectionRequest) returns (GetCollectionResponse);
@@ -85,6 +87,39 @@ message PodStatus {
   string name = 1;
   string phase = 2;   // Running, Pending, etc.
   bool ready = 3;
+}
+
+message UpdateBackendmanageRequest {
+  string instance_url = 1;
+  string kubeconfig = 2;
+  string tag = 3;
+  string container_registry = 4;
+  bool revert = 5;
+  int32 timeout_seconds = 6;
+}
+
+message UpdateBackendmanageResponse {
+  bool complete = 1;
+  string error = 2;
+  // Deployment rollout progress
+  int32 ready_replicas = 3;
+  int32 desired_replicas = 4;
+}
+
+message ScaleServiceRequest {
+  string instance_dir = 1;
+  string service = 2;
+  string kubeconfig = 3;
+  bool skip_ready_check = 4;
+  int32 timeout_seconds = 5;
+}
+
+message ScaleServiceResponse {
+  bool complete = 1;
+  string error = 2;
+  // Deployment rollout progress
+  int32 ready_replicas = 3;
+  int32 desired_replicas = 4;
 }
 
 // PostgreSQL database connection configuration for datastore access

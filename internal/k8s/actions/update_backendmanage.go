@@ -9,7 +9,6 @@ import (
 	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
-	"github.com/OpenSlides/openslides-cli/internal/utils"
 	"github.com/spf13/cobra"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -20,9 +19,9 @@ const (
 	UpdateBackendmanageHelpExtra = `Updates the backendmanage service deployment image tag and registry to new version.
 
 Examples:
-  osmanage k8s update-backendmanage ./my.instance.dir.org --kubeconfig ~/.kube/config --tag 4.2.23 --container-registry myRegistry
-  osmanage k8s update-backendmanage ./my.instance.dir.org --tag 4.2.23 --container-registry myRegistry --timeout 30s
-  osmanage k8s update-backendmanage ./my.instance.dir.org --tag 4.2.23 --container-registry myRegistry --revert --timeout 30s`
+  osmanage k8s update-backendmanage my.instance.url.org --kubeconfig ~/.kube/config --tag 4.2.23 --container-registry myRegistry
+  osmanage k8s update-backendmanage my.instance.url.org --tag 4.2.23 --container-registry myRegistry --timeout 30s
+  osmanage k8s update-backendmanage my.instance.url.org --tag 4.2.23 --container-registry myRegistry --revert --timeout 30s`
 )
 
 func UpdateBackendmanageCmd() *cobra.Command {
@@ -51,29 +50,20 @@ func UpdateBackendmanageCmd() *cobra.Command {
 		}
 
 		logger.Info("=== K8S UPDATE/REVERT BACKENDMANAGE ===")
-		instanceDir := args[0]
-		namespace := utils.ExtractNamespace(instanceDir)
-
-		logger.Info("Namespace: %s", namespace)
+		instanceUrl := args[0]
 
 		k8sClient, err := client.New(*kubeconfig)
 		if err != nil {
 			return fmt.Errorf("creating k8s client: %w", err)
 		}
 
-		ctx := context.Background()
+		if err := UpdateBackendmanage(context.Background(), k8sClient, instanceUrl, *tag, *containerRegistry, *revert, *timeout, nil); err != nil {
+			return err
+		}
 
 		if *revert {
-			if err := revertBackendmanage(ctx, k8sClient, namespace, *tag, *containerRegistry, *timeout); err != nil {
-				return err
-			}
-
 			logger.Info("Successfully reverted backendmanage")
 		} else {
-			if err := updateBackendmanage(ctx, k8sClient, namespace, *tag, *containerRegistry, *timeout); err != nil {
-				return err
-			}
-
 			logger.Info("Successfully updated backendmanage")
 		}
 		return nil
@@ -82,10 +72,24 @@ func UpdateBackendmanageCmd() *cobra.Command {
 	return cmd
 }
 
-func updateBackendmanage(ctx context.Context, k8sClient *client.Client, namespace, tag, containerRegistry string, timeout time.Duration) error {
+// UpdateBackendmanage updates or reverts the backendmanage deployment image and waits for rollout.
+// When revert is true the operation is logged as a revert, otherwise as an update.
+func UpdateBackendmanage(
+	ctx context.Context,
+	k8sClient *client.Client,
+	instanceUrl, tag, containerRegistry string,
+	revert bool,
+	timeout time.Duration,
+	callback func(*DeploymentStatus) error,
+) error {
+	namespace := strings.ReplaceAll(instanceUrl, ".", "")
 	image := fmt.Sprintf(constants.BackendmanageImageTemplate, containerRegistry, tag)
 
-	logger.Info("Updating deployment to image: %s", image)
+	if revert {
+		logger.Info("Reverting deployment to image: %s", image)
+	} else {
+		logger.Info("Updating deployment to image: %s", image)
+	}
 
 	patch := fmt.Appendf(nil, constants.BackendmanagePatchTemplate, constants.BackendmanageContainerName, image)
 
@@ -101,37 +105,9 @@ func updateBackendmanage(ctx context.Context, k8sClient *client.Client, namespac
 	}
 
 	logger.Info("Patch applied (generation: %d)", updated.Generation)
-
 	logger.Info("Waiting for rollout to complete...")
-	if err := waitForDeploymentReady(ctx, k8sClient, namespace, constants.BackendmanageDeploymentName, timeout); err != nil {
-		return fmt.Errorf("rollout failed: %w", err)
-	}
 
-	return nil
-}
-
-func revertBackendmanage(ctx context.Context, k8sClient *client.Client, namespace, tag, containerRegistry string, timeout time.Duration) error {
-	image := fmt.Sprintf(constants.BackendmanageImageTemplate, containerRegistry, tag)
-
-	logger.Info("Reverting deployment to image: %s", image)
-
-	patch := fmt.Appendf(nil, constants.BackendmanagePatchTemplate, constants.BackendmanageContainerName, image)
-
-	updated, err := k8sClient.Clientset().AppsV1().Deployments(namespace).Patch(
-		ctx,
-		constants.BackendmanageDeploymentName,
-		types.StrategicMergePatchType,
-		patch,
-		metav1.PatchOptions{},
-	)
-	if err != nil {
-		return fmt.Errorf("patching deployment: %w", err)
-	}
-
-	logger.Info("Patch applied (generation: %d)", updated.Generation)
-
-	logger.Info("Waiting for rollout to complete...")
-	if err := waitForDeploymentReady(ctx, k8sClient, namespace, constants.BackendmanageDeploymentName, timeout); err != nil {
+	if err := waitForDeploymentReady(ctx, k8sClient, namespace, constants.BackendmanageDeploymentName, timeout, callback); err != nil {
 		return fmt.Errorf("rollout failed: %w", err)
 	}
 

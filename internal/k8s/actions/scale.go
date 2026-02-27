@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
-	"github.com/OpenSlides/openslides-cli/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -48,35 +48,14 @@ func ScaleCmd() *cobra.Command {
 		logger.Info("=== K8S SCALE SERVICE ===")
 		instanceDir := args[0]
 		logger.Debug("Instance directory: %s", instanceDir)
-		logger.Info("Service: %s", *service)
-
-		namespace := utils.ExtractNamespace(instanceDir)
-		logger.Info("Namespace: %s", namespace)
 
 		k8sClient, err := client.New(*kubeconfig)
 		if err != nil {
 			return fmt.Errorf("creating k8s client: %w", err)
 		}
 
-		ctx := context.Background()
-
-		// Construct path to deployment file
-		deploymentFile := fmt.Sprintf(constants.DeploymentFileTemplate, *service)
-		deploymentPath := filepath.Join(instanceDir, constants.StackDirName, deploymentFile)
-
-		logger.Info("Applying deployment manifest: %s", deploymentPath)
-		if _, err := applyManifest(ctx, k8sClient, deploymentPath); err != nil {
-			return fmt.Errorf("applying deployment: %w", err)
-		}
-
-		if *skipReadyCheck {
-			logger.Info("Skipping ready check")
-			return nil
-		}
-
-		// Wait for the specific deployment (OpenSlides service name is deployment name)
-		if err := waitForDeploymentReady(ctx, k8sClient, namespace, *service, *timeout); err != nil {
-			return fmt.Errorf("waiting for deployment ready: %w", err)
+		if err := ScaleService(context.Background(), k8sClient, *service, instanceDir, *skipReadyCheck, *timeout, nil); err != nil {
+			return err
 		}
 
 		logger.Info("%s service scaled successfully", *service)
@@ -84,4 +63,30 @@ func ScaleCmd() *cobra.Command {
 	}
 
 	return cmd
+}
+
+// ScaleService applies the deployment manifest for a service and optionally waits for rollout.
+func ScaleService(ctx context.Context, k8sClient *client.Client, service, instanceDir string, skipReadyCheck bool, timeout time.Duration, callback func(*DeploymentStatus) error) error {
+	namespace := strings.ReplaceAll(instanceDir, ".", "")
+	logger.Info("Service: %s", service)
+	logger.Info("Namespace: %s", namespace)
+
+	deploymentFile := fmt.Sprintf(constants.DeploymentFileTemplate, service)
+	deploymentPath := filepath.Join(instanceDir, constants.StackDirName, deploymentFile)
+
+	logger.Info("Applying deployment manifest: %s", deploymentPath)
+	if _, err := applyManifest(ctx, k8sClient, deploymentPath); err != nil {
+		return fmt.Errorf("applying deployment: %w", err)
+	}
+
+	if skipReadyCheck {
+		logger.Info("Skipping ready check")
+		return nil
+	}
+
+	if err := waitForDeploymentReady(ctx, k8sClient, namespace, service, timeout, callback); err != nil {
+		return fmt.Errorf("waiting for deployment ready: %w", err)
+	}
+
+	return nil
 }

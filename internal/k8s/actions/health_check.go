@@ -26,6 +26,13 @@ type HealthStatus struct {
 	Pods       []corev1.Pod
 }
 
+// DeploymentStatus represents the rollout status of a deployment
+type DeploymentStatus struct {
+	Ready    int
+	Desired  int
+	Complete bool
+}
+
 // shouldCountPod returns true if the pod should be counted toward instance health
 // excludes completed, failed, and terminating pods
 func shouldCountPod(pod *corev1.Pod) bool {
@@ -229,7 +236,13 @@ func WaitForInstanceHealthy(
 }
 
 // waitForDeploymentReady waits for a specific deployment rollout to complete.
-func waitForDeploymentReady(ctx context.Context, k8sClient *client.Client, namespace, deploymentName string, timeout time.Duration) error {
+func waitForDeploymentReady(
+	ctx context.Context,
+	k8sClient *client.Client,
+	namespace, deploymentName string,
+	timeout time.Duration,
+	callback func(*DeploymentStatus) error,
+) error {
 	logger.Debug("Waiting for deployment %s to be ready (timeout: %v)", deploymentName, timeout)
 
 	deployment, err := k8sClient.Clientset().AppsV1().Deployments(namespace).Get(ctx, deploymentName, metav1.GetOptions{})
@@ -239,7 +252,7 @@ func waitForDeploymentReady(ctx context.Context, k8sClient *client.Client, names
 	desired := int(*deployment.Spec.Replicas)
 
 	var bar *progressbar.ProgressBar
-	if desired > 0 {
+	if callback == nil && desired > 0 {
 		bar = createProgressBar(desired, fmt.Sprintf("Waiting for %s rollout", deploymentName), 0)
 	}
 
@@ -259,9 +272,27 @@ func waitForDeploymentReady(ctx context.Context, k8sClient *client.Client, names
 		available := int(d.Status.AvailableReplicas)
 		total := int(d.Status.Replicas)
 
-		if bar != nil && !bar.IsFinished() {
-			if err := bar.Set(ready); err != nil {
-				return false, fmt.Errorf("setting progress bar: %w", err)
+		status := &DeploymentStatus{
+			Ready:   ready,
+			Desired: desired,
+		}
+
+		complete := d.Status.ObservedGeneration >= d.Generation &&
+			updated == desired &&
+			available == desired &&
+			ready == desired &&
+			total == desired
+
+		if callback != nil {
+			status.Complete = complete
+			if err := callback(status); err != nil {
+				return false, err
+			}
+		} else {
+			if bar != nil && !bar.IsFinished() {
+				if err := bar.Set(ready); err != nil {
+					return false, fmt.Errorf("setting progress bar: %w", err)
+				}
 			}
 		}
 
@@ -269,11 +300,7 @@ func waitForDeploymentReady(ctx context.Context, k8sClient *client.Client, names
 			deploymentName, updated, desired, ready, desired, total,
 			d.Status.ObservedGeneration, d.Generation)
 
-		if d.Status.ObservedGeneration >= d.Generation &&
-			updated == desired &&
-			available == desired &&
-			ready == desired &&
-			total == desired {
+		if complete {
 			if bar != nil && !bar.IsFinished() {
 				if err := bar.Finish(); err != nil {
 					return false, fmt.Errorf("finishing progress bar: %w", err)
