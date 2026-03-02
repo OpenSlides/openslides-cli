@@ -326,33 +326,56 @@ func waitForDeploymentReady(
 }
 
 // waitForNamespaceDeletion waits for a namespace to be completely deleted.
-func waitForNamespaceDeletion(ctx context.Context, k8sClient *client.Client, namespace string, timeout time.Duration) error {
+func waitForNamespaceDeletion(
+	ctx context.Context,
+	k8sClient *client.Client,
+	namespace string,
+	timeout time.Duration,
+	callback func(elapsedSeconds int) error,
+) error {
 	clientset := k8sClient.Clientset()
-	bar := createProgressBar(-1, fmt.Sprintf("Stopping %s", namespace), 0)
 
-	var lastErr error
+	var bar *progressbar.ProgressBar
+	if callback == nil {
+		bar = createProgressBar(-1, fmt.Sprintf("Stopping %s", namespace), 0)
+	}
+
+	startTime := time.Now()
+
 	err := pollUntil(ctx, constants.TickerDuration, timeout, func() (bool, error) {
-		_ = bar.Add(1)
+		elapsed := int(time.Since(startTime).Seconds())
+
+		if bar != nil {
+			_ = bar.Add(1)
+		}
+
+		if callback != nil {
+			if err := callback(elapsed); err != nil {
+				return false, err
+			}
+		}
+
 		_, err := clientset.CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
 		if err != nil {
-			if errors.IsNotFound(err) {
+			if !errors.IsNotFound(err) {
+				logger.Warn("Error checking namespace: %v", err)
+				return false, nil
+			}
+			if bar != nil {
 				if err := bar.Finish(); err != nil {
 					return false, fmt.Errorf("finishing progress bar: %w", err)
 				}
-				logger.Debug("Namespace %s successfully deleted", namespace)
-				return true, nil
 			}
-			lastErr = err
-			logger.Warn("Error checking namespace: %v", err)
+			logger.Debug("Namespace %s successfully deleted", namespace)
+			return true, nil
 		}
 		logger.Debug("Namespace %s still terminating...", namespace)
 		return false, nil
 	})
 
 	if err != nil {
-		_ = bar.Finish()
-		if lastErr != nil {
-			return fmt.Errorf("timeout waiting for namespace %s to be deleted (last error: %w)", namespace, lastErr)
+		if bar != nil {
+			_ = bar.Finish()
 		}
 		return fmt.Errorf("timeout waiting for namespace %s to be deleted", namespace)
 	}

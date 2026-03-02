@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"time"
 
 	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
@@ -44,40 +45,8 @@ func StartCmd() *cobra.Command {
 			return fmt.Errorf("creating k8s client: %w", err)
 		}
 
-		ctx := context.Background()
-
-		namespacePath := filepath.Join(instanceDir, constants.NamespaceYAML)
-		namespace, err := applyManifest(ctx, k8sClient, namespacePath)
-		if err != nil {
-			return fmt.Errorf("applying namespace: %w", err)
-		}
-		logger.Info("Applied namespace: %s", namespace)
-
-		tlsSecretPath := filepath.Join(instanceDir, constants.SecretsDirName, constants.TlsCertSecretYAML)
-		tlsExists, err := utils.FileExists(tlsSecretPath)
-		if err != nil {
-			return fmt.Errorf("checking tls secret path %s: %w", tlsSecretPath, err)
-		}
-		if tlsExists {
-			logger.Info("Found and applying %s", tlsSecretPath)
-			if _, err := applyManifest(ctx, k8sClient, tlsSecretPath); err != nil {
-				return fmt.Errorf("applying TLS secret: %w", err)
-			}
-		}
-
-		stackDir := filepath.Join(instanceDir, constants.StackDirName)
-		logger.Info("Applying stack manifests from: %s", stackDir)
-		if err := applyDirectory(ctx, k8sClient, stackDir); err != nil {
-			return fmt.Errorf("applying stack: %w", err)
-		}
-
-		if *skipReadyCheck {
-			logger.Info("Skipping ready check")
-			return nil
-		}
-
-		if err := WaitForInstanceHealthy(ctx, k8sClient, namespace, *timeout, nil); err != nil {
-			return fmt.Errorf("waiting for ready: %w", err)
+		if err := StartInstance(context.Background(), k8sClient, instanceDir, *skipReadyCheck, *timeout, nil); err != nil {
+			return err
 		}
 
 		logger.Info("Instance started successfully")
@@ -85,4 +54,45 @@ func StartCmd() *cobra.Command {
 	}
 
 	return cmd
+}
+
+// StartInstance applies namespace, optional TLS secret, and stack manifests,
+// then optionally waits for all pods to become healthy.
+func StartInstance(ctx context.Context, k8sClient *client.Client, instanceDir string, skipReadyCheck bool, timeout time.Duration, callback func(*HealthStatus) error) error {
+	namespacePath := filepath.Join(instanceDir, constants.NamespaceYAML)
+	namespace, err := applyManifest(ctx, k8sClient, namespacePath)
+	if err != nil {
+		return fmt.Errorf("applying namespace: %w", err)
+	}
+	logger.Info("Applied namespace: %s", namespace)
+
+	tlsSecretPath := filepath.Join(instanceDir, constants.SecretsDirName, constants.TlsCertSecretYAML)
+	tlsExists, err := utils.FileExists(tlsSecretPath)
+	if err != nil {
+		return fmt.Errorf("checking tls secret path %s: %w", tlsSecretPath, err)
+	}
+	if tlsExists {
+		logger.Info("Found and applying %s", tlsSecretPath)
+		if _, err := applyManifest(ctx, k8sClient, tlsSecretPath); err != nil {
+			return fmt.Errorf("applying TLS secret: %w", err)
+		}
+	}
+
+	stackDir := filepath.Join(instanceDir, constants.StackDirName)
+	logger.Info("Applying stack manifests from: %s", stackDir)
+	if err := applyDirectory(ctx, k8sClient, stackDir); err != nil {
+		return fmt.Errorf("applying stack: %w", err)
+	}
+
+	if skipReadyCheck {
+		logger.Info("Skipping ready check")
+		return nil
+	}
+
+	logger.Info("Waiting for instance to become ready...")
+	if err := WaitForInstanceHealthy(ctx, k8sClient, namespace, timeout, callback); err != nil {
+		return fmt.Errorf("waiting for ready: %w", err)
+	}
+
+	return nil
 }
