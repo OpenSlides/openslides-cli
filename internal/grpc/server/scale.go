@@ -27,7 +27,7 @@ func (s *OsmanageServiceServer) ScaleService(
 		timeout = constants.DefaultDeploymentTimeout
 	}
 
-	err = actions.ScaleService(ctx, k8sClient, req.InstanceDir, req.Service, req.SkipReadyCheck, timeout,
+	err = actions.ScaleService(ctx, k8sClient, req.Service, req.InstanceDir, req.SkipReadyCheck, timeout,
 		func(status *actions.DeploymentStatus) error {
 			return stream.Send(&pb.ScaleServiceResponse{
 				Complete:        false,
