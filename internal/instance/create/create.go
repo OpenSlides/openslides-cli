@@ -55,7 +55,7 @@ func Cmd() *cobra.Command {
 		instanceDir := args[0]
 		logger.Debug("Instance directory: %s", instanceDir)
 
-		if err := createInstance(instanceDir, *dbPassword, *superadminPassword); err != nil {
+		if err := CreateInstance(instanceDir, *dbPassword, *superadminPassword); err != nil {
 			return fmt.Errorf("creating instance: %w", err)
 		}
 
@@ -66,8 +66,8 @@ func Cmd() *cobra.Command {
 	return cmd
 }
 
-// createInstance sets up the secrets directory with the provided passwords
-func createInstance(instanceDir, dbPassword, superadminPassword string) error {
+// CreateInstance sets up the secrets directory with the provided passwords
+func CreateInstance(instanceDir, dbPassword, superadminPassword string) error {
 	secretsDir := filepath.Join(instanceDir, constants.SecretsDirName)
 
 	if _, err := os.Stat(secretsDir); os.IsNotExist(err) {

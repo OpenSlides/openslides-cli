@@ -36,7 +36,7 @@ func TestRemoveInstance_DirectoryExists(t *testing.T) {
 		}
 	})
 
-	err = removeInstance(instanceDir, true)
+	err = RemoveInstance(instanceDir, true)
 	if err != nil {
 		t.Fatalf("removeInstance failed: %v", err)
 	}
@@ -59,7 +59,7 @@ func TestRemoveInstance_DirectoryNotExist(t *testing.T) {
 
 	nonExistentDir := filepath.Join(tmpDir, "does-not-exist")
 
-	err = removeInstance(nonExistentDir, true)
+	err = RemoveInstance(nonExistentDir, true)
 	if err == nil {
 		t.Error("Expected error when removing non-existent directory, got nil")
 	}
@@ -86,7 +86,7 @@ func TestRemoveInstance_NotADirectory(t *testing.T) {
 		t.Fatalf("Failed to create test file: %v", err)
 	}
 
-	err = removeInstance(testFile, true)
+	err = RemoveInstance(testFile, true)
 	if err == nil {
 		t.Error("Expected error when removing a file instead of directory, got nil")
 	}
@@ -140,7 +140,7 @@ func TestRemoveInstance_RemovesNestedStructure(t *testing.T) {
 		}
 	})
 
-	err = removeInstance(instanceDir, true)
+	err = RemoveInstance(instanceDir, true)
 	if err != nil {
 		t.Fatalf("removeInstance failed: %v", err)
 	}
@@ -171,7 +171,7 @@ func TestRemoveInstance_WithForceFlag(t *testing.T) {
 		}
 	})
 
-	err = removeInstance(instanceDir, true)
+	err = RemoveInstance(instanceDir, true)
 	if err != nil {
 		t.Fatalf("removeInstance with force=true failed: %v", err)
 	}
@@ -198,7 +198,7 @@ func TestRemoveInstance_EmptyDirectory(t *testing.T) {
 		}
 	})
 
-	err = removeInstance(instanceDir, true)
+	err = RemoveInstance(instanceDir, true)
 	if err != nil {
 		t.Fatalf("removeInstance failed on empty directory: %v", err)
 	}
@@ -235,7 +235,7 @@ func TestRemoveInstance_WithSymlinks(t *testing.T) {
 		}
 	})
 
-	err = removeInstance(instanceDir, true)
+	err = RemoveInstance(instanceDir, true)
 	if err != nil {
 		t.Fatalf("removeInstance failed: %v", err)
 	}

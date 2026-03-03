@@ -34,7 +34,7 @@ func Cmd() *cobra.Command {
 		instanceDir := args[0]
 		logger.Debug("Instance directory: %s", instanceDir)
 
-		if err := removeInstance(instanceDir, *force); err != nil {
+		if err := RemoveInstance(instanceDir, *force); err != nil {
 			return fmt.Errorf("removing instance: %w", err)
 		}
 
@@ -45,8 +45,9 @@ func Cmd() *cobra.Command {
 	return cmd
 }
 
-// removeInstance removes the entire instance directory
-func removeInstance(instanceDir string, force bool) error {
+// RemoveInstance removes the entire instance directory
+// When force is false, prompts for confirmation before deletion.
+func RemoveInstance(instanceDir string, force bool) error {
 	info, err := os.Stat(instanceDir)
 	if err != nil {
 		if os.IsNotExist(err) {

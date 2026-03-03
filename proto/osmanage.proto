@@ -8,6 +8,8 @@ service OsmanageService {
   // Instance filesystem operations
   rpc SetupInstance(InstanceConfigRequest) returns (InstanceConfigResponse);
   rpc ConfigInstance(InstanceConfigRequest) returns (InstanceConfigResponse);
+  rpc CreateInstance(CreateInstanceRequest) returns (CreateInstanceResponse);
+  rpc RemoveInstance(RemoveInstanceRequest) returns (RemoveInstanceResponse);
 
   // k8s actions
   rpc GetClusterStatus(GetClusterStatusRequest) returns (GetClusterStatusResponse);
@@ -43,6 +45,27 @@ message InstanceConfigRequest {
 }
 
 message InstanceConfigResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+message CreateInstanceRequest {
+  string instance_dir = 1;
+  string db_password = 2;
+  string superadmin_password = 3;
+}
+
+message CreateInstanceResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+message RemoveInstanceRequest {
+  string instance_dir = 1;
+  bool force = 2;
+}
+
+message RemoveInstanceResponse {
   bool success = 1;
   string error = 2;
 }
