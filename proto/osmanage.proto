@@ -16,6 +16,7 @@ service OsmanageService {
   rpc GetServiceAddress(GetServiceAddressRequest) returns (GetServiceAddressResponse);
   rpc GetInstanceHealth(GetInstanceHealthRequest) returns (stream GetInstanceHealthResponse);
   rpc UpdateBackendmanage(UpdateBackendmanageRequest) returns (stream UpdateBackendmanageResponse);
+  rpc UpdateInstance(UpdateInstanceRequest) returns (stream UpdateInstanceResponse);
   rpc ScaleService(ScaleServiceRequest) returns (stream ScaleServiceResponse);
   rpc StartInstance(StartInstanceRequest) returns (stream StartInstanceResponse);
   rpc StopInstance(StopInstanceRequest) returns (stream StopInstanceResponse);
@@ -131,6 +132,24 @@ message UpdateBackendmanageResponse {
   int32 desired_replicas = 4;
 }
 
+message UpdateInstanceRequest {
+  string instance_dir = 1;
+  string kubeconfig = 2;
+  bool skip_ready_check = 3;
+  int32 timeout_seconds = 4;
+}
+
+message UpdateInstanceResponse {
+  bool healthy = 1;
+  int32 ready_pods = 2;
+  int32 total_pods = 3;
+  int32 active_pods = 4;
+  repeated PodStatus pods = 5;
+  bool complete = 6;
+  string error = 7;
+  bool inactive = 8;
+}
+
 message ScaleServiceRequest {
   string instance_dir = 1;
   string service = 2;
@@ -155,10 +174,13 @@ message StartInstanceRequest {
 }
 
 message StartInstanceResponse {
-  bool complete = 1;
-  string error = 2;
-  int32 ready_pods = 3;
-  int32 total_pods = 4;
+  bool healthy = 1;
+  int32 ready_pods = 2;
+  int32 total_pods = 3;
+  int32 active_pods = 4;
+  repeated PodStatus pods = 5;
+  bool complete = 6;
+  string error = 7;
 }
 
 message StopInstanceRequest {

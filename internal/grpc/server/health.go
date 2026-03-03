@@ -39,7 +39,7 @@ func (s *OsmanageServiceServer) GetInstanceHealth(
 			default:
 			}
 
-			return stream.Send(healthStatusToProto(status, false))
+			return stream.Send(healthStatusToHealthResponse(status, false))
 		}
 
 		err := actions.WaitForInstanceHealthy(ctx, k8sClient, namespace, timeout, streamCallback)
@@ -64,11 +64,11 @@ func (s *OsmanageServiceServer) GetInstanceHealth(
 		})
 	}
 
-	return stream.Send(healthStatusToProto(status, true))
+	return stream.Send(healthStatusToHealthResponse(status, true))
 }
 
 // Helper to convert internal type to proto
-func healthStatusToProto(status *actions.HealthStatus, complete bool) *pb.GetInstanceHealthResponse {
+func healthStatusToHealthResponse(status *actions.HealthStatus, complete bool) *pb.GetInstanceHealthResponse {
 	pods := make([]*pb.PodStatus, len(status.Pods))
 	for i, pod := range status.Pods {
 		pods[i] = &pb.PodStatus{

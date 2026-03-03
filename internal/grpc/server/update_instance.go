@@ -9,13 +9,13 @@ import (
 	pb "github.com/OpenSlides/openslides-cli/proto/osmanage"
 )
 
-func (s *OsmanageServiceServer) StartInstance(
-	req *pb.StartInstanceRequest,
-	stream pb.OsmanageService_StartInstanceServer,
+func (s *OsmanageServiceServer) UpdateInstance(
+	req *pb.UpdateInstanceRequest,
+	stream pb.OsmanageService_UpdateInstanceServer,
 ) error {
 	k8sClient, err := client.New(req.Kubeconfig)
 	if err != nil {
-		return stream.Send(&pb.StartInstanceResponse{
+		return stream.Send(&pb.UpdateInstanceResponse{
 			Complete: true,
 			Error:    err.Error(),
 		})
@@ -34,23 +34,30 @@ func (s *OsmanageServiceServer) StartInstance(
 		default:
 		}
 
-		return stream.Send(healthStatusToStartResponse(status, false))
+		return stream.Send(healthStatusToUpdateResponse(status, false))
 	}
 
-	err = actions.StartInstance(ctx, k8sClient, req.InstanceDir, req.SkipReadyCheck, timeout, streamCallback)
+	inactiveCallback := func() error {
+		return stream.Send(&pb.UpdateInstanceResponse{
+			Complete: true,
+			Inactive: true,
+		})
+	}
+
+	err = actions.UpdateInstance(ctx, k8sClient, req.InstanceDir, req.SkipReadyCheck, timeout, streamCallback, inactiveCallback)
 	if err != nil {
-		return stream.Send(&pb.StartInstanceResponse{
+		return stream.Send(&pb.UpdateInstanceResponse{
 			Complete: true,
 			Error:    err.Error(),
 		})
 	}
-	return stream.Send(&pb.StartInstanceResponse{
+	return stream.Send(&pb.UpdateInstanceResponse{
 		Complete: true,
 	})
 }
 
 // Helper to convert internal type to proto
-func healthStatusToStartResponse(status *actions.HealthStatus, complete bool) *pb.StartInstanceResponse {
+func healthStatusToUpdateResponse(status *actions.HealthStatus, complete bool) *pb.UpdateInstanceResponse {
 	pods := make([]*pb.PodStatus, len(status.Pods))
 	for i, pod := range status.Pods {
 		pods[i] = &pb.PodStatus{
@@ -60,7 +67,7 @@ func healthStatusToStartResponse(status *actions.HealthStatus, complete bool) *p
 		}
 	}
 
-	return &pb.StartInstanceResponse{
+	return &pb.UpdateInstanceResponse{
 		Healthy:    status.Healthy,
 		ReadyPods:  int32(status.Ready),
 		TotalPods:  int32(status.Total),

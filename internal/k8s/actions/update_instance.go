@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"time"
 
 	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
@@ -40,44 +41,13 @@ func UpdateInstanceCmd() *cobra.Command {
 
 		logger.Debug("Instance directory: %s", instanceDir)
 
-		namespace := utils.ExtractNamespace(instanceDir)
-		logger.Info("Namespace: %s", namespace)
-
 		k8sClient, err := client.New(*kubeconfig)
 		if err != nil {
 			return fmt.Errorf("creating k8s client: %w", err)
 		}
 
-		ctx := context.Background()
-
-		isActive, err := namespaceIsActive(ctx, k8sClient, namespace)
-		if err != nil {
-			return fmt.Errorf("checking namespace: %w", err)
-		}
-
-		if !isActive {
-			logger.Info("%s is not running.", namespace)
-			logger.Info("The configuration has been updated and the instance will be upgraded upon its next start.")
-			logger.Info("Note that the next start might take a long time due to pending migrations.")
-			logger.Info("Consider starting the instance and running migrations now.")
-			logger.Info("Alternatively, downgrade for now and run migrations in the background once the instance is started.")
-			return nil
-		}
-
-		logger.Info("Updating OpenSlides services.")
-
-		stackDir := filepath.Join(instanceDir, constants.StackDirName)
-		if err := applyDirectory(ctx, k8sClient, stackDir); err != nil {
-			return fmt.Errorf("applying stack: %w", err)
-		}
-
-		if *skipReadyCheck {
-			logger.Info("Skip ready check.")
-			return nil
-		}
-
-		if err := WaitForInstanceHealthy(ctx, k8sClient, namespace, *timeout, nil); err != nil {
-			return fmt.Errorf("waiting for instance health: %w", err)
+		if err := UpdateInstance(context.Background(), k8sClient, instanceDir, *skipReadyCheck, *timeout, nil, nil); err != nil {
+			return err
 		}
 
 		logger.Info("Instance updated successfully")
@@ -85,4 +55,55 @@ func UpdateInstanceCmd() *cobra.Command {
 	}
 
 	return cmd
+}
+
+// UpdateInstance applies new stack manifests and optionally waits for instance
+// to become healthy. Returns early with inactive=true if the namespace is not running.
+func UpdateInstance(
+	ctx context.Context,
+	k8sClient *client.Client,
+	instanceDir string,
+	skipReadyCheck bool,
+	timeout time.Duration,
+	callback func(*HealthStatus) error,
+	inactiveCallback func() error,
+) error {
+	namespace := utils.ExtractNamespace(instanceDir)
+	logger.Info("Namespace: %s", namespace)
+
+	isActive, err := namespaceIsActive(ctx, k8sClient, namespace)
+	if err != nil {
+		return fmt.Errorf("checking namespace: %w", err)
+	}
+
+	if !isActive {
+		logger.Info("%s is not running.", namespace)
+		logger.Info("The configuration has been updated and the instance will be upgraded upon its next start.")
+		logger.Info("Note that the next start might take a long time due to pending migrations.")
+		logger.Info("Consider starting the instance and running migrations now.")
+		logger.Info("Alternatively, downgrade for now and run migrations in the background once the instance is started.")
+		if inactiveCallback != nil {
+			return inactiveCallback()
+		}
+		return nil
+	}
+
+	logger.Info("Updating OpenSlides services.")
+
+	stackDir := filepath.Join(instanceDir, constants.StackDirName)
+	if err := applyDirectory(ctx, k8sClient, stackDir); err != nil {
+		return fmt.Errorf("applying stack: %w", err)
+	}
+
+	if skipReadyCheck {
+		logger.Info("Skip ready check.")
+		return nil
+	}
+
+	logger.Info("Waiting for instance to become ready...")
+	if err := WaitForInstanceHealthy(ctx, k8sClient, namespace, timeout, callback); err != nil {
+		return fmt.Errorf("waiting for instance health: %w", err)
+	}
+
+	return nil
 }
