@@ -10,6 +10,7 @@ import (
 	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
+	"github.com/OpenSlides/openslides-cli/internal/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -67,7 +68,7 @@ func ScaleCmd() *cobra.Command {
 
 // ScaleService applies the deployment manifest for a service and optionally waits for rollout.
 func ScaleService(ctx context.Context, k8sClient *client.Client, service, instanceDir string, skipReadyCheck bool, timeout time.Duration, callback func(*DeploymentStatus) error) error {
-	namespace := strings.ReplaceAll(instanceDir, ".", "")
+	namespace := utils.ExtractNamespace(instanceDir)
 	logger.Info("Service: %s", service)
 	logger.Info("Namespace: %s", namespace)
 
