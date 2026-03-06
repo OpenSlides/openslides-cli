@@ -35,6 +35,9 @@ service OsmanageService {
   rpc MigrationsClearCollectionfieldTables(MigrationsRequest) returns (MigrationsResponse);
   rpc MigrationsStats(MigrationsRequest) returns (MigrationsResponse);
   rpc MigrationsProgress(MigrationsRequest) returns (MigrationsResponse);
+
+  // generic manage action via backendmanage client
+  rpc SendManageAction(SendManageActionRequest) returns (SendManageActionResponse);
 }
 
 message InstanceConfigRequest {
@@ -246,4 +249,17 @@ message MigrationsProgressResponse {
   bool running = 2;
   bool success = 3;
   string exception = 4;
+}
+
+message SendManageActionRequest {
+  string address_backendmanage = 1;
+  string password_file_path = 2;
+  string action = 3;
+  bytes payload = 4;
+}
+
+message SendManageActionResponse {
+  bool success = 1;
+  string error = 2;
+  bytes body = 3;
 }
