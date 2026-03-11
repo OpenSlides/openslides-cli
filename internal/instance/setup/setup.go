@@ -87,10 +87,12 @@ func Cmd() *cobra.Command {
 }
 
 // Run creates secrets, optional SSL certificates, and deployment files for a new
-// instance. Merges configFiles and optional instanceConfig (merged last, wins on conflict)
-// before generating deployment files from the template into baseDir.
-func Run(baseDir string, force bool, customTemplate string, configFiles []string, instanceConfig []byte) error {
-	cfg, err := config.NewConfig(configFiles, instanceConfig)
+// instance. Exactly one of configFiles (CLI) or configs (gRPC) should be provided.
+// configs are pre-read byte slices sent over gRPC, configFiles are read from disk.
+// In both cases the last entry wins on conflict before generating deployment files
+// from the template into baseDir.
+func Run(baseDir string, force bool, customTemplate string, configFiles []string, configs [][]byte) error {
+	cfg, err := config.NewConfig(configFiles, configs)
 	if err != nil {
 		return fmt.Errorf("parsing configuration: %w", err)
 	}

@@ -12,8 +12,8 @@ func (s *OsmanageServiceServer) ConfigInstance(ctx context.Context, req *pb.Inst
 		req.InstanceDir,
 		req.Force,
 		req.StackTemplatePath,
-		[]string{req.StackConfigPath},
-		req.InstanceConfig,
+		nil,
+		req.Configs,
 	)
 	if err != nil {
 		return &pb.InstanceConfigResponse{Success: false, Error: err.Error()}, nil

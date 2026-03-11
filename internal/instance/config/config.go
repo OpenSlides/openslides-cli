@@ -76,8 +76,8 @@ func Cmd() *cobra.Command {
 
 // Run merges configFiles and optional instanceConfig (merged last, wins on conflict)
 // into a config map, then generates deployment files from the template into baseDir.
-func Run(baseDir string, force bool, customTemplate string, configFiles []string, instanceConfig []byte) error {
-	cfg, err := NewConfig(configFiles, instanceConfig)
+func Run(baseDir string, force bool, customTemplate string, configFiles []string, configs [][]byte) error {
+	cfg, err := NewConfig(configFiles, configs)
 	if err != nil {
 		return fmt.Errorf("parsing configuration: %w", err)
 	}
@@ -87,40 +87,44 @@ func Run(baseDir string, force bool, customTemplate string, configFiles []string
 	return nil
 }
 
-// NewConfig creates a configuration map by deep-merging all given files in order.
-// Later files override existing keys and add new keys.
-func NewConfig(configFileNames []string, instanceConfig []byte) (map[string]any, error) {
+// NewConfig creates a configuration map by deep-merging configs in order.
+// Later entries override existing keys and add new keys.
+// Exactly one of configFiles or configs should be provided:
+// - configFiles: path-based configs for direct CLI use, files are read from disk
+// - configs: pre-read byte slices for gRPC use, files are read on the client side
+func NewConfig(configFiles []string, configs [][]byte) (map[string]any, error) {
 	config := make(map[string]any)
 
-	for _, filename := range configFileNames {
-
+	for _, filename := range configFiles {
 		data, err := os.ReadFile(filename)
 		if err != nil {
 			return nil, fmt.Errorf("reading config file %q: %w", filename, err)
 		}
-
-		var fileConfig map[string]any
-		if err := yaml.Unmarshal(data, &fileConfig); err != nil {
-			return nil, fmt.Errorf("unmarshaling YAML from %q: %w", filename, err)
-		}
-
-		// Deep merge fileConfig into config
-		if err := mergo.Merge(&config, fileConfig, mergo.WithOverride); err != nil {
-			return nil, fmt.Errorf("merging config from %q: %w", filename, err)
+		if err := mergeYAML(&config, data, filename); err != nil {
+			return nil, err
 		}
 	}
 
-	if instanceConfig != nil {
-		var rawConfig map[string]any
-		if err := yaml.Unmarshal(instanceConfig, &rawConfig); err != nil {
-			return nil, fmt.Errorf("unmarshaling instance config: %w", err)
-		}
-		if err := mergo.Merge(&config, rawConfig, mergo.WithOverride); err != nil {
-			return nil, fmt.Errorf("merging instance config: %w", err)
+	for i, data := range configs {
+		if err := mergeYAML(&config, data, fmt.Sprintf("config[%d]", i)); err != nil {
+			return nil, err
 		}
 	}
 
 	return config, nil
+}
+
+// mergeYAML unmarshals YAML data into a map and deep-merges it into config,
+// with later values overriding existing keys. label is used for error messages.
+func mergeYAML(config *map[string]any, data []byte, label string) error {
+	var parsed map[string]any
+	if err := yaml.Unmarshal(data, &parsed); err != nil {
+		return fmt.Errorf("unmarshaling YAML from %q: %w", label, err)
+	}
+	if err := mergo.Merge(config, parsed, mergo.WithOverride); err != nil {
+		return fmt.Errorf("merging config from %q: %w", label, err)
+	}
+	return nil
 }
 
 // CreateDirAndFiles creates the base directory and (re-)creates the deployment
