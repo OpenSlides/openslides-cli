@@ -139,15 +139,22 @@ func createMigrationCmd(name, description string, withProgressTracking bool) *co
 			return fmt.Errorf("executing migration command: %w", err)
 		}
 
-		if withProgressTracking && progressInterval != nil && *progressInterval > 0 && Running(response) {
+		if withProgressTracking && progressInterval != nil && *progressInterval > 0 && (Running(response) || Finalizing(response)) {
 			fmt.Println("Progress:")
+
+			var stopCondition func(*pb.MigrationsResponse) bool
+			if name == "finalize" {
+				stopCondition = func(r *pb.MigrationsResponse) bool { return !Running(r) && !Finalizing(r) }
+			} else {
+				stopCondition = func(r *pb.MigrationsResponse) bool { return !Running(r) }
+			}
 
 			printCallback := func(update *pb.MigrationsProgressResponse) error {
 				fmt.Print(update.Output)
 				return nil
 			}
 
-			return TrackMigrationProgress(cl, *progressInterval, printCallback)
+			return TrackMigrationProgress(cl, *progressInterval, stopCondition, printCallback)
 		}
 
 		output, err := GetOutput(response, name)
@@ -231,8 +238,8 @@ func ExecuteMigrationCommand(cl *client.Client, command string) (*pb.MigrationsR
 			Stats:     string(httpResp.Stats),
 		}
 
-		logger.Debug("Migration response - Success: %v, Status: %s, Running: %v",
-			migrationResp.Success, migrationResp.Status, Running(migrationResp))
+		logger.Debug("Migration response - Success: %v, Status: %s, Running: %v, Finalizing: %v",
+			migrationResp.Success, migrationResp.Status, Running(migrationResp), Finalizing(migrationResp))
 
 		return migrationResp, nil
 	}
@@ -241,7 +248,12 @@ func ExecuteMigrationCommand(cl *client.Client, command string) (*pb.MigrationsR
 }
 
 // TrackMigrationProgress polls migration progress and sends updates to the callback.
-func TrackMigrationProgress(cl *client.Client, interval time.Duration, callback func(*pb.MigrationsProgressResponse) error) error {
+func TrackMigrationProgress(
+	cl *client.Client,
+	interval time.Duration,
+	stopCondition func(*pb.MigrationsResponse) bool,
+	callback func(*pb.MigrationsProgressResponse) error,
+) error {
 	logger.Debug("Starting progress tracking with interval: %v", interval)
 
 	for {
@@ -254,7 +266,7 @@ func TrackMigrationProgress(cl *client.Client, interval time.Duration, callback 
 
 		update := &pb.MigrationsProgressResponse{
 			Output:    response.Output,
-			Running:   Running(response),
+			Running:   Running(response) || Finalizing(response),
 			Success:   response.Success,
 			Exception: response.Exception,
 		}
@@ -268,7 +280,7 @@ func TrackMigrationProgress(cl *client.Client, interval time.Duration, callback 
 			return fmt.Errorf("migration failed: %s", response.Exception)
 		}
 
-		if !Running(response) {
+		if stopCondition(response) {
 			logger.Info("Migration completed")
 			break
 		}
@@ -317,12 +329,19 @@ func formatAll(mr *pb.MigrationsResponse) (string, error) {
 
 // Faulty returns true if the migration failed
 func Faulty(mr *pb.MigrationsResponse) bool {
-	return !mr.Success || mr.Exception != ""
+	return !mr.Success || mr.Exception != "" ||
+		mr.Status == constants.MigrationStatusFailed ||
+		mr.Status == constants.FinalizationStatusFailed
 }
 
 // Running returns true if the migration is currently in progress
 func Running(mr *pb.MigrationsResponse) bool {
 	return mr.Status == constants.MigrationStatusRunning
+}
+
+// Finalizing returns true if the migration finalization is currently in progress
+func Finalizing(mr *pb.MigrationsResponse) bool {
+	return mr.Status == constants.FinalizationStatusRunning
 }
 
 // isRetryableError determines if an error should trigger a retry
