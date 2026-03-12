@@ -15,14 +15,18 @@ func (s *OsmanageServiceServer) MigrationsMigrate(
 	req *pb.MigrationsRequest,
 	stream pb.OsmanageService_MigrationsMigrateServer,
 ) error {
-	return executeMigrationStream(req, stream, "migrate")
+	return executeMigrationStream(req, stream, "migrate",
+		func(r *pb.MigrationsResponse) bool { return !migrations.Running(r) },
+	)
 }
 
 func (s *OsmanageServiceServer) MigrationsFinalize(
 	req *pb.MigrationsRequest,
 	stream pb.OsmanageService_MigrationsFinalizeServer,
 ) error {
-	return executeMigrationStream(req, stream, "finalize")
+	return executeMigrationStream(req, stream, "finalize",
+		func(r *pb.MigrationsResponse) bool { return !migrations.Running(r) && !migrations.Finalizing(r) },
+	)
 }
 
 func (s *OsmanageServiceServer) MigrationsReset(
@@ -61,6 +65,7 @@ func executeMigrationStream(
 		Context() context.Context
 	},
 	command string,
+	stopCondition func(*pb.MigrationsResponse) bool,
 ) error {
 	authPassword, err := utils.ReadPassword(req.PasswordFilePath)
 	if err != nil {
@@ -74,7 +79,8 @@ func executeMigrationStream(
 		return fmt.Errorf("starting migration: %w", err)
 	}
 
-	if !migrations.Running(response) {
+	// If already completed within the backend's 0.2s thread wait, return immediately
+	if stopCondition(response) {
 		return stream.Send(&pb.MigrationsProgressResponse{
 			Output:    response.Output,
 			Running:   false,
@@ -96,6 +102,7 @@ func executeMigrationStream(
 	return migrations.TrackMigrationProgress(
 		backendClient,
 		constants.DefaultMigrationProgressInterval,
+		stopCondition,
 		streamCallback,
 	)
 }
