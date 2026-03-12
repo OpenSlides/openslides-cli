@@ -195,6 +195,15 @@ const (
 	// MigrationStatusRunning indicates a migration is currently in progress
 	MigrationStatusRunning string = "migration_running"
 
+	// MigrationStatusFailed indicates a migration process has failed
+	MigrationStatusFailed string = "migration_failed"
+
+	// FinalizationStatusRunning indicates a migration finalization is currently in progress
+	FinalizationStatusRunning string = "finalization_running"
+
+	// FinalizationStatusFailed indicates a migration finalization process has failed
+	FinalizationStatusFailed string = "finalization_failed"
+
 	// MigrationMaxRetries is the maximum number of retry attempts for failed migration requests
 	MigrationMaxRetries int = 5
 
