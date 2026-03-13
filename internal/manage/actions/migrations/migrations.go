@@ -327,7 +327,7 @@ func (mr *MigrationResponse) formatStats() (string, error) {
 	var sb strings.Builder
 	for _, field := range constants.MigrationStatsFields {
 		if value, ok := stats[field]; ok {
-			sb.WriteString(fmt.Sprintf("%s: %v\n", field, value))
+			fmt.Fprintf(&sb, "%s: %v\n", field, value)
 		}
 	}
 
