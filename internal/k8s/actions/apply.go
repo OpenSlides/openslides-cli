@@ -15,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
@@ -26,23 +27,30 @@ const (
 	forceConflicts bool = true
 )
 
-// applyManifest applies a single YAML manifest file using RESTMapper
-func applyManifest(ctx context.Context, k8sClient *client.Client, manifestPath string) (string, error) {
+// resourceKey uniquely identifies a Kubernetes resource by GVR and name
+type resourceKey struct {
+	gvr  schema.GroupVersionResource
+	name string
+}
+
+// applyManifest applies a single YAML manifest file using RESTMapper and returns
+// the applied resourceKey and namespace. Returns nil key if the manifest is skipped.
+func applyManifest(ctx context.Context, k8sClient *client.Client, manifestPath string) (*resourceKey, string, error) {
 	logger.Debug("Applying manifest: %s", manifestPath)
 
 	data, err := os.ReadFile(manifestPath)
 	if err != nil {
-		return "", fmt.Errorf("reading manifest: %w", err)
+		return nil, "", fmt.Errorf("reading manifest: %w", err)
 	}
 
 	var obj unstructured.Unstructured
 	if err := yaml.Unmarshal(data, &obj); err != nil {
-		return "", fmt.Errorf("parsing YAML: %w", err)
+		return nil, "", fmt.Errorf("parsing YAML: %w", err)
 	}
 
 	if obj.GetKind() == "" {
 		logger.Info("Skipping manifest with no kind: %s", manifestPath)
-		return "", nil
+		return nil, "", nil
 	}
 
 	namespace := obj.GetNamespace()
@@ -52,25 +60,25 @@ func applyManifest(ctx context.Context, k8sClient *client.Client, manifestPath s
 
 	mapper, err := k8sClient.RESTMapper()
 	if err != nil {
-		return "", fmt.Errorf("getting REST mapper: %w", err)
+		return nil, "", fmt.Errorf("getting REST mapper: %w", err)
 	}
 
 	gvk := obj.GroupVersionKind()
 
 	mapping, err := mapper.RESTMapping(gvk.GroupKind(), gvk.Version)
 	if err != nil {
-		return "", fmt.Errorf("getting REST mapping for %s: %w", gvk.String(), err)
+		return nil, "", fmt.Errorf("getting REST mapping for %s: %w", gvk.String(), err)
 	}
 
 	dynamicClient, err := k8sClient.Dynamic()
 	if err != nil {
-		return "", fmt.Errorf("getting dynamic client: %w", err)
+		return nil, "", fmt.Errorf("getting dynamic client: %w", err)
 	}
 
 	var result *unstructured.Unstructured
 	if mapping.Scope.Name() == meta.RESTScopeNameNamespace {
 		if namespace == "" {
-			return "", fmt.Errorf("resource %s/%s is namespaced but has no namespace specified",
+			return nil, "", fmt.Errorf("resource %s/%s is namespaced but has no namespace specified",
 				obj.GetKind(), obj.GetName())
 		}
 		result, err = dynamicClient.Resource(mapping.Resource).Namespace(namespace).Apply(
@@ -96,18 +104,18 @@ func applyManifest(ctx context.Context, k8sClient *client.Client, manifestPath s
 	}
 
 	if err != nil {
-		return namespace, fmt.Errorf("applying %s/%s: %w", obj.GetKind(), obj.GetName(), err)
+		return nil, namespace, fmt.Errorf("applying %s/%s: %w", obj.GetKind(), obj.GetName(), err)
 	}
 
 	logger.Info("Applied %s: %s", result.GetKind(), result.GetName())
-	return namespace, nil
+	return &resourceKey{gvr: mapping.Resource, name: obj.GetName()}, namespace, nil
 }
 
-// applyDirectory applies all YAML files in a directory
-func applyDirectory(ctx context.Context, k8sClient *client.Client, dirPath string) error {
+// applyDirectory applies all YAML files in a directory and returns the set of applied resources.
+func applyDirectory(ctx context.Context, k8sClient *client.Client, dirPath string) ([]resourceKey, error) {
 	files, err := os.ReadDir(dirPath)
 	if err != nil {
-		return fmt.Errorf("reading directory: %w", err)
+		return nil, fmt.Errorf("reading directory: %w", err)
 	}
 
 	var yamlFiles []os.DirEntry
@@ -129,11 +137,77 @@ func applyDirectory(ctx context.Context, k8sClient *client.Client, dirPath strin
 		return constants.GetKindPriority(kindI) < constants.GetKindPriority(kindJ)
 	})
 
+	var applied []resourceKey
 	for _, file := range yamlFiles {
 		manifestPath := filepath.Join(dirPath, file.Name())
-		if _, err := applyManifest(ctx, k8sClient, manifestPath); err != nil {
+		key, _, err := applyManifest(ctx, k8sClient, manifestPath)
+		if err != nil {
 			logger.Warn("Failed to apply %s: %v", file.Name(), err)
 			continue
+		}
+		if key != nil {
+			applied = append(applied, *key)
+		}
+	}
+
+	return applied, nil
+}
+
+// pruneOrphans deletes namespaced resources in the given namespace that are owned
+// by osmanage but are no longer present in the applied set.
+func pruneOrphans(ctx context.Context, k8sClient *client.Client, namespace string, applied []resourceKey) error {
+	desired := make(map[resourceKey]bool, len(applied))
+	for _, k := range applied {
+		desired[k] = true
+	}
+
+	dynamicClient, err := k8sClient.Dynamic()
+	if err != nil {
+		return fmt.Errorf("getting dynamic client: %w", err)
+	}
+
+	groupResources, err := k8sClient.APIGroupResources()
+	if err != nil {
+		return fmt.Errorf("getting API group resources: %w", err)
+	}
+
+	for _, group := range groupResources {
+		for _, version := range group.Group.Versions {
+			for _, resource := range group.VersionedResources[version.Version] {
+				if !resource.Namespaced {
+					continue
+				}
+
+				gvr := schema.GroupVersionResource{
+					Group:    group.Group.Name,
+					Version:  version.Version,
+					Resource: resource.Name,
+				}
+
+				list, err := dynamicClient.Resource(gvr).Namespace(namespace).List(ctx, metav1.ListOptions{})
+				if err != nil {
+					logger.Debug("Skipping %s: %v", gvr.Resource, err)
+					continue
+				}
+
+				for _, item := range list.Items {
+					if desired[resourceKey{gvr: gvr, name: item.GetName()}] {
+						continue
+					}
+					for _, mf := range item.GetManagedFields() {
+						if mf.Manager != fieldManager {
+							continue
+						}
+						logger.Info("Pruning orphaned %s: %s", item.GetKind(), item.GetName())
+						if err := dynamicClient.Resource(gvr).Namespace(namespace).Delete(
+							ctx, item.GetName(), metav1.DeleteOptions{},
+						); err != nil {
+							logger.Warn("Failed to prune %s/%s: %v", item.GetKind(), item.GetName(), err)
+						}
+						break
+					}
+				}
+			}
 		}
 	}
 

@@ -60,7 +60,7 @@ func StartCmd() *cobra.Command {
 // then optionally waits for all pods to become healthy.
 func StartInstance(ctx context.Context, k8sClient *client.Client, instanceDir string, skipReadyCheck bool, timeout time.Duration, callback func(*HealthStatus) error) error {
 	namespacePath := filepath.Join(instanceDir, constants.NamespaceYAML)
-	namespace, err := applyManifest(ctx, k8sClient, namespacePath)
+	_, namespace, err := applyManifest(ctx, k8sClient, namespacePath)
 	if err != nil {
 		return fmt.Errorf("applying namespace: %w", err)
 	}
@@ -73,14 +73,14 @@ func StartInstance(ctx context.Context, k8sClient *client.Client, instanceDir st
 	}
 	if tlsExists {
 		logger.Info("Found and applying %s", tlsSecretPath)
-		if _, err := applyManifest(ctx, k8sClient, tlsSecretPath); err != nil {
+		if _, _, err := applyManifest(ctx, k8sClient, tlsSecretPath); err != nil {
 			return fmt.Errorf("applying TLS secret: %w", err)
 		}
 	}
 
 	stackDir := filepath.Join(instanceDir, constants.StackDirName)
 	logger.Info("Applying stack manifests from: %s", stackDir)
-	if err := applyDirectory(ctx, k8sClient, stackDir); err != nil {
+	if _, err := applyDirectory(ctx, k8sClient, stackDir); err != nil {
 		return fmt.Errorf("applying stack: %w", err)
 	}
 

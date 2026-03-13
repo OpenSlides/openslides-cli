@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/OpenSlides/openslides-cli/internal/logger"
-
 	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes"
@@ -28,6 +27,8 @@ type Client struct {
 	restMapper meta.RESTMapper
 	mapperOnce sync.Once
 	mapperErr  error
+
+	apiGroupResources []*restmapper.APIGroupResources
 }
 
 // New creates a Kubernetes client from the given kubeconfig path.
@@ -87,8 +88,8 @@ func getDefaultKubeconfigPath() string {
 
 	return filepath.Join(
 		home,
-		clientcmd.RecommendedHomeDir,  // ".kube"
-		clientcmd.RecommendedFileName, // "config"
+		clientcmd.RecommendedHomeDir,
+		clientcmd.RecommendedFileName,
 	)
 }
 
@@ -125,9 +126,19 @@ func (c *Client) RESTMapper() (meta.RESTMapper, error) {
 			return
 		}
 
+		c.apiGroupResources = apiGroupResources
 		c.restMapper = restmapper.NewDiscoveryRESTMapper(apiGroupResources)
 		logger.Debug("REST mapper initialized")
 	})
 
 	return c.restMapper, c.mapperErr
+}
+
+// APIGroupResources returns the cached API group resources, initializing the
+// REST mapper if needed. Used for iterating over all known resource types.
+func (c *Client) APIGroupResources() ([]*restmapper.APIGroupResources, error) {
+	if _, err := c.RESTMapper(); err != nil {
+		return nil, err
+	}
+	return c.apiGroupResources, nil
 }

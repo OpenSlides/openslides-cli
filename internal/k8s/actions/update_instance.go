@@ -91,8 +91,13 @@ func UpdateInstance(
 	logger.Info("Updating OpenSlides services.")
 
 	stackDir := filepath.Join(instanceDir, constants.StackDirName)
-	if err := applyDirectory(ctx, k8sClient, stackDir); err != nil {
+	applied, err := applyDirectory(ctx, k8sClient, stackDir)
+	if err != nil {
 		return fmt.Errorf("applying stack: %w", err)
+	}
+
+	if err := pruneOrphans(ctx, k8sClient, namespace, applied); err != nil {
+		logger.Warn("Failed to prune orphaned resources: %v", err)
 	}
 
 	if skipReadyCheck {

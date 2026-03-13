@@ -76,7 +76,7 @@ func ScaleService(ctx context.Context, k8sClient *client.Client, service, instan
 	deploymentPath := filepath.Join(instanceDir, constants.StackDirName, deploymentFile)
 
 	logger.Info("Applying deployment manifest: %s", deploymentPath)
-	if _, err := applyManifest(ctx, k8sClient, deploymentPath); err != nil {
+	if _, _, err := applyManifest(ctx, k8sClient, deploymentPath); err != nil {
 		return fmt.Errorf("applying deployment: %w", err)
 	}
 
