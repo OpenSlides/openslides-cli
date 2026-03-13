@@ -45,6 +45,7 @@ message InstanceConfigRequest {
   string stack_template_path = 2;  // path to template file or directory on server node
   repeated bytes configs = 3;       // JSON-encoded YAML configs (merged last wins on conflict)
   bool force = 4;
+  bool clean = 5;
 }
 
 message InstanceConfigResponse {

@@ -51,6 +51,7 @@ func Cmd() *cobra.Command {
 	}
 
 	force := cmd.Flags().BoolP("force", "f", false, "overwrite existing files")
+	clean := cmd.Flags().Bool("clean", false, "Wipe stack folder contents before generating new files")
 	customTemplate := cmd.Flags().StringP("template", "t", "", "custom template file or directory")
 	configFiles := cmd.Flags().StringArrayP("config", "c", nil, "custom YAML config file (can be used multiple times)")
 	cmd.MarkFlagsRequiredTogether("template", "config")
@@ -62,7 +63,7 @@ func Cmd() *cobra.Command {
 		logger.Debug("Base directory: %s", baseDir)
 		logger.Debug("Config files: %v", *configFiles)
 
-		if err := Run(baseDir, *force, *customTemplate, *configFiles, nil); err != nil {
+		if err := Run(baseDir, *force, *clean, *customTemplate, *configFiles, nil); err != nil {
 			return err
 		}
 
@@ -76,7 +77,12 @@ func Cmd() *cobra.Command {
 
 // Run merges configFiles and optional instanceConfig (merged last, wins on conflict)
 // into a config map, then generates deployment files from the template into baseDir.
-func Run(baseDir string, force bool, customTemplate string, configFiles []string, configs [][]byte) error {
+func Run(baseDir string, force, clean bool, customTemplate string, configFiles []string, configs [][]byte) error {
+	if clean {
+		if err := os.RemoveAll(filepath.Join(baseDir, "stack")); err != nil {
+			return fmt.Errorf("cleaning stack folder: %w", err)
+		}
+	}
 	cfg, err := NewConfig(configFiles, configs)
 	if err != nil {
 		return fmt.Errorf("parsing configuration: %w", err)

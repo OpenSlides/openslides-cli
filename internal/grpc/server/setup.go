@@ -11,6 +11,7 @@ func (s *OsmanageServiceServer) SetupInstance(ctx context.Context, req *pb.Insta
 	err := setup.Run(
 		req.InstanceDir,
 		req.Force,
+		req.Clean,
 		req.StackTemplatePath,
 		nil,
 		req.Configs,
