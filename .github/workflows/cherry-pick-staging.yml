@@ -42,7 +42,7 @@ jobs:
           }
       
       - name: Generate access token
-        uses: actions/create-github-app-token@v2
+        uses: actions/create-github-app-token@v3
         id: generate-token
         with:
           app-id: ${{ secrets.AUTOMATION_APP_ID }}
