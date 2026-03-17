@@ -84,17 +84,6 @@ func RootCmd() *cobra.Command {
 		k8sActions.GetServiceAddressCmd(),
 	)
 
-	serveCmd := &cobra.Command{
-		Use:   "serve",
-		Short: "Start gRPC server",
-		Long:  "Start the osmanage gRPC server for client-server communication",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			port, _ := cmd.Flags().GetInt("port")
-			return grpcServer.Start(port)
-		},
-	}
-	serveCmd.Flags().IntP("port", "p", 50051, "gRPC server port")
-
 	rootCmd.AddCommand(
 		setup.Cmd(),
 		config.Cmd(),
@@ -108,7 +97,7 @@ func RootCmd() *cobra.Command {
 		action.Cmd(),
 		migrations.Cmd(),
 		k8sCmd,
-		serveCmd,
+		grpcServer.Cmd(),
 	)
 
 	return rootCmd

@@ -262,3 +262,10 @@ func GetKindPriority(kind string) int {
 	}
 	return 100
 }
+
+// gRPC server defaults
+const (
+	GRPCHost                string        = "127.0.0.1"
+	GRPCPort                string        = "50051"
+	GRPCGracefulStopTimeout time.Duration = 30 * time.Second
+)

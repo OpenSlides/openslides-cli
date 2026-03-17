@@ -38,9 +38,14 @@ func New(levelStr string) (*Logger, error) {
 		return nil, fmt.Errorf("invalid log level: %s", levelStr)
 	}
 
+	flags := log.LstdFlags
+	if os.Getenv("INVOCATION_ID") != "" { // if used as systemd service
+		flags = 0
+	}
+
 	return &Logger{
 		level:  level,
-		logger: log.New(os.Stderr, "", log.LstdFlags),
+		logger: log.New(os.Stderr, "", flags),
 	}, nil
 }
 
