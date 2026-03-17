@@ -209,7 +209,7 @@ func ExecuteGetCollection(ctx context.Context, dbConfig *pb.DatabaseConfig, para
 
 	// Initialize datastore flow
 	env := environment.ForTests(envMap)
-	dsFlow, err := datastore.NewFlowPostgres(env, nil)
+	dsFlow, err := datastore.NewFlowPostgres(env)
 	if err != nil {
 		return &pb.GetCollectionResponse{
 			Success: false,
