@@ -27,7 +27,7 @@ func (s *OsmanageServiceServer) UpdateBackendmanage(
 		timeout = constants.DefaultDeploymentTimeout
 	}
 
-	err = actions.UpdateBackendmanage(ctx, k8sClient, req.InstanceUrl, req.Tag, req.ContainerRegistry, req.Revert, timeout,
+	err = actions.UpdateBackendmanage(ctx, k8sClient, req.InstanceUrl, req.Tag, req.ContainerRegistry, timeout,
 		func(status *actions.DeploymentStatus) error {
 			return stream.Send(&pb.UpdateBackendmanageResponse{
 				Complete:        false,

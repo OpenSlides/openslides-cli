@@ -20,8 +20,7 @@ const (
 
 Examples:
   osmanage k8s update-backendmanage my.instance.url.org --kubeconfig ~/.kube/config --tag 4.2.23 --container-registry myRegistry
-  osmanage k8s update-backendmanage my.instance.url.org --tag 4.2.23 --container-registry myRegistry --timeout 30s
-  osmanage k8s update-backendmanage my.instance.url.org --tag 4.2.23 --container-registry myRegistry --revert --timeout 30s`
+  osmanage k8s update-backendmanage my.instance.url.org --tag 4.2.23 --container-registry myRegistry --timeout 30s`
 )
 
 func UpdateBackendmanageCmd() *cobra.Command {
@@ -35,7 +34,6 @@ func UpdateBackendmanageCmd() *cobra.Command {
 	tag := cmd.Flags().StringP("tag", "t", "", "Image tag (required)")
 	containerRegistry := cmd.Flags().String("container-registry", "", "Container registry (required)")
 	kubeconfig := cmd.Flags().String("kubeconfig", "", "Path to kubeconfig file")
-	revert := cmd.Flags().Bool("revert", false, "Changes image back with given tag and registry")
 	timeout := cmd.Flags().Duration("timeout", constants.DefaultDeploymentTimeout, "Timeout for deployment rollout check")
 
 	_ = cmd.MarkFlagRequired("tag")
@@ -49,7 +47,7 @@ func UpdateBackendmanageCmd() *cobra.Command {
 			return fmt.Errorf("--container-registry cannot be empty")
 		}
 
-		logger.Info("=== K8S UPDATE/REVERT BACKENDMANAGE ===")
+		logger.Info("=== K8S UPDATE BACKENDMANAGE ===")
 		instanceUrl := args[0]
 
 		k8sClient, err := client.New(*kubeconfig)
@@ -57,15 +55,11 @@ func UpdateBackendmanageCmd() *cobra.Command {
 			return fmt.Errorf("creating k8s client: %w", err)
 		}
 
-		if err := UpdateBackendmanage(context.Background(), k8sClient, instanceUrl, *tag, *containerRegistry, *revert, *timeout, nil); err != nil {
+		if err := UpdateBackendmanage(context.Background(), k8sClient, instanceUrl, *tag, *containerRegistry, *timeout, nil); err != nil {
 			return err
 		}
 
-		if *revert {
-			logger.Info("Successfully reverted backendmanage")
-		} else {
-			logger.Info("Successfully updated backendmanage")
-		}
+		logger.Info("Successfully updated backendmanage")
 		return nil
 	}
 
@@ -78,18 +72,13 @@ func UpdateBackendmanage(
 	ctx context.Context,
 	k8sClient *client.Client,
 	instanceUrl, tag, containerRegistry string,
-	revert bool,
 	timeout time.Duration,
 	callback func(*DeploymentStatus) error,
 ) error {
 	namespace := strings.ReplaceAll(instanceUrl, ".", "")
 	image := fmt.Sprintf(constants.BackendmanageImageTemplate, containerRegistry, tag)
 
-	if revert {
-		logger.Info("Reverting deployment to image: %s", image)
-	} else {
-		logger.Info("Updating deployment to image: %s", image)
-	}
+	logger.Info("Updating deployment to image: %s", image)
 
 	patch := fmt.Appendf(nil, constants.BackendmanagePatchTemplate, constants.BackendmanageContainerName, image)
 

@@ -123,8 +123,7 @@ message UpdateBackendmanageRequest {
   string kubeconfig = 2;
   string tag = 3;
   string container_registry = 4;
-  bool revert = 5;
-  int32 timeout_seconds = 6;
+  int32 timeout_seconds = 5;
 }
 
 message UpdateBackendmanageResponse {
