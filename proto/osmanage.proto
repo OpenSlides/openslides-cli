@@ -12,6 +12,7 @@ service OsmanageService {
   rpc RemoveInstance(RemoveInstanceRequest) returns (RemoveInstanceResponse);
 
   // k8s actions
+  rpc GetNamespaceExists(GetNamespaceExistsRequest) returns (GetNamespaceExistsResponse);
   rpc GetClusterStatus(GetClusterStatusRequest) returns (GetClusterStatusResponse);
   rpc GetServiceAddress(GetServiceAddressRequest) returns (GetServiceAddressResponse);
   rpc GetInstanceHealth(GetInstanceHealthRequest) returns (stream GetInstanceHealthResponse);
@@ -71,6 +72,16 @@ message RemoveInstanceRequest {
 
 message RemoveInstanceResponse {
   bool success = 1;
+  string error = 2;
+}
+
+message GetNamespaceExistsRequest {
+  string instance_url = 1;
+  string kubeconfig = 2;
+}
+
+message GetNamespaceExistsResponse {
+  bool exists = 1;
   string error = 2;
 }
 

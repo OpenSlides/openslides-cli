@@ -82,6 +82,7 @@ func RootCmd() *cobra.Command {
 		k8sActions.UpdateInstanceCmd(),
 		k8sActions.ScaleCmd(),
 		k8sActions.GetServiceAddressCmd(),
+		k8sActions.GetNamespaceExistsCmd(),
 	)
 
 	rootCmd.AddCommand(
