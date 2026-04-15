@@ -35,7 +35,7 @@ type resourceKey struct {
 
 // applyManifest applies a single YAML manifest file using RESTMapper and returns
 // the applied resourceKey and namespace. Returns nil key if the manifest is skipped.
-func applyManifest(ctx context.Context, k8sClient *client.Client, manifestPath string) (*resourceKey, string, error) {
+func applyManifest(ctx context.Context, k8sClient *client.Client, manifestPath string, labels map[string]string) (*resourceKey, string, error) {
 	logger.Debug("Applying manifest: %s", manifestPath)
 
 	data, err := os.ReadFile(manifestPath)
@@ -50,6 +50,11 @@ func applyManifest(ctx context.Context, k8sClient *client.Client, manifestPath s
 
 	if obj.GetKind() == "" {
 		logger.Info("Skipping manifest with no kind: %s", manifestPath)
+		return nil, "", nil
+	}
+
+	if !matchesLabels(&obj, labels) {
+		logger.Debug("Skipping %s/%s: does not match labels", obj.GetKind(), obj.GetName())
 		return nil, "", nil
 	}
 
@@ -111,8 +116,22 @@ func applyManifest(ctx context.Context, k8sClient *client.Client, manifestPath s
 	return &resourceKey{gvr: mapping.Resource, name: obj.GetName()}, namespace, nil
 }
 
+// matchesLabels checks if an unstructured object has all the given labels
+func matchesLabels(obj *unstructured.Unstructured, labels map[string]string) bool {
+	if len(labels) == 0 {
+		return true
+	}
+	objLabels := obj.GetLabels()
+	for k, v := range labels {
+		if objLabels[k] != v {
+			return false
+		}
+	}
+	return true
+}
+
 // applyDirectory applies all YAML files in a directory and returns the set of applied resources.
-func applyDirectory(ctx context.Context, k8sClient *client.Client, dirPath string) ([]resourceKey, error) {
+func applyDirectory(ctx context.Context, k8sClient *client.Client, dirPath string, labels map[string]string) ([]resourceKey, error) {
 	files, err := os.ReadDir(dirPath)
 	if err != nil {
 		return nil, fmt.Errorf("reading directory: %w", err)
@@ -140,7 +159,7 @@ func applyDirectory(ctx context.Context, k8sClient *client.Client, dirPath strin
 	var applied []resourceKey
 	for _, file := range yamlFiles {
 		manifestPath := filepath.Join(dirPath, file.Name())
-		key, _, err := applyManifest(ctx, k8sClient, manifestPath)
+		key, _, err := applyManifest(ctx, k8sClient, manifestPath, labels)
 		if err != nil {
 			logger.Warn("Failed to apply %s: %v", file.Name(), err)
 			continue

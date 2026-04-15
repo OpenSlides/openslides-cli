@@ -91,7 +91,7 @@ func UpdateInstance(
 	logger.Info("Updating OpenSlides services.")
 
 	stackDir := filepath.Join(instanceDir, constants.StackDirName)
-	applied, err := applyDirectory(ctx, k8sClient, stackDir)
+	applied, err := applyDirectory(ctx, k8sClient, stackDir, nil)
 	if err != nil {
 		return fmt.Errorf("applying stack: %w", err)
 	}

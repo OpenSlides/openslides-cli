@@ -37,7 +37,7 @@ func (s *OsmanageServiceServer) StartInstance(
 		return stream.Send(healthStatusToStartResponse(status, false))
 	}
 
-	err = actions.StartInstance(ctx, k8sClient, req.InstanceDir, req.SkipReadyCheck, timeout, streamCallback)
+	err = actions.StartInstance(ctx, k8sClient, req.InstanceDir, req.SkipReadyCheck, timeout, req.Labels, streamCallback)
 	if err != nil {
 		return stream.Send(&pb.StartInstanceResponse{
 			Complete: true,

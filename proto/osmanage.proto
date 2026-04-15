@@ -184,6 +184,7 @@ message StartInstanceRequest {
   string kubeconfig = 2;
   bool skip_ready_check = 3;
   int32 timeout_seconds = 4;
+  map<string, string> labels = 5;
 }
 
 message StartInstanceResponse {
