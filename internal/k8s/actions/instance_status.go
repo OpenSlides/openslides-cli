@@ -55,14 +55,16 @@ func GetInstanceStatusCmd() *cobra.Command {
 		}
 
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-		fmt.Fprintln(w, "NAMESPACE\tSERVICE\tPOD\tREGISTRY\tTAG\tREADY\tSTARTED\tNODE")
+		if _, err := fmt.Fprintln(w, "NAMESPACE\tSERVICE\tPOD\tREGISTRY\tTAG\tREADY\tSTARTED\tNODE"); err != nil {
+			return fmt.Errorf("writing header: %w", err)
+		}
 		for _, pod := range status.Pods {
 			for _, container := range pod.Containers {
 				registry := container.ContainerRegistry
 				if idx := strings.LastIndex(registry, "/"); idx != -1 {
 					registry = registry[:idx]
 				}
-				fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%v\t%v\t%s\n",
+				if _, err := fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%v\t%v\t%s\n",
 					namespace,
 					pod.Service,
 					pod.Name,
@@ -71,10 +73,14 @@ func GetInstanceStatusCmd() *cobra.Command {
 					container.Ready,
 					container.Started,
 					pod.Node,
-				)
+				); err != nil {
+					return fmt.Errorf("writing row: %w", err)
+				}
 			}
 		}
-		w.Flush()
+		if err := w.Flush(); err != nil {
+			return fmt.Errorf("flushing output: %w", err)
+		}
 		return nil
 	}
 
