@@ -150,6 +150,10 @@ func Cmd() *cobra.Command {
 			return fmt.Errorf("executing query: %w", err)
 		}
 
+		if !result.Success && result.Error != "" {
+			return fmt.Errorf("query failed: %s", result.Error)
+		}
+
 		// Print result
 		switch r := result.Result.(type) {
 		case *pb.GetCollectionResponse_Exists:
