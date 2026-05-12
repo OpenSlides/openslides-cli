@@ -159,9 +159,18 @@ func applyDirectory(ctx context.Context, k8sClient *client.Client, dirPath strin
 	var applied []resourceKey
 	for _, file := range yamlFiles {
 		manifestPath := filepath.Join(dirPath, file.Name())
+		info, err := file.Info()
+		if err != nil {
+			logger.Warn("Getting file info %s: %v", file.Name(), err)
+			continue
+		}
+		if info.Size() == 0 {
+			logger.Warn("File is empty, skipping: %s", file.Name())
+			continue
+		}
 		key, _, err := applyManifest(ctx, k8sClient, manifestPath, labels)
 		if err != nil {
-			logger.Warn("Failed to apply %s: %v", file.Name(), err)
+			logger.Error("Failed to apply %s: %v", file.Name(), err)
 			continue
 		}
 		if key != nil {
