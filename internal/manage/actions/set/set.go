@@ -3,6 +3,7 @@ package set
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -62,8 +63,16 @@ func Cmd() *cobra.Command {
 	passwordFile := cmd.Flags().String("password-file", "", "file with password for authorization (required)")
 	payloadFile := cmd.Flags().StringP("file", "f", "", "JSON file with the payload, or - for stdin")
 
-	_ = cmd.MarkFlagRequired("address")
-	_ = cmd.MarkFlagRequired("password-file")
+	if addressEnv := os.Getenv("OSMANAGE_BACKEND_ADDRESS"); addressEnv != "" {
+		address = &addressEnv
+	} else {
+		_ = cmd.MarkFlagRequired("address")
+	}
+	if passwordFileEnv := os.Getenv("OSMANAGE_BACKEND_PASSWORD_FILE"); passwordFileEnv != "" {
+		passwordFile = &passwordFileEnv
+	} else {
+		_ = cmd.MarkFlagRequired("password-file")
+	}
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		logger.Info("=== SET ACTION ===")

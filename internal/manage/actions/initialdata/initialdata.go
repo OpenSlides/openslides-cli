@@ -50,8 +50,16 @@ func Cmd() *cobra.Command {
 	superadminPasswordFile := cmd.Flags().String("superadmin-password-file", "", "file with superadmin password (required)")
 	dataFile := cmd.Flags().StringP("file", "f", "", "JSON file with initial data, or - for stdin")
 
-	_ = cmd.MarkFlagRequired("address")
-	_ = cmd.MarkFlagRequired("password-file")
+	if addressEnv := os.Getenv("OSMANAGE_BACKEND_ADDRESS"); addressEnv != "" {
+		address = &addressEnv
+	} else {
+		_ = cmd.MarkFlagRequired("address")
+	}
+	if passwordFileEnv := os.Getenv("OSMANAGE_BACKEND_PASSWORD_FILE"); passwordFileEnv != "" {
+		passwordFile = &passwordFileEnv
+	} else {
+		_ = cmd.MarkFlagRequired("password-file")
+	}
 	_ = cmd.MarkFlagRequired("superadmin-password-file")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {

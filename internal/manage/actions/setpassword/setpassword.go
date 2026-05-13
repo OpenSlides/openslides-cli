@@ -3,6 +3,7 @@ package setpassword
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/OpenSlides/openslides-cli/internal/logger"
@@ -30,8 +31,16 @@ func Cmd() *cobra.Command {
 	password := cmd.Flags().StringP("password", "p", "", "new password of the user (required)")
 	userID := cmd.Flags().Int64P("user_id", "u", 0, "ID of the user account (required)")
 
-	_ = cmd.MarkFlagRequired("address")
-	_ = cmd.MarkFlagRequired("password-file")
+	if addressEnv := os.Getenv("OSMANAGE_BACKEND_ADDRESS"); addressEnv != "" {
+		address = &addressEnv
+	} else {
+		_ = cmd.MarkFlagRequired("address")
+	}
+	if passwordFileEnv := os.Getenv("OSMANAGE_BACKEND_PASSWORD_FILE"); passwordFileEnv != "" {
+		passwordFile = &passwordFileEnv
+	} else {
+		_ = cmd.MarkFlagRequired("password-file")
+	}
 	_ = cmd.MarkFlagRequired("user_id")
 	_ = cmd.MarkFlagRequired("password")
 
