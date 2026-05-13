@@ -366,29 +366,36 @@ func TestGetFilename(t *testing.T) {
 		cfg := map[string]any{
 			"filename": "custom.yml",
 		}
-		result := getFilename(cfg)
+		result := getFilename(cfg, "myspecial.yaml.tmpl")
 		if result != "custom.yml" {
 			t.Errorf("Expected custom.yml, got %s", result)
 		}
 	})
-
-	t.Run("without filename in config", func(t *testing.T) {
+	t.Run("without filename in config, with template file", func(t *testing.T) {
 		cfg := map[string]any{
 			"other": "value",
 		}
-		result := getFilename(cfg)
+		result := getFilename(cfg, "myspecial.yaml.tmpl")
+		if result != "myspecial.yaml" {
+			t.Errorf("Expected myspecial.yaml, got %s", result)
+		}
+	})
+	t.Run("without filename in config, no template suffix", func(t *testing.T) {
+		cfg := map[string]any{
+			"other": "value",
+		}
+		result := getFilename(cfg, "myspecial.yaml")
 		if result != constants.DefaultConfigFile {
 			t.Errorf("Expected %s, got %s", constants.DefaultConfigFile, result)
 		}
 	})
-
-	t.Run("empty filename in config", func(t *testing.T) {
+	t.Run("empty filename in config, with template file", func(t *testing.T) {
 		cfg := map[string]any{
 			"filename": "",
 		}
-		result := getFilename(cfg)
-		if result != constants.DefaultConfigFile {
-			t.Errorf("Expected %s for empty filename, got %s", constants.DefaultConfigFile, result)
+		result := getFilename(cfg, "myspecial.yaml.tmpl")
+		if result != "myspecial.yaml" {
+			t.Errorf("Expected myspecial.yaml for empty filename, got %s", result)
 		}
 	})
 
@@ -396,9 +403,9 @@ func TestGetFilename(t *testing.T) {
 		cfg := map[string]any{
 			"filename": 123,
 		}
-		result := getFilename(cfg)
-		if result != constants.DefaultConfigFile {
-			t.Errorf("Expected %s for non-string filename, got %s", constants.DefaultConfigFile, result)
+		result := getFilename(cfg, "myspecial.yaml.tmpl")
+		if result != "myspecial.yaml" {
+			t.Errorf("Expected myspecial.yaml for non-string filename, got %s", result)
 		}
 	})
 }
