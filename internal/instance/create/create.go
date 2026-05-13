@@ -44,18 +44,11 @@ func Cmd() *cobra.Command {
 	_ = cmd.MarkFlagRequired("superadmin-password")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		if strings.TrimSpace(*dbPassword) == "" {
-			return fmt.Errorf("--db-password cannot be empty")
-		}
-		if strings.TrimSpace(*superadminPassword) == "" {
-			return fmt.Errorf("--superadmin-password cannot be empty")
-		}
-
 		logger.Info("=== K8S CREATE INSTANCE ===")
 		instanceDir := args[0]
 		logger.Debug("Instance directory: %s", instanceDir)
 
-		if err := createInstance(instanceDir, *dbPassword, *superadminPassword); err != nil {
+		if err := CreateInstance(instanceDir, *dbPassword, *superadminPassword); err != nil {
 			return fmt.Errorf("creating instance: %w", err)
 		}
 
@@ -66,8 +59,15 @@ func Cmd() *cobra.Command {
 	return cmd
 }
 
-// createInstance sets up the secrets directory with the provided passwords
-func createInstance(instanceDir, dbPassword, superadminPassword string) error {
+// CreateInstance sets up the secrets directory with the provided passwords
+func CreateInstance(instanceDir, dbPassword, superadminPassword string) error {
+	if strings.TrimSpace(dbPassword) == "" {
+		return fmt.Errorf("db_password cannot be empty")
+	}
+	if strings.TrimSpace(superadminPassword) == "" {
+		return fmt.Errorf("superadmin_password cannot be empty")
+	}
+
 	secretsDir := filepath.Join(instanceDir, constants.SecretsDirName)
 
 	if _, err := os.Stat(secretsDir); os.IsNotExist(err) {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	grpcServer "github.com/OpenSlides/openslides-cli/internal/grpc/server"
 	"github.com/OpenSlides/openslides-cli/internal/instance/config"
 	"github.com/OpenSlides/openslides-cli/internal/instance/create"
 	"github.com/OpenSlides/openslides-cli/internal/instance/remove"
@@ -81,6 +82,8 @@ func RootCmd() *cobra.Command {
 		k8sActions.UpdateInstanceCmd(),
 		k8sActions.ScaleCmd(),
 		k8sActions.GetServiceAddressCmd(),
+		k8sActions.GetNamespaceExistsCmd(),
+		k8sActions.GetInstanceStatusCmd(),
 	)
 
 	rootCmd.AddCommand(
@@ -96,6 +99,7 @@ func RootCmd() *cobra.Command {
 		action.Cmd(),
 		migrations.Cmd(),
 		k8sCmd,
+		grpcServer.Cmd(),
 	)
 
 	return rootCmd

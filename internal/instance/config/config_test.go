@@ -11,7 +11,7 @@ import (
 
 func TestNewConfig(t *testing.T) {
 	t.Run("empty config list", func(t *testing.T) {
-		cfg, err := NewConfig([]string{})
+		cfg, err := NewConfig(nil, nil)
 		if err != nil {
 			t.Errorf("NewConfig() error = %v", err)
 		}
@@ -25,7 +25,7 @@ func TestNewConfig(t *testing.T) {
 		}
 	})
 
-	t.Run("with custom config", func(t *testing.T) {
+	t.Run("with custom config file", func(t *testing.T) {
 		tmpfile, err := os.CreateTemp("", "config-*.yml")
 		if err != nil {
 			t.Fatal(err)
@@ -52,7 +52,7 @@ defaults:
 			t.Fatalf("failed to close temp file: %v", err)
 		}
 
-		cfg, err := NewConfig([]string{tmpfile.Name()})
+		cfg, err := NewConfig([]string{tmpfile.Name()}, nil)
 		if err != nil {
 			t.Errorf("NewConfig() error = %v", err)
 		}
@@ -62,7 +62,7 @@ defaults:
 		if cfg["host"] != "192.168.1.1" {
 			t.Errorf("Expected host 192.168.1.1, got %v", cfg["host"])
 		}
-		if cfg["port"] != float64(9000) { // YAML unmarshals numbers as float64
+		if cfg["port"] != float64(9000) {
 			t.Errorf("Expected port 9000, got %v", cfg["port"])
 		}
 
@@ -79,7 +79,7 @@ defaults:
 		}
 	})
 
-	t.Run("merge multiple configs", func(t *testing.T) {
+	t.Run("merge multiple config files", func(t *testing.T) {
 		tmpdir := t.TempDir()
 
 		config1 := filepath.Join(tmpdir, "config1.yml")
@@ -92,7 +92,7 @@ defaults:
 			t.Fatalf("failed to write config2: %v", err)
 		}
 
-		cfg, err := NewConfig([]string{config1, config2})
+		cfg, err := NewConfig([]string{config1, config2}, nil)
 		if err != nil {
 			t.Errorf("NewConfig() error = %v", err)
 		}
@@ -107,6 +107,96 @@ defaults:
 		// host should still be present from config1 (new key added)
 		if cfg["host"] != "127.0.0.1" {
 			t.Errorf("Expected host 127.0.0.1 (from config1), got %v", cfg["host"])
+		}
+	})
+
+	t.Run("gRPC bytes configs override earlier entries", func(t *testing.T) {
+		// Simulates stack_config at index 0, instance config at index 1 — sent over gRPC
+		stackConfig := []byte(`
+defaults:
+  tag: 4.2.0
+  containerRegistry: registry.example.com
+stackName: base-stack
+`)
+		instanceConfig := []byte(`{
+			"stackName": "my.instance.org",
+			"defaults": {
+				"tag": "4.3.0"
+			}
+		}`)
+
+		cfg, err := NewConfig(nil, [][]byte{stackConfig, instanceConfig})
+		if err != nil {
+			t.Errorf("NewConfig() error = %v", err)
+		}
+
+		// instance config should override stack config
+		if cfg["stackName"] != "my.instance.org" {
+			t.Errorf("Expected stackName my.instance.org from instance config, got %v", cfg["stackName"])
+		}
+		defaults, ok := cfg["defaults"].(map[string]any)
+		if !ok {
+			t.Fatal("Expected defaults to be a map")
+		}
+		if defaults["tag"] != "4.3.0" {
+			t.Errorf("Expected tag 4.3.0 from instance config, got %v", defaults["tag"])
+		}
+		// containerRegistry should be preserved from stack config
+		if defaults["containerRegistry"] != "registry.example.com" {
+			t.Errorf("Expected containerRegistry preserved from stack config, got %v", defaults["containerRegistry"])
+		}
+	})
+
+	t.Run("nil configs is a no-op", func(t *testing.T) {
+		tmpdir := t.TempDir()
+
+		stackConfig := filepath.Join(tmpdir, "stack.yml")
+		if err := os.WriteFile(stackConfig, []byte("stackName: base-stack\n"), constants.StackFilePerm); err != nil {
+			t.Fatalf("failed to write stack config: %v", err)
+		}
+
+		cfg, err := NewConfig([]string{stackConfig}, nil)
+		if err != nil {
+			t.Errorf("NewConfig() error = %v", err)
+		}
+		if cfg["stackName"] != "base-stack" {
+			t.Errorf("Expected stackName base-stack, got %v", cfg["stackName"])
+		}
+	})
+
+	t.Run("invalid gRPC config bytes", func(t *testing.T) {
+		_, err := NewConfig(nil, [][]byte{[]byte("invalid: yaml: content:")})
+		if err == nil {
+			t.Error("Expected error for invalid config bytes")
+		}
+	})
+
+	t.Run("invalid YAML file", func(t *testing.T) {
+		tmpfile, err := os.CreateTemp("", "config-*.yml")
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() {
+			if err := os.Remove(tmpfile.Name()); err != nil {
+				t.Logf("warning: failed to remove temp file: %v", err)
+			}
+		})
+		if _, err := tmpfile.WriteString("invalid: yaml: content:"); err != nil {
+			t.Fatalf("failed to write invalid yaml: %v", err)
+		}
+		if err := tmpfile.Close(); err != nil {
+			t.Fatalf("failed to close temp file: %v", err)
+		}
+		_, err = NewConfig([]string{tmpfile.Name()}, nil)
+		if err == nil {
+			t.Error("Expected error for invalid YAML")
+		}
+	})
+
+	t.Run("nonexistent file", func(t *testing.T) {
+		_, err := NewConfig([]string{"nonexistent.yml"}, nil)
+		if err == nil {
+			t.Error("Expected error for nonexistent file")
 		}
 	})
 
@@ -133,7 +223,7 @@ services:
 			t.Fatalf("failed to write config2: %v", err)
 		}
 
-		cfg, err := NewConfig([]string{config1, config2})
+		cfg, err := NewConfig([]string{config1, config2}, nil)
 		if err != nil {
 			t.Errorf("NewConfig() error = %v", err)
 		}
@@ -186,7 +276,7 @@ services:
 			t.Fatalf("failed to write config2: %v", err)
 		}
 
-		cfg, err := NewConfig([]string{config1, config2})
+		cfg, err := NewConfig([]string{config1, config2}, nil)
 		if err != nil {
 			t.Errorf("NewConfig() error = %v", err)
 		}
@@ -235,7 +325,7 @@ services:
 			t.Fatalf("failed to write config2: %v", err)
 		}
 
-		cfg, err := NewConfig([]string{config1, config2})
+		cfg, err := NewConfig([]string{config1, config2}, nil)
 		if err != nil {
 			t.Errorf("NewConfig() error = %v", err)
 		}
@@ -266,38 +356,7 @@ services:
 
 		// auth service doesn't exist at all - that's fine with 'or' pattern
 		if _, exists := services["auth"]; exists {
-			t.Errorf("auth service should not exist, but it do")
-		}
-	})
-
-	t.Run("invalid YAML file", func(t *testing.T) {
-		tmpfile, err := os.CreateTemp("", "config-*.yml")
-		if err != nil {
-			t.Fatal(err)
-		}
-		t.Cleanup(func() {
-			if err := os.Remove(tmpfile.Name()); err != nil {
-				t.Logf("warning: failed to remove temp file: %v", err)
-			}
-		})
-
-		if _, err := tmpfile.WriteString("invalid: yaml: content:"); err != nil {
-			t.Fatalf("failed to write invalid yaml: %v", err)
-		}
-		if err := tmpfile.Close(); err != nil {
-			t.Fatalf("failed to close temp file: %v", err)
-		}
-
-		_, err = NewConfig([]string{tmpfile.Name()})
-		if err == nil {
-			t.Error("Expected error for invalid YAML")
-		}
-	})
-
-	t.Run("nonexistent file", func(t *testing.T) {
-		_, err := NewConfig([]string{"nonexistent.yml"})
-		if err == nil {
-			t.Error("Expected error for nonexistent file")
+			t.Errorf("auth service should not exist, but it does")
 		}
 	})
 }
@@ -454,10 +513,7 @@ func TestEnvMapToK8S(t *testing.T) {
 	})
 
 	t.Run("handles empty map", func(t *testing.T) {
-		env := map[string]any{}
-
-		result := envMapToK8S(env)
-
+		result := envMapToK8S(map[string]any{})
 		if len(result) != 0 {
 			t.Errorf("Expected 0 items, got %d", len(result))
 		}

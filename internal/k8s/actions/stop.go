@@ -48,16 +48,8 @@ func StopCmd() *cobra.Command {
 			return fmt.Errorf("creating k8s client: %w", err)
 		}
 
-		ctx := context.Background()
-
-		namespace := utils.ExtractNamespace(instanceDir)
-		if err := saveTLSSecret(ctx, k8sClient, namespace, instanceDir); err != nil {
-			logger.Warn("Failed to save TLS secret: %v", err)
-		}
-
-		logger.Info("Stopping instance: %s", namespace)
-		if err := deleteNamespace(ctx, k8sClient, namespace, *timeout); err != nil {
-			return fmt.Errorf("deleting namespace: %w", err)
+		if err := StopInstance(context.Background(), k8sClient, instanceDir, *timeout, nil); err != nil {
+			return err
 		}
 
 		logger.Info("Instance stopped successfully")
@@ -65,6 +57,23 @@ func StopCmd() *cobra.Command {
 	}
 
 	return cmd
+}
+
+// StopInstance saves the TLS secret if present, then deletes the namespace
+// and waits for it to be fully removed.
+func StopInstance(ctx context.Context, k8sClient *client.Client, instanceDir string, timeout time.Duration, callback func(elapsedSeconds int) error) error {
+	namespace := utils.ExtractNamespace(instanceDir)
+
+	if err := saveTLSSecret(ctx, k8sClient, namespace, instanceDir); err != nil {
+		logger.Warn("Failed to save TLS secret: %v", err)
+	}
+
+	logger.Info("Stopping instance: %s", namespace)
+	if err := deleteNamespace(ctx, k8sClient, namespace, timeout, callback); err != nil {
+		return fmt.Errorf("deleting namespace: %w", err)
+	}
+
+	return nil
 }
 
 // saveTLSSecret saves the TLS certificate secret to a YAML file if it exists
@@ -97,7 +106,7 @@ func saveTLSSecret(ctx context.Context, k8sClient *client.Client, namespace, ins
 }
 
 // deleteNamespace deletes a Kubernetes namespace
-func deleteNamespace(ctx context.Context, k8sClient *client.Client, namespace string, timeout time.Duration) error {
+func deleteNamespace(ctx context.Context, k8sClient *client.Client, namespace string, timeout time.Duration, callback func(elapsedSeconds int) error) error {
 	clientset := k8sClient.Clientset()
 
 	logger.Debug("Deleting namespace: %s", namespace)
@@ -113,5 +122,5 @@ func deleteNamespace(ctx context.Context, k8sClient *client.Client, namespace st
 	logger.Info("Namespace %s deletion initiated", namespace)
 
 	logger.Debug("Waiting for namespace to be fully deleted...")
-	return waitForNamespaceDeletion(ctx, k8sClient, namespace, timeout)
+	return waitForNamespaceDeletion(ctx, k8sClient, namespace, timeout, callback)
 }

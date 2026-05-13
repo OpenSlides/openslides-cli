@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	"github.com/OpenSlides/openslides-cli/internal/constants"
 	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
 	"github.com/OpenSlides/openslides-cli/internal/logger"
 	"github.com/OpenSlides/openslides-cli/internal/utils"
-	"github.com/spf13/cobra"
 )
 
 const (
@@ -34,6 +35,7 @@ func HealthCmd() *cobra.Command {
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		logger.Info("=== K8S HEALTH CHECK ===")
+
 		instanceDir := args[0]
 		namespace := utils.ExtractNamespace(instanceDir)
 		logger.Debug("Namespace: %s", namespace)
@@ -46,10 +48,22 @@ func HealthCmd() *cobra.Command {
 		ctx := context.Background()
 
 		if *wait {
-			return waitForInstanceHealthy(ctx, k8sClient, namespace, *timeout)
+			return WaitForInstanceHealthy(ctx, k8sClient, namespace, *timeout, nil)
 		}
 
-		return checkHealth(ctx, k8sClient, namespace)
+		status, err := GetHealthStatus(ctx, k8sClient, namespace)
+		if err != nil {
+			return fmt.Errorf("getting health status: %w", err)
+		}
+
+		printHealthStatus(namespace, status)
+
+		if !status.Healthy {
+			return fmt.Errorf("instance is not healthy: %d/%d pods ready", status.Ready, status.Total)
+		}
+
+		logger.Info("Instance is healthy")
+		return nil
 	}
 
 	return cmd

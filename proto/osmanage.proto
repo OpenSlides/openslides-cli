@@ -1,0 +1,304 @@
+syntax = "proto3";
+
+package osmanage;
+
+option go_package = "github.com/OpenSlides/openslides-cli/proto/osmanage";
+
+service OsmanageService {
+  // Instance filesystem operations
+  rpc SetupInstance(InstanceConfigRequest) returns (InstanceConfigResponse);
+  rpc ConfigInstance(InstanceConfigRequest) returns (InstanceConfigResponse);
+  rpc CreateInstance(CreateInstanceRequest) returns (CreateInstanceResponse);
+  rpc RemoveInstance(RemoveInstanceRequest) returns (RemoveInstanceResponse);
+
+  // k8s actions
+  rpc GetNamespaceExists(GetNamespaceExistsRequest) returns (GetNamespaceExistsResponse);
+  rpc GetClusterStatus(GetClusterStatusRequest) returns (GetClusterStatusResponse);
+  rpc GetServiceAddress(GetServiceAddressRequest) returns (GetServiceAddressResponse);
+  rpc GetInstanceHealth(GetInstanceHealthRequest) returns (stream GetInstanceHealthResponse);
+  rpc GetInstanceStatus(GetInstanceStatusRequest) returns (GetInstanceStatusResponse);
+  rpc UpdateBackendmanage(UpdateBackendmanageRequest) returns (stream UpdateBackendmanageResponse);
+  rpc UpdateInstance(UpdateInstanceRequest) returns (stream UpdateInstanceResponse);
+  rpc ScaleService(ScaleServiceRequest) returns (stream ScaleServiceResponse);
+  rpc StartInstance(StartInstanceRequest) returns (stream StartInstanceResponse);
+  rpc StopInstance(StopInstanceRequest) returns (stream StopInstanceResponse);
+  
+  // datastore query action (via openslides-go)
+  rpc GetCollection(GetCollectionRequest) returns (GetCollectionResponse);
+  
+  // migrations actions
+  
+  // server side streaming
+  rpc MigrationsMigrate(MigrationsRequest) returns (stream MigrationsProgressResponse);
+  rpc MigrationsFinalize(MigrationsRequest) returns (stream MigrationsProgressResponse);
+  
+  // unary gRPC calls
+  rpc MigrationsReset(MigrationsRequest) returns (MigrationsResponse);
+  rpc MigrationsClearCollectionfieldTables(MigrationsRequest) returns (MigrationsResponse);
+  rpc MigrationsStats(MigrationsRequest) returns (MigrationsResponse);
+  rpc MigrationsProgress(MigrationsRequest) returns (MigrationsResponse);
+
+  // generic manage action via backendmanage client
+  rpc SendManageAction(SendManageActionRequest) returns (SendManageActionResponse);
+}
+
+message InstanceConfigRequest {
+  string instance_dir = 1;
+  string stack_template_path = 2;  // path to template file or directory on server node
+  repeated bytes configs = 3;       // JSON-encoded YAML configs (merged last wins on conflict)
+  bool force = 4;
+  bool clean = 5;
+}
+
+message InstanceConfigResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+message CreateInstanceRequest {
+  string instance_dir = 1;
+  string db_password = 2;
+  string superadmin_password = 3;
+}
+
+message CreateInstanceResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+message RemoveInstanceRequest {
+  string instance_dir = 1;
+  bool force = 2;
+}
+
+message RemoveInstanceResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+message GetNamespaceExistsRequest {
+  string instance_url = 1;
+  string kubeconfig = 2;
+}
+
+message GetNamespaceExistsResponse {
+  bool exists = 1;
+  string error = 2;
+}
+
+message GetClusterStatusRequest {
+  string kubeconfig = 1;  // Empty = use default
+}
+
+message GetClusterStatusResponse {
+  string status = 1;
+  int32 total_nodes = 2;
+  int32 ready_nodes = 3;
+}
+
+message GetServiceAddressRequest {
+  string instance_url = 1;
+  string service_name = 2;
+  string kubeconfig = 3;  // Empty = use default
+}
+
+message GetServiceAddressResponse {
+  string address = 1;  // Format: "IP:Port"
+  string error = 2;    // Empty on success
+}
+
+message GetInstanceHealthRequest {
+  string instance_url = 1;
+  string kubeconfig = 2;
+  bool wait = 3;
+  int32 timeout_seconds = 4;
+}
+
+message GetInstanceHealthResponse {
+  bool healthy = 1;
+  int32 ready_pods = 2;
+  int32 total_pods = 3;
+  int32 active_pods = 4;
+  repeated PodStatus pods = 5;
+  bool complete = 6;  // True on final message (healthy or timeout)
+  string error = 7;   // Error message if failed
+}
+
+message PodStatus {
+  string name = 1;
+  string phase = 2;   // Running, Pending, etc.
+  bool ready = 3;
+}
+
+message ContainerStatus {
+    string name = 1;
+    string tag = 2;
+    string container_registry = 3;
+    bool ready = 4;
+    bool started = 5;
+    map<string, string> env_vars = 6;
+}
+
+message InstancePodStatus {
+    string name = 1;
+    string service = 2;
+    string node = 3;
+    repeated ContainerStatus containers = 4;
+}
+
+message GetInstanceStatusRequest {
+    string instance_url = 1;
+    string kubeconfig = 2;
+}
+
+message GetInstanceStatusResponse {
+    repeated InstancePodStatus pods = 1;
+    map<string, int32> service_counts = 2;
+    bool namespace_exists = 3;
+}
+
+message UpdateBackendmanageRequest {
+  string instance_url = 1;
+  string kubeconfig = 2;
+  string tag = 3;
+  string container_registry = 4;
+  int32 timeout_seconds = 5;
+}
+
+message UpdateBackendmanageResponse {
+  bool complete = 1;
+  string error = 2;
+  // Deployment rollout progress
+  int32 ready_replicas = 3;
+  int32 desired_replicas = 4;
+}
+
+message UpdateInstanceRequest {
+  string instance_dir = 1;
+  string kubeconfig = 2;
+  bool skip_ready_check = 3;
+  int32 timeout_seconds = 4;
+}
+
+message UpdateInstanceResponse {
+  bool healthy = 1;
+  int32 ready_pods = 2;
+  int32 total_pods = 3;
+  int32 active_pods = 4;
+  repeated PodStatus pods = 5;
+  bool complete = 6;
+  string error = 7;
+  bool inactive = 8;
+}
+
+message ScaleServiceRequest {
+  string instance_dir = 1;
+  string service = 2;
+  string kubeconfig = 3;
+  bool skip_ready_check = 4;
+  int32 timeout_seconds = 5;
+}
+
+message ScaleServiceResponse {
+  bool complete = 1;
+  string error = 2;
+  // Deployment rollout progress
+  int32 ready_replicas = 3;
+  int32 desired_replicas = 4;
+}
+
+message StartInstanceRequest {
+  string instance_dir = 1;
+  string kubeconfig = 2;
+  bool skip_ready_check = 3;
+  int32 timeout_seconds = 4;
+  map<string, string> labels = 5;
+}
+
+message StartInstanceResponse {
+  bool healthy = 1;
+  int32 ready_pods = 2;
+  int32 total_pods = 3;
+  int32 active_pods = 4;
+  repeated PodStatus pods = 5;
+  bool complete = 6;
+  string error = 7;
+}
+
+message StopInstanceRequest {
+  string instance_dir = 1;
+  string kubeconfig = 2;
+  int32 timeout_seconds = 3;
+}
+
+message StopInstanceResponse {
+  bool complete = 1;
+  string error = 2;
+  int32 elapsed_seconds = 3;
+}
+
+// PostgreSQL database connection configuration for datastore access
+message DatabaseConfig {
+  string host = 1;
+  string port = 2;
+  string user = 3;
+  string database = 4;
+  string password_file = 5;
+}
+
+// Query parameters for filtering and selecting datastore models
+message QueryParams {
+  string collection = 1;                 // Collection to query: "user", "meeting", or "organization"
+  repeated string fields = 2;            // Fields to return (empty = all fields)
+  bool exists_only = 3;                  // Return only existence check (bool) instead of data
+  map<string, string> simple_filter = 4; // Simple key=value filters (AND'd together)
+  bytes raw_filter = 5;                  // Complex JSON filter (mutually exclusive with simple_filter)
+}
+
+message GetCollectionRequest {
+  DatabaseConfig db_config = 1;   // Database connection configuration
+  QueryParams query_params = 2;   // Query filtering and field selection
+}
+
+message GetCollectionResponse {
+  bool success = 1;
+  string error = 2;  // Empty on success
+  
+  oneof result {
+    bool exists = 3;      // For exists_only queries
+    bytes json_data = 4;  // JSON-encoded model data
+  }
+}
+
+message MigrationsRequest {
+  string address_backendmanage = 1;
+  string password_file_path = 2;
+}
+
+message MigrationsResponse {
+  bool success = 1;
+  string status = 2;
+  string output = 3;
+  string exception = 4;
+  string stats = 5;
+}
+
+message MigrationsProgressResponse {
+  string output = 1;
+  bool running = 2;
+  bool success = 3;
+  string exception = 4;
+}
+
+message SendManageActionRequest {
+  string address_backendmanage = 1;
+  string password_file_path = 2;
+  string action = 3;
+  bytes payload = 4;
+}
+
+message SendManageActionResponse {
+  bool success = 1;
+  string error = 2;
+  bytes body = 3;
+}

@@ -157,7 +157,7 @@ func TestCreateInstance(t *testing.T) {
 	dbPassword := "new-database-password"
 	superadminPassword := "new-superadmin-password"
 
-	err = createInstance(tmpDir, dbPassword, superadminPassword)
+	err = CreateInstance(tmpDir, dbPassword, superadminPassword)
 	if err != nil {
 		t.Fatalf("createInstance failed: %v", err)
 	}
@@ -234,7 +234,7 @@ func TestCreateInstance_SecretsDirectoryNotExist(t *testing.T) {
 	})
 
 	// Don't create secrets directory - should fail
-	err = createInstance(tmpDir, "password", "admin")
+	err = CreateInstance(tmpDir, "password", "admin")
 	if err == nil {
 		t.Error("Expected error when secrets directory doesn't exist, got nil")
 	}

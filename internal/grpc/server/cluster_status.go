@@ -1,0 +1,30 @@
+package server
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/OpenSlides/openslides-cli/internal/k8s/actions"
+	"github.com/OpenSlides/openslides-cli/internal/k8s/client"
+	pb "github.com/OpenSlides/openslides-cli/proto/osmanage"
+)
+
+func (s *OsmanageServiceServer) GetClusterStatus(ctx context.Context, req *pb.GetClusterStatusRequest) (*pb.GetClusterStatusResponse, error) {
+	k8sClient, err := client.New(req.Kubeconfig)
+	if err != nil {
+		return nil, fmt.Errorf("creating k8s client: %w", err)
+	}
+
+	status, err := actions.CheckClusterStatus(ctx, k8sClient)
+	if err != nil {
+		return nil, fmt.Errorf("checking cluster status: %w", err)
+	}
+
+	statusMsg := fmt.Sprintf("Cluster: %d/%d nodes ready", status.ReadyNodes, status.TotalNodes)
+
+	return &pb.GetClusterStatusResponse{
+		Status:     statusMsg,
+		TotalNodes: int32(status.TotalNodes),
+		ReadyNodes: int32(status.ReadyNodes),
+	}, nil
+}

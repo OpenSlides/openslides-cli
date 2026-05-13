@@ -63,6 +63,7 @@ func Cmd() *cobra.Command {
 	}
 
 	force := cmd.Flags().BoolP("force", "f", false, "overwrite existing files")
+	clean := cmd.Flags().Bool("clean", false, "Wipe stack folder contents before generating new files")
 	customTemplate := cmd.Flags().StringP("template", "t", "", "custom template file or directory")
 	configFiles := cmd.Flags().StringArrayP("config", "c", nil, "custom YAML config file (can be used multiple times)")
 	cmd.MarkFlagsRequiredTogether("template", "config")
@@ -74,37 +75,8 @@ func Cmd() *cobra.Command {
 		logger.Debug("Base directory: %s", baseDir)
 		logger.Debug("Force: %v, Custom: %s", *force, *customTemplate)
 
-		// Parse configuration
-		cfg, err := config.NewConfig(*configFiles)
-		if err != nil {
-			return fmt.Errorf("parsing configuration: %w", err)
-		}
-
-		// Create secrets directory
-		secretsDir := filepath.Join(baseDir, constants.SecretsDirName)
-		logger.Debug("Creating secrets directory: %s", secretsDir)
-		if err := os.MkdirAll(secretsDir, constants.SecretsDirPerm); err != nil {
-			return fmt.Errorf("creating secrets directory: %w", err)
-		}
-
-		// Create secrets
-		logger.Info("Creating secrets...")
-		if err := createSecrets(secretsDir, *force, defaultSecrets); err != nil {
-			return fmt.Errorf("creating secrets: %w", err)
-		}
-
-		// Create certificates if HTTPS is enabled
-		if enableLocalHTTPS, ok := cfg["enableLocalHTTPS"].(bool); ok && enableLocalHTTPS {
-			logger.Info("Creating SSL certificates...")
-			if err := createCerts(secretsDir, *force); err != nil {
-				return fmt.Errorf("creating certificates: %w", err)
-			}
-		}
-
-		// Create deployment files
-		logger.Info("Creating deployment files...")
-		if err := config.CreateDirAndFiles(baseDir, *force, *customTemplate, cfg); err != nil {
-			return fmt.Errorf("creating deployment files: %w", err)
+		if err := Run(baseDir, *force, *clean, *customTemplate, *configFiles, nil); err != nil {
+			return err
 		}
 
 		logger.Info("Setup completed successfully")
@@ -113,6 +85,49 @@ func Cmd() *cobra.Command {
 	}
 
 	return cmd
+}
+
+// Run creates secrets, optional SSL certificates, and deployment files for a new
+// instance. Exactly one of configFiles (CLI) or configs (gRPC) should be provided.
+// configs are pre-read byte slices sent over gRPC, configFiles are read from disk.
+// In both cases the last entry wins on conflict before generating deployment files
+// from the template into baseDir.
+func Run(baseDir string, force, clean bool, customTemplate string, configFiles []string, configs [][]byte) error {
+	if clean {
+		if err := os.RemoveAll(filepath.Join(baseDir, "stack")); err != nil {
+			return fmt.Errorf("cleaning stack folder: %w", err)
+		}
+	}
+
+	cfg, err := config.NewConfig(configFiles, configs)
+	if err != nil {
+		return fmt.Errorf("parsing configuration: %w", err)
+	}
+
+	secretsDir := filepath.Join(baseDir, constants.SecretsDirName)
+	logger.Debug("Creating secrets directory: %s", secretsDir)
+	if err := os.MkdirAll(secretsDir, constants.SecretsDirPerm); err != nil {
+		return fmt.Errorf("creating secrets directory: %w", err)
+	}
+
+	logger.Info("Creating secrets...")
+	if err := createSecrets(secretsDir, force, defaultSecrets); err != nil {
+		return fmt.Errorf("creating secrets: %w", err)
+	}
+
+	if enableLocalHTTPS, ok := cfg["enableLocalHTTPS"].(bool); ok && enableLocalHTTPS {
+		logger.Info("Creating SSL certificates...")
+		if err := createCerts(secretsDir, force); err != nil {
+			return fmt.Errorf("creating certificates: %w", err)
+		}
+	}
+
+	logger.Info("Creating deployment files...")
+	if err := config.CreateDirAndFiles(baseDir, force, customTemplate, cfg); err != nil {
+		return fmt.Errorf("creating deployment files: %w", err)
+	}
+
+	return nil
 }
 
 func createSecrets(dir string, force bool, secrets []SecretSpec) error {

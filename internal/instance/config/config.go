@@ -51,6 +51,7 @@ func Cmd() *cobra.Command {
 	}
 
 	force := cmd.Flags().BoolP("force", "f", false, "overwrite existing files")
+	clean := cmd.Flags().Bool("clean", false, "Wipe stack folder contents before generating new files")
 	customTemplate := cmd.Flags().StringP("template", "t", "", "custom template file or directory")
 	configFiles := cmd.Flags().StringArrayP("config", "c", nil, "custom YAML config file (can be used multiple times)")
 	cmd.MarkFlagsRequiredTogether("template", "config")
@@ -59,16 +60,11 @@ func Cmd() *cobra.Command {
 		logger.Info("=== CONFIG ===")
 
 		baseDir := args[0]
-		logger.Debug("Base directory: %s", args[0])
+		logger.Debug("Base directory: %s", baseDir)
 		logger.Debug("Config files: %v", *configFiles)
 
-		config, err := NewConfig(*configFiles)
-		if err != nil {
-			return fmt.Errorf("parsing configuration: %w", err)
-		}
-
-		if err := CreateDirAndFiles(baseDir, *force, *customTemplate, config); err != nil {
-			return fmt.Errorf("creating deployment files: %w", err)
+		if err := Run(baseDir, *force, *clean, *customTemplate, *configFiles, nil); err != nil {
+			return err
 		}
 
 		logger.Info("Config files created successfully")
@@ -79,32 +75,62 @@ func Cmd() *cobra.Command {
 	return cmd
 }
 
-// NewConfig creates a configuration map by deep-merging all given files in order.
-// Later files override existing keys and add new keys.
-func NewConfig(configFileNames []string) (map[string]any, error) {
-	logger.Debug("Loading configuration from %d file(s)", len(configFileNames))
+// Run merges configFiles and optional instanceConfig (merged last, wins on conflict)
+// into a config map, then generates deployment files from the template into baseDir.
+func Run(baseDir string, force, clean bool, customTemplate string, configFiles []string, configs [][]byte) error {
+	if clean {
+		if err := os.RemoveAll(filepath.Join(baseDir, "stack")); err != nil {
+			return fmt.Errorf("cleaning stack folder: %w", err)
+		}
+	}
+	cfg, err := NewConfig(configFiles, configs)
+	if err != nil {
+		return fmt.Errorf("parsing configuration: %w", err)
+	}
+	if err := CreateDirAndFiles(baseDir, force, customTemplate, cfg); err != nil {
+		return fmt.Errorf("creating deployment files: %w", err)
+	}
+	return nil
+}
 
+// NewConfig creates a configuration map by deep-merging configs in order.
+// Later entries override existing keys and add new keys.
+// Exactly one of configFiles or configs should be provided:
+// - configFiles: path-based configs for direct CLI use, files are read from disk
+// - configs: pre-read byte slices for gRPC use, files are read on the client side
+func NewConfig(configFiles []string, configs [][]byte) (map[string]any, error) {
 	config := make(map[string]any)
 
-	for _, filename := range configFileNames {
-		logger.Debug("Reading config file: %s", filename)
+	for _, filename := range configFiles {
 		data, err := os.ReadFile(filename)
 		if err != nil {
 			return nil, fmt.Errorf("reading config file %q: %w", filename, err)
 		}
-
-		var fileConfig map[string]any
-		if err := yaml.Unmarshal(data, &fileConfig); err != nil {
-			return nil, fmt.Errorf("unmarshaling YAML from %q: %w", filename, err)
+		if err := mergeYAML(&config, data, filename); err != nil {
+			return nil, err
 		}
+	}
 
-		// Deep merge fileConfig into config
-		if err := mergo.Merge(&config, fileConfig, mergo.WithOverride); err != nil {
-			return nil, fmt.Errorf("merging config from %q: %w", filename, err)
+	for i, data := range configs {
+		if err := mergeYAML(&config, data, fmt.Sprintf("config[%d]", i)); err != nil {
+			return nil, err
 		}
 	}
 
 	return config, nil
+}
+
+// mergeYAML unmarshals YAML data into a map and deep-merges it into config,
+// with later values overriding existing keys. label is used for error messages.
+func mergeYAML(config *map[string]any, data []byte, label string) error {
+	var parsed map[string]any
+	if err := yaml.Unmarshal(data, &parsed); err != nil {
+		return fmt.Errorf("unmarshaling YAML from %q: %w", label, err)
+	}
+	if err := mergo.Merge(config, parsed, mergo.WithOverride); err != nil {
+		return fmt.Errorf("merging config from %q: %w", label, err)
+	}
+	return nil
 }
 
 // CreateDirAndFiles creates the base directory and (re-)creates the deployment
