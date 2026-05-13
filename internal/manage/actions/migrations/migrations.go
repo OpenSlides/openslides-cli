@@ -139,9 +139,13 @@ func createMigrationCmd(name, description string, withProgressTracking bool) *co
 			return fmt.Errorf("executing migration command: %w", err)
 		}
 
-		if withProgressTracking && progressInterval != nil && *progressInterval > 0 && (Running(response) || Finalizing(response)) {
-			fmt.Println("Progress:")
+		output, err := GetOutput(response, name)
+		if err != nil {
+			return fmt.Errorf("formatting output: %w", err)
+		}
+		fmt.Print(output)
 
+		if withProgressTracking && progressInterval != nil && *progressInterval > 0 && (Running(response) || Finalizing(response)) {
 			var stopCondition func(*pb.MigrationsResponse) bool
 			if name == "finalize" {
 				stopCondition = func(r *pb.MigrationsResponse) bool { return !Running(r) && !Finalizing(r) }
@@ -157,12 +161,6 @@ func createMigrationCmd(name, description string, withProgressTracking bool) *co
 			return TrackMigrationProgress(cl, *progressInterval, stopCondition, printCallback)
 		}
 
-		output, err := GetOutput(response, name)
-		if err != nil {
-			return fmt.Errorf("formatting output: %w", err)
-		}
-
-		fmt.Print(output)
 		return nil
 	}
 
