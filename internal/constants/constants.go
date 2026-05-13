@@ -46,6 +46,9 @@ const (
 	// DefaultConfigFile is the filename used, if none is set in config file(s)
 	DefaultConfigFile string = "os-config.yaml"
 
+	// TemplateSuffix is the recognized suffix for template files
+	TemplateSuffix string = ".tmpl"
+
 	// CertCertName is filename for the HTTPS certificate file
 	CertCertName string = "cert_crt"
 
