@@ -15,6 +15,7 @@ services:
       - backendPresenter
       - autoupdate
       - search
+      - projector
       - auth
       - media
       - icc
@@ -51,6 +52,7 @@ services:
       - backendPresenter
       - autoupdate
       - search
+      - projector
       - auth
       - media
       - icc
@@ -112,7 +114,6 @@ services:
     image: {{ or .services.backendManage.containerRegistry .defaults.containerRegistry }}/openslides-backend:{{ or .services.backendManage.tag .defaults.tag }}
     {{- if not .disableDependsOn }}
     depends_on:
-      - datastoreWriter
       - postgres
     {{- end }}
     environment:
@@ -130,40 +131,9 @@ services:
       - superadmin
     {{- with .services.backendManage.additionalContent }}{{ marshalContent 4 . }}{{- end }}
 
-  datastoreReader:
-    image: {{ or .services.datastoreReader.containerRegistry .defaults.containerRegistry }}/openslides-datastore-reader:{{ or .services.datastoreReader.tag .defaults.tag }}
-    {{- if not .disableDependsOn }}
-    depends_on:
-      - postgres
-    {{- end }}
-    environment:
-      << : *default-environment
-      {{- with .services.datastoreReader.environment }}{{ marshalContent 6 . }}{{- end }}
-    networks:
-      - data
-    secrets:
-      - postgres_password
-    {{- with .services.datastoreReader.additionalContent }}{{ marshalContent 4 . }}{{- end }}
-
-  datastoreWriter:
-    image: {{ or .services.datastoreWriter.containerRegistry .defaults.containerRegistry }}/openslides-datastore-writer:{{ or .services.datastoreWriter.tag .defaults.tag }}
-    {{- if not .disableDependsOn }}
-    depends_on:
-      - postgres
-      - redis
-    {{- end }}
-    environment:
-      << : *default-environment
-      {{- with .services.datastoreWriter.environment }}{{ marshalContent 6 . }}{{- end }}
-    networks:
-      - data
-    secrets:
-      - postgres_password
-    {{- with .services.datastoreWriter.additionalContent }}{{ marshalContent 4 . }}{{- end }}
-
   {{- if not .disablePostgres }}
   postgres:
-    image: postgres:15
+    image: postgres:17
     environment:
       << : *default-environment
       {{- with .services.postgres.environment }}{{ marshalContent 6 . }}{{- end }}
@@ -183,7 +153,6 @@ services:
     image: {{ or .services.autoupdate.containerRegistry .defaults.containerRegistry }}/openslides-autoupdate:{{ or .services.autoupdate.tag .defaults.tag }}
     {{- if not .disableDependsOn }}
     depends_on:
-      - datastoreReader
       - redis
     {{- end }}
     environment:
@@ -202,7 +171,6 @@ services:
     image: {{ or .services.search.containerRegistry .defaults.containerRegistry }}/openslides-search:{{ or .services.search.tag .defaults.tag }}
     {{- if not .disableDependsOn }}
     depends_on:
-      - datastoreReader
       - postgres
       - autoupdate
     {{- end }}
@@ -218,12 +186,33 @@ services:
       - postgres_password
     {{- with .services.search.additionalContent }}{{ marshalContent 4 . }}{{- end }}
 
+  projector:
+    image: {{ or .services.projector.containerRegistry .defaults.containerRegistry }}/openslides-projector:{{ or .services.projector.tag .defaults.tag }}
+    {{- if not .disableDependsOn }}
+    depends_on:
+      - postgres
+      - autoupdate
+      - backendAction
+      - postgres
+    {{- end }}
+    environment:
+      << : *default-environment
+      {{- with .services.projector.environment }}{{ marshalContent 6 . }}{{- end }}
+    networks:
+      - frontend
+      - data
+    secrets:
+      - auth_token_key
+      - auth_cookie_key
+      - postgres_password
+    {{- with .services.projector.additionalContent }}{{ marshalContent 4 . }}{{- end }}
+
   auth:
     image: {{ or .services.auth.containerRegistry .defaults.containerRegistry }}/openslides-auth:{{ or .services.auth.tag .defaults.tag }}
     {{- if not .disableDependsOn }}
     depends_on:
-      - datastoreReader
       - redis
+      - postgres
     {{- end }}
     environment:
       << : *default-environment
@@ -235,16 +224,17 @@ services:
       - auth_token_key
       - auth_cookie_key
       - internal_auth_password
+      - postgres_password
     {{- with .services.auth.additionalContent }}{{ marshalContent 4 . }}{{- end }}
 
   vote:
     image: {{ or .services.vote.containerRegistry .defaults.containerRegistry }}/openslides-vote:{{ or .services.vote.tag .defaults.tag }}
     {{- if not .disableDependsOn }}
     depends_on:
-      - datastoreReader
       - auth
       - autoupdate
       - redis
+      - postgres
     {{- end }}
     environment:
       << : *default-environment
@@ -290,7 +280,6 @@ services:
     image: {{ or .services.icc.containerRegistry .defaults.containerRegistry }}/openslides-icc:{{ or .services.icc.tag .defaults.tag }}
     {{- if not .disableDependsOn }}
     depends_on:
-      - datastoreReader
       - postgres
       - redis
     {{- end }}
