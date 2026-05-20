@@ -123,6 +123,8 @@ services:
     networks:
       - data
       - email
+    ports:
+      - {{ .host }}:9002:9002
     secrets:
       - auth_token_key
       - auth_cookie_key
