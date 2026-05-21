@@ -2,7 +2,53 @@
 version: "3.4"
 
 x-default-environment: &default-environment
-  {{- marshalContent 2 .defaultEnvironment }}
+  ACTION_HOST: {{ or .defaultEnvironment.ACTION_HOST "backendAction" }}
+  ACTION_PORT: {{ or .defaultEnvironment.ACTION_PORT "9002" }}
+  AUTH_COOKIE_KEY_FILE: {{ or .defaultEnvironment.AUTH_COOKIE_KEY_FILE "/run/secrets/auth_cookie_key" }}
+  AUTH_HOST: {{ or .defaultEnvironment.AUTH_HOST "auth" }}
+  AUTH_PORT: {{ or .defaultEnvironment.AUTH_PORT "9004" }}
+  AUTH_TOKEN_KEY_FILE: {{ or .defaultEnvironment.AUTH_TOKEN_KEY_FILE "/run/secrets/auth_token_key" }}
+  AUTOUPDATE_HOST: {{ or .defaultEnvironment.AUTOUPDATE_HOST "autoupdate" }}
+  AUTOUPDATE_PORT: {{ or .defaultEnvironment.AUTOUPDATE_PORT "9012" }}
+  CACHE_HOST: {{ or .defaultEnvironment.CACHE_HOST "redis" }}
+  CACHE_PORT: {{ or .defaultEnvironment.CACHE_PORT "6379" }}
+  DATABASE_HOST: {{ or .defaultEnvironment.DATABASE_HOST "postgres" }}
+  DATABASE_NAME: {{ or .defaultEnvironment.DATABASE_NAME "openslides" }}
+  DATABASE_PASSWORD_FILE: {{ or .defaultEnvironment.DATABASE_PASSWORD_FILE "/run/secrets/postgres_password" }}
+  DATABASE_PORT: {{ or .defaultEnvironment.DATABASE_PORT "5432" }}
+  DATABASE_USER: {{ or .defaultEnvironment.DATABASE_USER "openslides" }}
+  ICC_HOST: {{ or .defaultEnvironment.ICC_HOST "icc" }}
+  ICC_PORT: {{ or .defaultEnvironment.ICC_PORT "9007" }}
+  INTERNAL_AUTH_PASSWORD_FILE: {{ or .defaultEnvironment.INTERNAL_AUTH_PASSWORD_FILE "/run/secrets/internal_auth_password" }}
+  MANAGE_AUTH_PASSWORD_FILE: {{ or .defaultEnvironment.MANAGE_AUTH_PASSWORD_FILE "/run/secrets/manage_auth_password" }}
+  MANAGE_HOST: {{ or .defaultEnvironment.MANAGE_HOST "manage" }}
+  MANAGE_PORT: {{ or .defaultEnvironment.MANAGE_PORT "9008" }}
+  MEDIA_DATABASE_HOST: {{ or .defaultEnvironment.MEDIA_DATABASE_HOST "postgres" }}
+  MEDIA_DATABASE_NAME: {{ or .defaultEnvironment.MEDIA_DATABASE_NAME "openslides" }}
+  MEDIA_DATABASE_PASSWORD_FILE: {{ or .defaultEnvironment.MEDIA_DATABASE_PASSWORD_FILE "/run/secrets/postgres_password" }}
+  MEDIA_DATABASE_PORT: {{ or .defaultEnvironment.MEDIA_DATABASE_PORT "5432" }}
+  MEDIA_DATABASE_USER: {{ or .defaultEnvironment.MEDIA_DATABASE_USER "openslides" }}
+  MEDIA_HOST: {{ or .defaultEnvironment.MEDIA_HOST "media" }}
+  MEDIA_PORT: {{ or .defaultEnvironment.MEDIA_PORT "9006" }}
+  MESSAGE_BUS_HOST: {{ or .defaultEnvironment.MESSAGE_BUS_HOST "redis" }}
+  MESSAGE_BUS_PORT: {{ or .defaultEnvironment.MESSAGE_BUS_PORT "6379" }}
+  OPENSLIDES_DEVELOPMENT: {{ or .defaultEnvironment.OPENSLIDES_DEVELOPMENT "false" }}
+  OPENSLIDES_LOGLEVEL: {{ or .defaultEnvironment.OPENSLIDES_LOGLEVEL "info" }}
+  PRESENTER_HOST: {{ or .defaultEnvironment.PRESENTER_HOST "backendPresenter" }}
+  PRESENTER_PORT: {{ or .defaultEnvironment.PRESENTER_PORT "9003" }}
+  PROJECTOR_HOST: {{ or .defaultEnvironment.PROJECTOR_HOST "projector" }}
+  PROJECTOR_PORT: {{ or .defaultEnvironment.PROJECTOR_PORT "9051" }}
+  RESTRICTER_URL: {{ or .defaultEnvironment.RESTRICTER_URL "http://autoupdate:9012/internal/autoupdate" }}
+  SEARCH_HOST: {{ or .defaultEnvironment.SEARCH_HOST "search" }}
+  SEARCH_PORT: {{ or .defaultEnvironment.SEARCH_PORT "9050" }}
+  SUPERADMIN_PASSWORD_FILE: {{ or .defaultEnvironment.SUPERADMIN_PASSWORD_FILE "/run/secrets/superadmin" }}
+  VOTE_DATABASE_HOST: {{ or .defaultEnvironment.VOTE_DATABASE_HOST "postgres" }}
+  VOTE_DATABASE_NAME: {{ or .defaultEnvironment.VOTE_DATABASE_NAME "openslides" }}
+  VOTE_DATABASE_PASSWORD_FILE: {{ or .defaultEnvironment.VOTE_DATABASE_PASSWORD_FILE "/run/secrets/postgres_password" }}
+  VOTE_DATABASE_PORT: {{ or .defaultEnvironment.VOTE_DATABASE_PORT "5432" }}
+  VOTE_DATABASE_USER: {{ or .defaultEnvironment.VOTE_DATABASE_USER "openslides" }}
+  VOTE_HOST: {{ or .defaultEnvironment.VOTE_HOST "vote" }}
+  VOTE_PORT: {{ or .defaultEnvironment.VOTE_PORT "9013" }}
 
 services:
 
@@ -124,7 +170,7 @@ services:
       - data
       - email
     ports:
-      - {{ .host }}:9002:9002
+      - 127.0.0.1:9002:9002
     secrets:
       - auth_token_key
       - auth_cookie_key

@@ -1,0 +1,17 @@
+
+filename: docker-compose.yml
+
+disableDependsOn: false
+
+host: 127.0.0.1
+port: 8000
+
+defaults:
+  tag: 4.3.0
+
+services:
+  backendManage:
+    environment:
+      OPENSLIDES_BACKEND_CREATE_INITIAL_DATA: false
+      MIG0100_I_READ_DOCS: '1'
+      MIG0100_TIMEZONE: 'Europe/Berlin'
