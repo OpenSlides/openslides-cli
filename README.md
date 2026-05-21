@@ -1,7 +1,7 @@
 
 # osmanage
 
-A command-line interface for managing OpenSlides instances. This tool provides deployment automation, Kubernetes orchestration, direct access to OpenSlides backend actions, datastore queries, and database migrations.
+A command-line interface for managing OpenSlides instances. This tool provides deployment automation, Kubernetes orchestration, direct access to OpenSlides backend actions, database queries, and database migrations.
 
 
 ## Table of Contents
@@ -37,7 +37,7 @@ A command-line interface for managing OpenSlides instances. This tool provides d
 - **Deployment Setup**: Generate Docker Compose and Kubernetes configurations
 - **Kubernetes Management**: Deploy, update, and manage OpenSlides in Kubernetes
 - **Secrets Management**: Automatic generation of secure passwords and certificates
-- **Datastore Queries**: Direct PostgreSQL access with advanced filtering
+- **Database Queries**: Direct PostgreSQL access with advanced filtering
 - **Database Migrations**: Manage OpenSlides schema migrations with progress tracking
 - **User Management**: Create users and manage passwords
 - **Backend Actions**: Execute arbitrary OpenSlides actions
@@ -49,6 +49,7 @@ A command-line interface for managing OpenSlides instances. This tool provides d
 ### Binary Release
 
 Download the latest binary from the [releases page](https://github.com/OpenSlides/openslides-cli/releases):
+
 ```bash
 # Linux AMD64
 curl -L https://github.com/OpenSlides/openslides-cli/releases/latest/download/osmanage -o osmanage
@@ -61,6 +62,7 @@ sudo mv osmanage /usr/local/bin/
 
 **Requirements:**
 - Go 1.23 or later
+
 ```bash
 git clone https://github.com/OpenSlides/openslides-cli.git
 cd openslides-cli
@@ -74,6 +76,7 @@ CGO_ENABLED=0 go build -a -ldflags="-s -w" ./cmd/osmanage
 ### Docker Compose Setup
 
 Standard workflow for Docker Compose deployments:
+
 ```bash
 # 1. Generate deployment configuration with random secrets
 osmanage setup ./my.instance.dir.org \
@@ -114,11 +117,13 @@ Commands for creating and managing OpenSlides instance directories.
 Creates a new instance directory with deployment configuration, secrets, and SSL certificates.
 
 **Usage:**
+
 ```bash
 osmanage setup <instance-dir> [flags]
 ```
 
 **Generated Structure:**
+
 ```
 my.instance.dir.org/
 ├── docker-compose.yml          # (if using Docker Compose template)
@@ -133,6 +138,7 @@ my.instance.dir.org/
 ```
 
 **Examples:**
+
 ```bash
 # Docker Compose deployment
 osmanage setup ./my.instance.dir.org \
@@ -158,6 +164,7 @@ osmanage setup ./my.instance.dir.org \
 (Re)creates deployment configuration files from templates and YAML config files.
 
 **Usage:**
+
 ```bash
 osmanage config <instance-dir> [flags]
 ```
@@ -174,6 +181,7 @@ osmanage config <instance-dir> [flags]
 - Fix or modify deployment manifests
 
 **Examples:**
+
 ```bash
 # Regenerate deployment files
 osmanage config ./my.instance.dir.org \
@@ -215,6 +223,7 @@ Manage OpenSlides database migrations.
 - `progress`: Check running migration progress
 
 **Examples:**
+
 ```bash
 # Check migration status
 osmanage migrations stats \
@@ -239,6 +248,7 @@ osmanage migrations finalize \
 ```
 
 **Migration Stats Output:**
+
 ```
 current_migration_index: 15
 target_migration_index: 20
@@ -252,9 +262,10 @@ status: migration_running
 
 #### `initial-data`
 
-Initialize a new OpenSlides datastore.
+Initialize a new OpenSlides database.
 
 **Usage:**
+
 ```bash
 osmanage initial-data [flags]
 ```
@@ -262,9 +273,10 @@ osmanage initial-data [flags]
 **Behavior:**
 - Sets up organization and default data
 - Sets superadmin (user ID 1) password
-- Returns error if datastore is not empty (exit code 2)
+- Returns error if database is not empty (exit code 2)
 
 **Examples:**
+
 ```bash
 # Docker Compose
 osmanage initial-data \
@@ -279,6 +291,7 @@ osmanage initial-data \
 Create a new OpenSlides user.
 
 **Usage:**
+
 ```bash
 osmanage create-user [user-data] [flags]
 ```
@@ -288,6 +301,7 @@ osmanage create-user [user-data] [flags]
 - `default_password`: Initial password
 
 **Examples:**
+
 ```bash
 # Inline JSON
 osmanage create-user '{"username": "admin", "default_password": "secret123"}' \
@@ -302,6 +316,7 @@ osmanage create-user \
 ```
 
 **user.json:**
+
 ```json
 {
   "username": "mmax",
@@ -319,11 +334,13 @@ osmanage create-user \
 Change a user's password.
 
 **Usage:**
+
 ```bash
 osmanage set-password [flags]
 ```
 
 **Example:**
+
 ```bash
 osmanage set-password \
   --address localhost:9002 \
@@ -335,12 +352,13 @@ osmanage set-password \
 
 #### `get`
 
-Query the OpenSlides datastore with advanced filtering.
+Query the OpenSlides database with advanced filtering.
 
 > [!IMPORTANT]
 > Requires access to postgres. Examples assume port is forwarded.
 
 **Usage:**
+
 ```bash
 osmanage get <collection> [flags]
 ```
@@ -380,6 +398,7 @@ osmanage get user --filter is_active=true \
 ```
 
 **Complex filters:**
+
 ```bash
 # Regex matching
 osmanage get user \
@@ -416,6 +435,7 @@ osmanage get meeting \
 Update OpenSlides objects using backend actions.
 
 **Usage:**
+
 ```bash
 osmanage set <action> [payload] [flags]
 ```
@@ -424,6 +444,7 @@ osmanage set <action> [payload] [flags]
 - `agenda_item`, `committee`, `group`, `meeting`, `motion`, `organization`, `organization_tag`, `projector`, `theme`, `topic`, `user`
 
 **Examples:**
+
 ```bash
 # Update user
 osmanage set user '[{"id": 5, "first_name": "Jane", "last_name": "Smith"}]' \
@@ -443,11 +464,13 @@ osmanage set meeting \
 Execute arbitrary OpenSlides backend actions.
 
 **Usage:**
+
 ```bash
 osmanage action <action-name> [payload] [flags]
 ```
 
 **Examples:**
+
 ```bash
 # Docker Compose (localhost)
 osmanage action meeting.create '[{"name": "Annual Meeting", "committee_id": 1, "language": "de", "admin_ids": [1]}]' \
@@ -494,6 +517,7 @@ Commands for managing OpenSlides instances in Kubernetes.
 Deploys an OpenSlides instance to Kubernetes.
 
 **Usage:**
+
 ```bash
 osmanage k8s start <instance-dir> [flags]
 ```
@@ -511,6 +535,7 @@ osmanage k8s start <instance-dir> [flags]
 Stops and removes an OpenSlides instance from Kubernetes.
 
 **Usage:**
+
 ```bash
 osmanage k8s stop <instance-dir> [flags]
 ```
@@ -527,6 +552,7 @@ osmanage k8s stop <instance-dir> [flags]
 Updates an existing Kubernetes instance with new manifests.
 
 **Usage:**
+
 ```bash
 osmanage k8s update-instance <instance-dir> [flags]
 ```
@@ -543,6 +569,7 @@ osmanage k8s update-instance <instance-dir> [flags]
 Updates the backendmanage container image.
 
 **Usage:**
+
 ```bash
 osmanage k8s update-backendmanage <instance-dir> [flags]
 ```
@@ -553,6 +580,7 @@ osmanage k8s update-backendmanage <instance-dir> [flags]
 Scales a specific service deployment.
 
 **Usage:**
+
 ```bash
 osmanage k8s scale <instance-dir> [flags]
 ```
@@ -565,6 +593,7 @@ osmanage k8s scale <instance-dir> [flags]
 Checks the health status of an OpenSlides instance.
 
 **Usage:**
+
 ```bash
 osmanage k8s health <instance-dir> [flags]
 ```
@@ -580,6 +609,7 @@ osmanage k8s health <instance-dir> [flags]
 Displays comprehensive cluster status.
 
 **Usage:**
+
 ```bash
 osmanage k8s cluster-status [flags]
 ```
