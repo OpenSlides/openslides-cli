@@ -187,6 +187,16 @@ const (
 	DefaultOrganizationFields string = "id,name"
 )
 
+// Connect flags defaults
+const (
+	// DefaultBackendManageAddress is the default address for reaching backendManage
+	DefaultBackendManageAddress = "localhost:9002"
+
+	// DefaultPasswordFile is the default file read when authenticating to backendManage
+	// TODO : const + "/" + const
+	DefaultPasswordFile = "secrets/internal_auth_password"
+)
+
 // Migration command defaults and configuration
 const (
 	// DefaultMigrationProgressInterval is the default interval for checking migration progress

@@ -113,18 +113,14 @@ func createMigrationCmd(name, description string, withProgressTracking bool) *co
 		Args:  cobra.NoArgs,
 	}
 
-	address := cmd.Flags().StringP("address", "a", "", "address of the OpenSlides backendManage service (required)")
-	passwordFile := cmd.Flags().String("password-file", "", "file with password for authorization (required)")
+	address := cmd.Flags().StringP("address", "a", constants.DefaultBackendManageAddress, "address of the OpenSlides backendManage service (required)")
+	passwordFile := cmd.Flags().String("password-file", constants.DefaultPasswordFile, "file with password for authorization (required)")
 
 	if addressEnv := os.Getenv("OSMANAGE_BACKEND_ADDRESS"); addressEnv != "" {
 		address = &addressEnv
-	} else {
-		_ = cmd.MarkFlagRequired("address")
 	}
 	if passwordFileEnv := os.Getenv("OSMANAGE_BACKEND_PASSWORD_FILE"); passwordFileEnv != "" {
 		passwordFile = &passwordFileEnv
-	} else {
-		_ = cmd.MarkFlagRequired("password-file")
 	}
 
 	var progressInterval *time.Duration
