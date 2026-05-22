@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	GetHelp      = "Get models from the datastore"
+	GetHelp      = "Get models from the database"
 	GetHelpExtra = `Provide a collection to list contained models.
 Use options to narrow down output.
 
@@ -201,7 +201,7 @@ func ExecuteGetCollection(ctx context.Context, dbConfig *pb.DatabaseConfig, para
 		}
 	}
 
-	// Create environment map for datastore connection
+	// Create environment map for database connection
 	envMap := map[string]string{
 		constants.EnvDatabaseHost:          dbConfig.Host,
 		constants.EnvDatabasePort:          dbConfig.Port,

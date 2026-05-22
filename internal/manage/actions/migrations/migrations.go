@@ -18,7 +18,7 @@ import (
 
 const (
 	MigrationsHelp      = "Wrapper to the OpenSlides backend migration tool"
-	MigrationsHelpExtra = `Run database migrations on the OpenSlides datastore.
+	MigrationsHelpExtra = `Run database migrations.
 
 Examples:
   # Check migration status
@@ -26,12 +26,12 @@ Examples:
     --address <myBackendManageIP>:9002 \
     --password-file my.instance.dir/secrets/internal_auth_password
 
-  # Prepare migrations (dry run)
+  # Run migrations on auxiliary tables
   osmanage migrations migrate \
     --address <myBackendManageIP>:9002 \
     --password-file my.instance.dir/secrets/internal_auth_password
 
-  # Apply migrations to datastore
+  # Apply migrations to live tables
   osmanage migrations finalize \
     --address <myBackendManageIP>:9002 \
     --password-file my.instance.dir/secrets/internal_auth_password
@@ -53,10 +53,9 @@ Examples:
     --interval 2s
 
 Available commands:
-  migrate                       Prepare migrations (dry run)
-  finalize                      Apply migrations to datastore
+  migrate                       Run migrations on auxiliary tables
+  finalize                      Apply migrations to live tables
   reset                         Reset unapplied migrations
-  clear-collectionfield-tables  Clear auxiliary tables (offline only)
   stats                         Show migration statistics
   progress                      Check running migration progress`
 )
@@ -81,17 +80,18 @@ func Cmd() *cobra.Command {
 }
 
 func migrateCmd() *cobra.Command {
-	return createMigrationCmd("migrate", "Prepare migrations but do not apply them to the datastore", true)
+	return createMigrationCmd("migrate", "Prepare migrations but do not apply them to the live tables", true)
 }
 
 func finalizeCmd() *cobra.Command {
-	return createMigrationCmd("finalize", "Prepare migrations and apply them to the datastore", true)
+	return createMigrationCmd("finalize", "Prepare migrations and apply them to the live tables", true)
 }
 
 func resetCmd() *cobra.Command {
 	return createMigrationCmd("reset", "Reset unapplied migrations", false)
 }
 
+// TODO: unavailable after 4.3.0, delete when backward compatibility no longer needed
 func clearCollectionfieldTablesCmd() *cobra.Command {
 	return createMigrationCmd("clear-collectionfield-tables", "Clear all data from auxiliary tables (only when OpenSlides is offline)", false)
 }

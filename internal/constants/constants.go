@@ -148,7 +148,7 @@ const (
 	BackendContentType string = "application/json"
 )
 
-// PostgreSQL datastore environment variable keys (used by get command)
+// Environment variable keys (used by get command)
 const (
 	// EnvDatabaseHost is the environment variable for PostgreSQL host
 	EnvDatabaseHost string = "DATABASE_HOST"
@@ -169,7 +169,7 @@ const (
 	EnvOpenSlidesDevelopment string = "OPENSLIDES_DEVELOPMENT"
 )
 
-// PostgreSQL datastore environment variable values
+// Environment variable values
 const (
 	// DevelopmentModeDisabled is the value to disable OpenSlides development mode
 	DevelopmentModeDisabled string = "false"
@@ -178,7 +178,7 @@ const (
 	DevelopmentModeEnabled string = "true"
 )
 
-// OpenSlides datastore defaults
+// OpenSlides database defaults
 const (
 	// DefaultOrganizationID is the organization ID in OpenSlides (always 1)
 	DefaultOrganizationID int = 1
