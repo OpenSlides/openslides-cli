@@ -18,16 +18,13 @@ defaults:
   containerRegistry: ghcr.io/openslides/openslides
   tag: 4.3.0
 
-# These environment variables are injected into every OpenSlides service
-defaultEnvironment:
-  MIG0100_I_READ_DOCS: '1'
-  MIG0100_TIMEZONE: 'Europe/Berlin'
-
 # You can customize single services using the services property.
 services:
   backendManage:
     environment:
       OPENSLIDES_BACKEND_CREATE_INITIAL_DATA: 1
+      MIG0100_I_READ_DOCS: '1'
+      MIG0100_TIMEZONE: 'Europe/Berlin'
 
 # All properties from the "defaults" section are available here.
 #

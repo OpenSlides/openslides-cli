@@ -1,5 +1,4 @@
 ---
-version: "3.4"
 
 x-default-environment: &default-environment
   ACTION_HOST: {{ or .defaultEnvironment.ACTION_HOST "backendAction" }}
@@ -115,7 +114,6 @@ services:
     image: {{ or .services.backendAction.containerRegistry .defaults.containerRegistry }}/openslides-backend:{{ or .services.backendAction.tag .defaults.tag }}
     {{- if not .disableDependsOn }}
     depends_on:
-      - datastoreWriter
       - auth
       - media
       - vote
@@ -180,6 +178,7 @@ services:
     {{- with .services.backendManage.additionalContent }}{{ marshalContent 4 . }}{{- end }}
 
   {{- if not .disablePostgres }}
+
   postgres:
     image: postgres:17.10
     environment:
@@ -238,7 +237,6 @@ services:
     image: {{ or .services.projector.containerRegistry .defaults.containerRegistry }}/openslides-projector:{{ or .services.projector.tag .defaults.tag }}
     {{- if not .disableDependsOn }}
     depends_on:
-      - postgres
       - autoupdate
       - backendAction
       - postgres
