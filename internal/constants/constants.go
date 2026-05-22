@@ -62,7 +62,7 @@ const (
 	SecretsDirPerm fs.FileMode = 0700
 
 	// SecretFilePerm is the permission for secret files (owner read/write only)
-	SecretFilePerm fs.FileMode = 0600
+	SecretFilePerm fs.FileMode = 0644
 
 	// InstanceDirPerm is the permission for project root directory (owner + others read)
 	InstanceDirPerm fs.FileMode = 0755
