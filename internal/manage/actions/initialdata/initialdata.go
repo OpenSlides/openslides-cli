@@ -16,13 +16,13 @@ import (
 )
 
 const (
-	InitialDataHelp      = "Creates initial data if the datastore is empty"
+	InitialDataHelp      = "Creates initial data if the database is empty"
 	InitialDataHelpExtra = `This command sets up initial data for a new OpenSlides instance.
 Provide initial data via --file flag with a JSON file path, or use --file=- to read from stdin.
 If no file is provided, empty initialization data will be used.
 
 This command also sets the superadmin (user 1) password from the superadmin password file.
-It returns an error if the datastore is not empty.
+It returns an error if the database is not empty.
 
 Examples:
   osmanage initial-data \
@@ -101,9 +101,9 @@ func Cmd() *cobra.Command {
 
 		body, err := client.CheckResponse(resp)
 		if err != nil {
-			if bytes.Contains(body, []byte("Datastore is not empty")) {
-				logger.Warn("Datastore is not empty")
-				fmt.Fprintln(os.Stderr, "Datastore contains data, initial data were NOT set")
+			if bytes.Contains(body, []byte("is not empty")) {
+				logger.Warn("Database is not empty")
+				fmt.Fprintln(os.Stderr, "Database contains data, initial data were NOT set")
 				os.Exit(2)
 			}
 			return err

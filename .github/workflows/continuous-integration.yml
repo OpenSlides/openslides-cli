@@ -19,7 +19,7 @@ jobs:
           go-version-file: 'go.mod'
 
       - name: Go Format
-        run: gofmt -s -w . && git diff --exit-code
+        run: make format
 
       - name: Go Build
         run: go build ./...
@@ -31,7 +31,7 @@ jobs:
         uses: golangci/golangci-lint-action@v9
 
       - name: Test
-        run: go test -v -count=1 -race -shuffle=on -coverprofile=coverage.txt -json ./... > test.json
+        run: make test
 
       - name: Annotate tests
         if: always()

@@ -33,7 +33,7 @@ jobs:
         go-version-file: 'go.mod'
 
     - name: Build binaries
-      run: go build ./cmd/osmanage
+      run: make build-prod
 
     - name: Create release
       uses: marvinpinto/action-automatic-releases@latest
