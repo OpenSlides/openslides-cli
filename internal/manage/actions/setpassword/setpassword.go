@@ -3,7 +3,6 @@ package setpassword
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/OpenSlides/openslides-cli/internal/constants"
@@ -27,17 +26,10 @@ func Cmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 
-	address := cmd.Flags().StringP("address", "a", constants.DefaultBackendManageAddress, "address of the OpenSlides backendManage service (required)")
-	passwordFile := cmd.Flags().String("password-file", constants.DefaultPasswordFile, "file with password for authorization (required)")
+	address := cmd.Flags().StringP("address", "a", "", "address of the OpenSlides backendManage service (default: " + constants.DefaultBackendManageAddress + ")")
+	passwordFile := cmd.Flags().String("password-file", "", "file with password for authorization (default: " + constants.DefaultPasswordFile + ")")
 	password := cmd.Flags().StringP("password", "p", "", "new password of the user (required)")
 	userID := cmd.Flags().Int64P("user_id", "u", 0, "ID of the user account (required)")
-
-	if addressEnv := os.Getenv("OSMANAGE_BACKEND_ADDRESS"); addressEnv != "" {
-		address = &addressEnv
-	}
-	if passwordFileEnv := os.Getenv("OSMANAGE_BACKEND_PASSWORD_FILE"); passwordFileEnv != "" {
-		passwordFile = &passwordFileEnv
-	}
 
 	_ = cmd.MarkFlagRequired("user_id")
 	_ = cmd.MarkFlagRequired("password")
@@ -49,6 +41,9 @@ func Cmd() *cobra.Command {
 		if *userID == 0 {
 			return fmt.Errorf("--user_id cannot be empty or less than 1")
 		}
+
+		utils.KeepValueOrEnvOrDefault(address, constants.EnvOsmanageBackendAddress, constants.DefaultBackendManageAddress)
+		utils.KeepValueOrEnvOrDefault(passwordFile, constants.EnvOsmanageBackendPasswordFile, constants.DefaultPasswordFile)
 
 		logger.Info("=== SET PASSWORD ===")
 		logger.Debug("Setting password for user ID: %d", *userID)

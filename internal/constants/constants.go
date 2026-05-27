@@ -150,6 +150,12 @@ const (
 
 // PostgreSQL datastore environment variable keys (used by get command)
 const (
+	// EnvOsmanageBackendAddress is the environment variable for address to reach backendManage
+	EnvOsmanageBackendAddress string = "OSMANAGE_BACKEND_ADDRESS"
+
+	// EnvOsmanageBackendPasswordFile is the environment variable for the password file read to authenticate to backendManage
+	EnvOsmanageBackendPasswordFile string = "OSMANAGE_BACKEND_PASSWORD_FILE"
+
 	// EnvDatabaseHost is the environment variable for PostgreSQL host
 	EnvDatabaseHost string = "DATABASE_HOST"
 

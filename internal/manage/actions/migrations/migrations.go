@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -113,15 +112,8 @@ func createMigrationCmd(name, description string, withProgressTracking bool) *co
 		Args:  cobra.NoArgs,
 	}
 
-	address := cmd.Flags().StringP("address", "a", constants.DefaultBackendManageAddress, "address of the OpenSlides backendManage service (required)")
-	passwordFile := cmd.Flags().String("password-file", constants.DefaultPasswordFile, "file with password for authorization (required)")
-
-	if addressEnv := os.Getenv("OSMANAGE_BACKEND_ADDRESS"); addressEnv != "" {
-		address = &addressEnv
-	}
-	if passwordFileEnv := os.Getenv("OSMANAGE_BACKEND_PASSWORD_FILE"); passwordFileEnv != "" {
-		passwordFile = &passwordFileEnv
-	}
+	address := cmd.Flags().StringP("address", "a", "", "address of the OpenSlides backendManage service (default: " + constants.DefaultBackendManageAddress + ")")
+	passwordFile := cmd.Flags().String("password-file", "", "file with password for authorization (default: " + constants.DefaultPasswordFile + ")")
 
 	var progressInterval *time.Duration
 	if withProgressTracking {
@@ -130,6 +122,9 @@ func createMigrationCmd(name, description string, withProgressTracking bool) *co
 	}
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		utils.KeepValueOrEnvOrDefault(address, constants.EnvOsmanageBackendAddress, constants.DefaultBackendManageAddress)
+		utils.KeepValueOrEnvOrDefault(passwordFile, constants.EnvOsmanageBackendPasswordFile, constants.DefaultPasswordFile)
+
 		logger.Info("=== MIGRATIONS: %s ===", strings.ToUpper(name))
 
 		authPassword, err := utils.ReadPassword(*passwordFile)
