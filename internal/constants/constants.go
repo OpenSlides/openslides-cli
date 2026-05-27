@@ -150,6 +150,12 @@ const (
 
 // PostgreSQL datastore environment variable keys (used by get command)
 const (
+	// EnvOsmanageBackendAddress is the environment variable for address to reach backendManage
+	EnvOsmanageBackendAddress string = "OSMANAGE_BACKEND_ADDRESS"
+
+	// EnvOsmanageBackendPasswordFile is the environment variable for the password file read to authenticate to backendManage
+	EnvOsmanageBackendPasswordFile string = "OSMANAGE_BACKEND_PASSWORD_FILE"
+
 	// EnvDatabaseHost is the environment variable for PostgreSQL host
 	EnvDatabaseHost string = "DATABASE_HOST"
 
@@ -185,6 +191,16 @@ const (
 
 	// DefaultOrganizationFields are the default fields fetched for organization queries
 	DefaultOrganizationFields string = "id,name"
+)
+
+// Connect flags defaults
+const (
+	// DefaultBackendManageAddress is the default address for reaching backendManage
+	DefaultBackendManageAddress = "localhost:9002"
+
+	// DefaultPasswordFile is the default file read when authenticating to backendManage
+	// TODO : const + "/" + const
+	DefaultPasswordFile = "secrets/internal_auth_password"
 )
 
 // Migration command defaults and configuration
