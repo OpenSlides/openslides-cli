@@ -19,9 +19,6 @@ x-default-environment: &default-environment
   ICC_HOST: {{ or .defaultEnvironment.ICC_HOST "icc" }}
   ICC_PORT: {{ or .defaultEnvironment.ICC_PORT "9007" }}
   INTERNAL_AUTH_PASSWORD_FILE: {{ or .defaultEnvironment.INTERNAL_AUTH_PASSWORD_FILE "/run/secrets/internal_auth_password" }}
-  MANAGE_AUTH_PASSWORD_FILE: {{ or .defaultEnvironment.MANAGE_AUTH_PASSWORD_FILE "/run/secrets/manage_auth_password" }}
-  MANAGE_HOST: {{ or .defaultEnvironment.MANAGE_HOST "manage" }}
-  MANAGE_PORT: {{ or .defaultEnvironment.MANAGE_PORT "9008" }}
   MEDIA_DATABASE_HOST: {{ or .defaultEnvironment.MEDIA_DATABASE_HOST "postgres" }}
   MEDIA_DATABASE_NAME: {{ or .defaultEnvironment.MEDIA_DATABASE_NAME "openslides" }}
   MEDIA_DATABASE_PASSWORD_FILE: {{ or .defaultEnvironment.MEDIA_DATABASE_PASSWORD_FILE "/run/secrets/postgres_password" }}
@@ -167,8 +164,10 @@ services:
     networks:
       - data
       - email
+    {{- if not .disableBackendManageForward }}
     ports:
       - 127.0.0.1:9002:9002
+    {{- end }}
     secrets:
       - auth_token_key
       - auth_cookie_key

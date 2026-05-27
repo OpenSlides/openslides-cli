@@ -10,10 +10,12 @@ port: 8000
 # General global options
 disablePostgres: false
 disableDependsOn: false
+disableBackendManageForward: false
 enableLocalHTTPS: true
 enableAutoHTTPS: false
 
 # Defaults for all OpenSlides services.
+# tag can be set to 'latest' but is not recommended
 defaults:
   containerRegistry: ghcr.io/openslides/openslides
   tag: 4.3.0
