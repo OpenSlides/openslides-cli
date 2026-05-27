@@ -51,6 +51,8 @@ func Cmd() *cobra.Command {
 	superadminPasswordFile := cmd.Flags().String("superadmin-password-file", "", "file with superadmin password (required)")
 	dataFile := cmd.Flags().StringP("file", "f", "", "JSON file with initial data, or - for stdin")
 
+	_ = cmd.MarkFlagRequired("superadmin-password-file")
+
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		if strings.TrimSpace(*superadminPasswordFile) == "" {
 			return fmt.Errorf("--superadmin-password-file cannot be empty")
