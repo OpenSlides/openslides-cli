@@ -46,8 +46,8 @@ func Cmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 
-	address := cmd.Flags().StringP("address", "a", "", "address of the OpenSlides backendManage service (default: " + constants.DefaultBackendManageAddress + ")")
-	passwordFile := cmd.Flags().String("password-file", "", "file with password for authorization (default: " + constants.DefaultPasswordFile + ")")
+	address := cmd.Flags().StringP("address", "a", "", "address of the OpenSlides backendManage service (default: "+constants.DefaultBackendManageAddress+")")
+	passwordFile := cmd.Flags().String("password-file", "", "file with password for authorization (default: "+constants.DefaultPasswordFile+")")
 	superadminPasswordFile := cmd.Flags().String("superadmin-password-file", "", "file with superadmin password (required)")
 	dataFile := cmd.Flags().StringP("file", "f", "", "JSON file with initial data, or - for stdin")
 

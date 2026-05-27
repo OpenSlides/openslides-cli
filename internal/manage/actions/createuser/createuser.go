@@ -43,8 +43,8 @@ func Cmd() *cobra.Command {
 		Args:  cobra.RangeArgs(0, 1),
 	}
 
-	address := cmd.Flags().StringP("address", "a", "", "address of the OpenSlides backendManage service (default: " + constants.DefaultBackendManageAddress + ")")
-	passwordFile := cmd.Flags().String("password-file", "", "file with password for authorization (default: " + constants.DefaultPasswordFile + ")")
+	address := cmd.Flags().StringP("address", "a", "", "address of the OpenSlides backendManage service (default: "+constants.DefaultBackendManageAddress+")")
+	passwordFile := cmd.Flags().String("password-file", "", "file with password for authorization (default: "+constants.DefaultPasswordFile+")")
 	userFile := cmd.Flags().StringP("file", "f", "", "JSON file with user data, or - for stdin")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
