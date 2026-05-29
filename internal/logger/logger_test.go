@@ -89,3 +89,52 @@ func TestGlobalLogger(t *testing.T) {
 		t.Error("Global logger did not log message")
 	}
 }
+
+func TestBroadcaster(t *testing.T) {
+	sub := Subscribe()
+	defer Unsubscribe(sub)
+
+	// set global logger to publish
+	var buf bytes.Buffer
+	l := &Logger{
+		level:  LevelDebug,
+		logger: log.New(&buf, "", 0),
+	}
+	SetGlobal(l)
+
+	Info("test broadcast message")
+
+	select {
+	case entry := <-sub:
+		if entry.Message != "test broadcast message" {
+			t.Errorf("Expected 'test broadcast message', got: %s", entry.Message)
+		}
+		if entry.Level != "info" {
+			t.Errorf("Expected level 'info', got: %s", entry.Level)
+		}
+	default:
+		t.Error("Expected broadcast entry but got none")
+	}
+}
+
+func TestBroadcasterDrop(t *testing.T) {
+	// full channel should not block logger
+	sub := make(Subscriber, 1)
+	globalBroadcaster.mu.Lock()
+	globalBroadcaster.subscribers[sub] = struct{}{}
+	globalBroadcaster.mu.Unlock()
+	defer Unsubscribe(sub)
+
+	var buf bytes.Buffer
+	l := &Logger{
+		level:  LevelDebug,
+		logger: log.New(&buf, "", 0),
+	}
+	SetGlobal(l)
+
+	// fill the channel
+	sub <- LogEntry{}
+
+	// this should not block even though channel is full
+	Info("should not block")
+}

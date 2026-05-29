@@ -31,6 +31,7 @@ service OsmanageService {
   // server side streaming
   rpc MigrationsMigrate(MigrationsRequest) returns (stream MigrationsProgressResponse);
   rpc MigrationsFinalize(MigrationsRequest) returns (stream MigrationsProgressResponse);
+  rpc StreamLogs(LogStreamRequest) returns (stream LogEntry);
   
   // unary gRPC calls
   rpc MigrationsReset(MigrationsRequest) returns (MigrationsResponse);
@@ -40,6 +41,15 @@ service OsmanageService {
 
   // generic manage action via backendmanage client
   rpc SendManageAction(SendManageActionRequest) returns (SendManageActionResponse);
+}
+
+message LogStreamRequest {
+  string level = 1;
+}
+
+message LogEntry {
+  string level = 1;
+  string message = 2;
 }
 
 message InstanceConfigRequest {

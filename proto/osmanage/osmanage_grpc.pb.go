@@ -36,6 +36,7 @@ const (
 	OsmanageService_GetCollection_FullMethodName                        = "/osmanage.OsmanageService/GetCollection"
 	OsmanageService_MigrationsMigrate_FullMethodName                    = "/osmanage.OsmanageService/MigrationsMigrate"
 	OsmanageService_MigrationsFinalize_FullMethodName                   = "/osmanage.OsmanageService/MigrationsFinalize"
+	OsmanageService_StreamLogs_FullMethodName                           = "/osmanage.OsmanageService/StreamLogs"
 	OsmanageService_MigrationsReset_FullMethodName                      = "/osmanage.OsmanageService/MigrationsReset"
 	OsmanageService_MigrationsClearCollectionfieldTables_FullMethodName = "/osmanage.OsmanageService/MigrationsClearCollectionfieldTables"
 	OsmanageService_MigrationsStats_FullMethodName                      = "/osmanage.OsmanageService/MigrationsStats"
@@ -68,6 +69,7 @@ type OsmanageServiceClient interface {
 	// server side streaming
 	MigrationsMigrate(ctx context.Context, in *MigrationsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[MigrationsProgressResponse], error)
 	MigrationsFinalize(ctx context.Context, in *MigrationsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[MigrationsProgressResponse], error)
+	StreamLogs(ctx context.Context, in *LogStreamRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[LogEntry], error)
 	// unary gRPC calls
 	MigrationsReset(ctx context.Context, in *MigrationsRequest, opts ...grpc.CallOption) (*MigrationsResponse, error)
 	MigrationsClearCollectionfieldTables(ctx context.Context, in *MigrationsRequest, opts ...grpc.CallOption) (*MigrationsResponse, error)
@@ -327,6 +329,25 @@ func (c *osmanageServiceClient) MigrationsFinalize(ctx context.Context, in *Migr
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type OsmanageService_MigrationsFinalizeClient = grpc.ServerStreamingClient[MigrationsProgressResponse]
 
+func (c *osmanageServiceClient) StreamLogs(ctx context.Context, in *LogStreamRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[LogEntry], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &OsmanageService_ServiceDesc.Streams[8], OsmanageService_StreamLogs_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[LogStreamRequest, LogEntry]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type OsmanageService_StreamLogsClient = grpc.ServerStreamingClient[LogEntry]
+
 func (c *osmanageServiceClient) MigrationsReset(ctx context.Context, in *MigrationsRequest, opts ...grpc.CallOption) (*MigrationsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MigrationsResponse)
@@ -402,6 +423,7 @@ type OsmanageServiceServer interface {
 	// server side streaming
 	MigrationsMigrate(*MigrationsRequest, grpc.ServerStreamingServer[MigrationsProgressResponse]) error
 	MigrationsFinalize(*MigrationsRequest, grpc.ServerStreamingServer[MigrationsProgressResponse]) error
+	StreamLogs(*LogStreamRequest, grpc.ServerStreamingServer[LogEntry]) error
 	// unary gRPC calls
 	MigrationsReset(context.Context, *MigrationsRequest) (*MigrationsResponse, error)
 	MigrationsClearCollectionfieldTables(context.Context, *MigrationsRequest) (*MigrationsResponse, error)
@@ -469,6 +491,9 @@ func (UnimplementedOsmanageServiceServer) MigrationsMigrate(*MigrationsRequest, 
 }
 func (UnimplementedOsmanageServiceServer) MigrationsFinalize(*MigrationsRequest, grpc.ServerStreamingServer[MigrationsProgressResponse]) error {
 	return status.Error(codes.Unimplemented, "method MigrationsFinalize not implemented")
+}
+func (UnimplementedOsmanageServiceServer) StreamLogs(*LogStreamRequest, grpc.ServerStreamingServer[LogEntry]) error {
+	return status.Error(codes.Unimplemented, "method StreamLogs not implemented")
 }
 func (UnimplementedOsmanageServiceServer) MigrationsReset(context.Context, *MigrationsRequest) (*MigrationsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method MigrationsReset not implemented")
@@ -756,6 +781,17 @@ func _OsmanageService_MigrationsFinalize_Handler(srv interface{}, stream grpc.Se
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type OsmanageService_MigrationsFinalizeServer = grpc.ServerStreamingServer[MigrationsProgressResponse]
 
+func _OsmanageService_StreamLogs_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(LogStreamRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(OsmanageServiceServer).StreamLogs(m, &grpc.GenericServerStream[LogStreamRequest, LogEntry]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type OsmanageService_StreamLogsServer = grpc.ServerStreamingServer[LogEntry]
+
 func _OsmanageService_MigrationsReset_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MigrationsRequest)
 	if err := dec(in); err != nil {
@@ -949,6 +985,11 @@ var OsmanageService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "MigrationsFinalize",
 			Handler:       _OsmanageService_MigrationsFinalize_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "StreamLogs",
+			Handler:       _OsmanageService_StreamLogs_Handler,
 			ServerStreams: true,
 		},
 	},
