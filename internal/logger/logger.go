@@ -42,7 +42,7 @@ var globalBroadcaster = &Broadcaster{
 }
 
 func New(levelStr string) (*Logger, error) {
-	level, err := parseLevel(levelStr)
+	level, err := ParseLevel(levelStr)
 	if err != nil {
 		return nil, err
 	}
@@ -59,10 +59,6 @@ func New(levelStr string) (*Logger, error) {
 }
 
 func ParseLevel(levelStr string) (Level, error) {
-	return parseLevel(levelStr)
-}
-
-func parseLevel(levelStr string) (Level, error) {
 	switch strings.ToLower(levelStr) {
 	case "debug":
 		return LevelDebug, nil
