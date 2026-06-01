@@ -43,8 +43,8 @@ const (
 	// TlsCertSecretYAML is the manifest file for the kubernetes secret enabling HTTPS
 	TlsCertSecretYAML string = "tls-letsencrypt-secret.yaml"
 
-	// DefaultConfigFile is the filename used, if none is set in config file(s)
-	DefaultConfigFile string = "os-config.yaml"
+	// DefaultTemplatingOutputFilename is the filename used, if none is set in config file(s)
+	DefaultTemplatingOutputFilename string = "os-deployment.yaml"
 
 	// TemplateSuffix is the recognized suffix for template files
 	TemplateSuffix string = ".tmpl"
