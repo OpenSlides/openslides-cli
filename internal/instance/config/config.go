@@ -252,7 +252,6 @@ type TemplateFunctions struct {
 	baseDir string
 }
 
-
 // GetFuncMap returns the template function map with context
 func (tf *TemplateFunctions) GetFuncMap() template.FuncMap {
 	return template.FuncMap{
