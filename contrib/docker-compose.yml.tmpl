@@ -78,7 +78,7 @@ services:
       - uplink
       - frontend
     ports:
-      - {{ .host }}:{{ .port }}:8000
+      - {{ or .host "127.0.0.1" }}:{{ or .port "8000" }}:8000
     {{- if .enableLocalHTTPS }}
     secrets:
       - cert_crt
