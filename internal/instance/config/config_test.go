@@ -385,8 +385,8 @@ func TestGetFilename(t *testing.T) {
 			"other": "value",
 		}
 		result := getFilename(cfg, "myspecial.yaml")
-		if result != constants.DefaultConfigFile {
-			t.Errorf("Expected %s, got %s", constants.DefaultConfigFile, result)
+		if result != constants.DefaultTemplatingOutputFilename {
+			t.Errorf("Expected %s, got %s", constants.DefaultTemplatingOutputFilename, result)
 		}
 	})
 	t.Run("empty filename in config, with template file", func(t *testing.T) {
@@ -532,7 +532,7 @@ func TestCreateDirAndFiles(t *testing.T) {
 
 	t.Run("invalid template path", func(t *testing.T) {
 		cfg := map[string]any{
-			"filename": constants.DefaultConfigFile,
+			"filename": constants.DefaultTemplatingOutputFilename,
 		}
 		err := CreateDirAndFiles(tmpdir, false, "nonexistent-template", cfg)
 		if err == nil {
@@ -580,7 +580,7 @@ func TestCreateDirAndFiles(t *testing.T) {
 
 		outDir := filepath.Join(tmpdir, "output2")
 		cfg := map[string]any{
-			"filename": constants.DefaultConfigFile,
+			"filename": constants.DefaultTemplatingOutputFilename,
 		}
 
 		err := CreateDirAndFiles(outDir, true, tplDir, cfg)

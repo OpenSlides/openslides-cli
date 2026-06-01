@@ -245,7 +245,7 @@ func getFilename(cfg map[string]any, tplFile string) string {
 	if tplFilePretty, found := strings.CutSuffix(tplBase, constants.TemplateSuffix); found {
 		return tplFilePretty
 	}
-	return constants.DefaultConfigFile
+	return constants.DefaultTemplatingOutputFilename
 }
 
 type TemplateFunctions struct {
