@@ -220,6 +220,7 @@ services:
       - postgres
       - autoupdate
     {{- end }}
+    restart: unless-stopped
     environment:
       << : *default-environment
       {{- with .services.search.environment }}{{ marshalContent 6 . }}{{- end }}
