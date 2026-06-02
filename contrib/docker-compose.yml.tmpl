@@ -240,6 +240,7 @@ services:
       - backendAction
       - postgres
     {{- end }}
+    restart: unless-stopped
     environment:
       << : *default-environment
       {{- with .services.projector.environment }}{{ marshalContent 6 . }}{{- end }}
