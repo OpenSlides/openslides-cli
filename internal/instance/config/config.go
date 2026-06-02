@@ -241,10 +241,11 @@ func getFilename(cfg map[string]any, tplFile string) string {
 	if fn, ok := cfg["filename"].(string); ok && fn != "" {
 		return fn
 	}
-	if tplFilePretty, found := strings.CutSuffix(tplFile, constants.TemplateSuffix); found {
+	tplBase := filepath.Base(tplFile)
+	if tplFilePretty, found := strings.CutSuffix(tplBase, constants.TemplateSuffix); found {
 		return tplFilePretty
 	}
-	return constants.DefaultConfigFile
+	return constants.DefaultTemplatingOutputFilename
 }
 
 type TemplateFunctions struct {
