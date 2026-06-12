@@ -33,6 +33,7 @@ func Cmd() *cobra.Command {
 
 	host := cmd.Flags().String("host", constants.GRPCHost, "Host to listen on")
 	port := cmd.Flags().String("port", constants.GRPCPort, "Port to listen on")
+	unsafe := cmd.Flags().Bool("unsafe", constants.Unsafe, "Guardrail to prevent people starting a bare gRPC server, unless they really want to and know what they're doing.")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		if *host == "" {
@@ -40,6 +41,9 @@ func Cmd() *cobra.Command {
 		}
 		if *port == "" {
 			return fmt.Errorf("gRPC port flag cannot be empty")
+		}
+		if !*unsafe {
+			return fmt.Errorf("Here be dragons")
 		}
 		address := fmt.Sprintf("%s:%s", *host, *port)
 		return start(address)
