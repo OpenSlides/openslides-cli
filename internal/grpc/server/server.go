@@ -43,7 +43,7 @@ func Cmd() *cobra.Command {
 			return fmt.Errorf("gRPC port flag cannot be empty")
 		}
 		if !*unsafe {
-			return fmt.Errorf("Here be dragons")
+			return fmt.Errorf("here be dragons")
 		}
 		address := fmt.Sprintf("%s:%s", *host, *port)
 		return start(address)
