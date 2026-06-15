@@ -15,6 +15,18 @@ import (
 	"google.golang.org/grpc"
 )
 
+const (
+	ServeHelp      = "Start gRPC server"
+	ServeHelpExtra = `Start the osmanage gRPC server for client-server communication.
+This command is intended to be ran locally only and will expose 
+an unsafe grpc port over which extensive actions can be 
+conducted without authentication. Use with caution!
+
+Examples:
+  osmanage serve
+  osmanage serve --host 1.2.3.4 --port 50051 --unsafe`
+)
+
 // OsmanageServiceServer implements the OsmanageService gRPC interface
 type OsmanageServiceServer struct {
 	pb.UnimplementedOsmanageServiceServer
@@ -27,13 +39,13 @@ func NewOsmanageServiceServer() *OsmanageServiceServer {
 func Cmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "serve",
-		Short: "Start gRPC server",
-		Long:  "Start the osmanage gRPC server for client-server communication",
+		Short: ServeHelp,
+		Long:  ServeHelpExtra,
 	}
 
 	host := cmd.Flags().String("host", constants.GRPCHost, "Host to listen on")
 	port := cmd.Flags().String("port", constants.GRPCPort, "Port to listen on")
-	unsafe := cmd.Flags().Bool("unsafe", constants.Unsafe, "Guardrail to prevent people starting a bare gRPC server, unless they really want to and know what they're doing.")
+	unsafe := cmd.Flags().Bool("unsafe", constants.Unsafe, "Bypass local-only restriction for gRPC; required if non-default host is used")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		if *host == "" {
@@ -42,7 +54,7 @@ func Cmd() *cobra.Command {
 		if *port == "" {
 			return fmt.Errorf("gRPC port flag cannot be empty")
 		}
-		if !*unsafe {
+		if !*unsafe && *host != constants.GRPCHost {
 			return fmt.Errorf("here be dragons")
 		}
 		address := fmt.Sprintf("%s:%s", *host, *port)
