@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -23,7 +24,7 @@ import (
 )
 
 const (
-	GetHelp      = "Get models from the datastore"
+	GetHelp      = "Get models from the database"
 	GetHelpExtra = `Provide a collection to list contained models.
 Use options to narrow down output.
 
@@ -94,12 +95,31 @@ func Cmd() *cobra.Command {
 	postgresDatabase := cmd.Flags().String("postgres-database", "", "PostgreSQL database (required)")
 	postgresPasswordFile := cmd.Flags().String("postgres-password-file", "", "PostgreSQL password file (required)")
 
-	// Mark PostgreSQL flags as required
-	_ = cmd.MarkFlagRequired("postgres-host")
-	_ = cmd.MarkFlagRequired("postgres-port")
-	_ = cmd.MarkFlagRequired("postgres-user")
-	_ = cmd.MarkFlagRequired("postgres-database")
-	_ = cmd.MarkFlagRequired("postgres-password-file")
+	if postgresHostEnv := os.Getenv("OSMANAGE_POSTGRES_HOST"); postgresHostEnv != "" {
+		postgresHost = &postgresHostEnv
+	} else {
+		_ = cmd.MarkFlagRequired("postgres-host")
+	}
+	if postgresPortEnv := os.Getenv("OSMANAGE_POSTGRES_PORT"); postgresPortEnv != "" {
+		postgresPort = &postgresPortEnv
+	} else {
+		_ = cmd.MarkFlagRequired("postgres-port")
+	}
+	if postgresUserEnv := os.Getenv("OSMANAGE_POSTGRES_USER"); postgresUserEnv != "" {
+		postgresUser = &postgresUserEnv
+	} else {
+		_ = cmd.MarkFlagRequired("postgres-user")
+	}
+	if postgresDatabaseEnv := os.Getenv("OSMANAGE_POSTGRES_DATABASE"); postgresDatabaseEnv != "" {
+		postgresDatabase = &postgresDatabaseEnv
+	} else {
+		_ = cmd.MarkFlagRequired("postgres-database")
+	}
+	if postgresPasswordFileEnv := os.Getenv("OSMANAGE_POSTGRES_PASSWORD_FILE"); postgresPasswordFileEnv != "" {
+		postgresPasswordFile = &postgresPasswordFileEnv
+	} else {
+		_ = cmd.MarkFlagRequired("postgres-password-file")
+	}
 
 	// Query flags
 	fields := cmd.Flags().StringSlice("fields", nil, "only include the provided fields in output")
@@ -201,7 +221,7 @@ func ExecuteGetCollection(ctx context.Context, dbConfig *pb.DatabaseConfig, para
 		}
 	}
 
-	// Create environment map for datastore connection
+	// Create environment map for database connection
 	envMap := map[string]string{
 		constants.EnvDatabaseHost:          dbConfig.Host,
 		constants.EnvDatabasePort:          dbConfig.Port,

@@ -1,0 +1,377 @@
+---
+
+x-default-environment: &default-environment
+  ACTION_HOST: {{ or .defaultEnvironment.ACTION_HOST "backendAction" }}
+  ACTION_PORT: {{ or .defaultEnvironment.ACTION_PORT "9002" }}
+  AUTH_COOKIE_KEY_FILE: {{ or .defaultEnvironment.AUTH_COOKIE_KEY_FILE "/run/secrets/auth_cookie_key" }}
+  AUTH_HOST: {{ or .defaultEnvironment.AUTH_HOST "auth" }}
+  AUTH_PORT: {{ or .defaultEnvironment.AUTH_PORT "9004" }}
+  AUTH_TOKEN_KEY_FILE: {{ or .defaultEnvironment.AUTH_TOKEN_KEY_FILE "/run/secrets/auth_token_key" }}
+  AUTOUPDATE_HOST: {{ or .defaultEnvironment.AUTOUPDATE_HOST "autoupdate" }}
+  AUTOUPDATE_PORT: {{ or .defaultEnvironment.AUTOUPDATE_PORT "9012" }}
+  CACHE_HOST: {{ or .defaultEnvironment.CACHE_HOST "redis" }}
+  CACHE_PORT: {{ or .defaultEnvironment.CACHE_PORT "6379" }}
+  DATABASE_HOST: {{ or .defaultEnvironment.DATABASE_HOST "postgres" }}
+  DATABASE_NAME: {{ or .defaultEnvironment.DATABASE_NAME "openslides" }}
+  DATABASE_PASSWORD_FILE: {{ or .defaultEnvironment.DATABASE_PASSWORD_FILE "/run/secrets/postgres_password" }}
+  DATABASE_PORT: {{ or .defaultEnvironment.DATABASE_PORT "5432" }}
+  DATABASE_USER: {{ or .defaultEnvironment.DATABASE_USER "openslides" }}
+  ICC_HOST: {{ or .defaultEnvironment.ICC_HOST "icc" }}
+  ICC_PORT: {{ or .defaultEnvironment.ICC_PORT "9007" }}
+  INTERNAL_AUTH_PASSWORD_FILE: {{ or .defaultEnvironment.INTERNAL_AUTH_PASSWORD_FILE "/run/secrets/internal_auth_password" }}
+  MEDIA_DATABASE_HOST: {{ or .defaultEnvironment.MEDIA_DATABASE_HOST "postgres" }}
+  MEDIA_DATABASE_NAME: {{ or .defaultEnvironment.MEDIA_DATABASE_NAME "openslides" }}
+  MEDIA_DATABASE_PASSWORD_FILE: {{ or .defaultEnvironment.MEDIA_DATABASE_PASSWORD_FILE "/run/secrets/postgres_password" }}
+  MEDIA_DATABASE_PORT: {{ or .defaultEnvironment.MEDIA_DATABASE_PORT "5432" }}
+  MEDIA_DATABASE_USER: {{ or .defaultEnvironment.MEDIA_DATABASE_USER "openslides" }}
+  MEDIA_HOST: {{ or .defaultEnvironment.MEDIA_HOST "media" }}
+  MEDIA_PORT: {{ or .defaultEnvironment.MEDIA_PORT "9006" }}
+  MESSAGE_BUS_HOST: {{ or .defaultEnvironment.MESSAGE_BUS_HOST "redis" }}
+  MESSAGE_BUS_PORT: {{ or .defaultEnvironment.MESSAGE_BUS_PORT "6379" }}
+  OPENSLIDES_DEVELOPMENT: {{ or .defaultEnvironment.OPENSLIDES_DEVELOPMENT "false" }}
+  OPENSLIDES_LOGLEVEL: {{ or .defaultEnvironment.OPENSLIDES_LOGLEVEL "info" }}
+  PRESENTER_HOST: {{ or .defaultEnvironment.PRESENTER_HOST "backendPresenter" }}
+  PRESENTER_PORT: {{ or .defaultEnvironment.PRESENTER_PORT "9003" }}
+  PROJECTOR_HOST: {{ or .defaultEnvironment.PROJECTOR_HOST "projector" }}
+  PROJECTOR_PORT: {{ or .defaultEnvironment.PROJECTOR_PORT "9051" }}
+  RESTRICTER_URL: {{ or .defaultEnvironment.RESTRICTER_URL "http://autoupdate:9012/internal/autoupdate" }}
+  SEARCH_HOST: {{ or .defaultEnvironment.SEARCH_HOST "search" }}
+  SEARCH_PORT: {{ or .defaultEnvironment.SEARCH_PORT "9050" }}
+  SUPERADMIN_PASSWORD_FILE: {{ or .defaultEnvironment.SUPERADMIN_PASSWORD_FILE "/run/secrets/superadmin" }}
+  VOTE_DATABASE_HOST: {{ or .defaultEnvironment.VOTE_DATABASE_HOST "postgres" }}
+  VOTE_DATABASE_NAME: {{ or .defaultEnvironment.VOTE_DATABASE_NAME "openslides" }}
+  VOTE_DATABASE_PASSWORD_FILE: {{ or .defaultEnvironment.VOTE_DATABASE_PASSWORD_FILE "/run/secrets/postgres_password" }}
+  VOTE_DATABASE_PORT: {{ or .defaultEnvironment.VOTE_DATABASE_PORT "5432" }}
+  VOTE_DATABASE_USER: {{ or .defaultEnvironment.VOTE_DATABASE_USER "openslides" }}
+  VOTE_HOST: {{ or .defaultEnvironment.VOTE_HOST "vote" }}
+  VOTE_PORT: {{ or .defaultEnvironment.VOTE_PORT "9013" }}
+
+services:
+
+  proxy:
+    image: {{ or .services.proxy.containerRegistry .defaults.containerRegistry }}/openslides-proxy:{{ or .services.proxy.tag .defaults.tag }}
+    {{- if not .disableDependsOn }}
+    depends_on:
+      - client
+      - backendAction
+      - backendPresenter
+      - autoupdate
+      - search
+      - projector
+      - auth
+      - media
+      - icc
+      - vote
+    {{- end }}
+    environment:
+      << : *default-environment
+      {{- with .services.proxy.environment }}{{ marshalContent 6 . }}{{- end }}
+    {{- if .enableLocalHTTPS }}
+      ENABLE_LOCAL_HTTPS: 1
+      HTTPS_CERT_FILE: /run/secrets/cert_crt
+      HTTPS_KEY_FILE: /run/secrets/cert_key
+    {{- end }}
+    {{- if .enableAutoHTTPS }}
+      ENABLE_AUTO_HTTPS: 1
+    {{- end }}
+    networks:
+      - uplink
+      - frontend
+    ports:
+      - {{ or .host "127.0.0.1" }}:{{ or .port "8000" }}:8000
+    {{- if .enableLocalHTTPS }}
+    secrets:
+      - cert_crt
+      - cert_key
+    {{- end }}
+    {{- with .services.proxy.additionalContent }}{{ marshalContent 4 . }}{{- end }}
+
+  client:
+    image: {{ or .services.client.containerRegistry .defaults.containerRegistry }}/openslides-client:{{ or .services.client.tag .defaults.tag }}
+    {{- if not .disableDependsOn }}
+    depends_on:
+      - backendAction
+      - backendPresenter
+      - autoupdate
+      - search
+      - projector
+      - auth
+      - media
+      - icc
+      - vote
+    {{- end }}
+    environment:
+      << : *default-environment
+      {{- with .services.client.environment }}{{ marshalContent 6 . }}{{- end }}
+    networks:
+      - frontend
+    {{- with .services.client.additionalContent }}{{ marshalContent 4 . }}{{ end }}
+
+  backendAction:
+    image: {{ or .services.backendAction.containerRegistry .defaults.containerRegistry }}/openslides-backend:{{ or .services.backendAction.tag .defaults.tag }}
+    {{- if not .disableDependsOn }}
+    depends_on:
+      - auth
+      - media
+      - vote
+      - postgres
+    {{- end }}
+    environment:
+      << : *default-environment
+      {{- with .services.backendAction.environment }}{{ marshalContent 6 . }}{{- end }}
+      OPENSLIDES_BACKEND_COMPONENT: action
+    networks:
+      - frontend
+      - data
+      - email
+    secrets:
+      - auth_token_key
+      - auth_cookie_key
+      - internal_auth_password
+      - postgres_password
+    {{- with .services.backendAction.additionalContent }}{{ marshalContent 4 . }}{{- end }}
+
+  backendPresenter:
+    image: {{ or .services.backendPresenter.containerRegistry .defaults.containerRegistry }}/openslides-backend:{{ or .services.backendPresenter.tag .defaults.tag }}
+    {{- if not .disableDependsOn }}
+    depends_on:
+      - auth
+      - postgres
+    {{- end }}
+    environment:
+      << : *default-environment
+      {{- with .services.backendPresenter.environment }}{{ marshalContent 6 . }}{{- end }}
+      OPENSLIDES_BACKEND_COMPONENT: presenter
+    networks:
+      - frontend
+      - data
+    secrets:
+      - auth_token_key
+      - auth_cookie_key
+      - postgres_password
+    {{- with .services.backendPresenter.additionalContent }}{{ marshalContent 4 . }}{{- end }}
+
+  backendManage:
+    image: {{ or .services.backendManage.containerRegistry .defaults.containerRegistry }}/openslides-backend:{{ or .services.backendManage.tag .defaults.tag }}
+    {{- if not .disableDependsOn }}
+    depends_on:
+      - postgres
+    {{- end }}
+    environment:
+      << : *default-environment
+      {{- with .services.backendManage.environment }}{{ marshalContent 6 . }}{{- end }}
+      OPENSLIDES_BACKEND_COMPONENT: action
+    networks:
+      - data
+      - email
+    {{- if not .disableBackendManageForward }}
+    ports:
+      - 127.0.0.1:{{ or .backendManagePort "9002" }}:9002
+    {{- end }}
+    secrets:
+      - auth_token_key
+      - auth_cookie_key
+      - internal_auth_password
+      - postgres_password
+      - superadmin
+    {{- with .services.backendManage.additionalContent }}{{ marshalContent 4 . }}{{- end }}
+
+  {{- if not .disablePostgres }}
+
+  postgres:
+    image: postgres:17.10
+    environment:
+      << : *default-environment
+      {{- with .services.postgres.environment }}{{ marshalContent 6 . }}{{- end }}
+      POSTGRES_DB: openslides
+      POSTGRES_USER: openslides
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - data
+    secrets:
+      - postgres_password
+    {{- with .services.postgres.additionalContent }}{{ marshalContent 4 . }}{{- end }}
+  {{- end }}
+
+  autoupdate:
+    image: {{ or .services.autoupdate.containerRegistry .defaults.containerRegistry }}/openslides-autoupdate:{{ or .services.autoupdate.tag .defaults.tag }}
+    {{- if not .disableDependsOn }}
+    depends_on:
+      - redis
+    {{- end }}
+    environment:
+      << : *default-environment
+      {{- with .services.autoupdate.environment }}{{ marshalContent 6 . }}{{- end }}
+    networks:
+      - frontend
+      - data
+    secrets:
+      - auth_token_key
+      - auth_cookie_key
+      - postgres_password
+    {{- with .services.autoupdate.additionalContent }}{{ marshalContent 4 . }}{{- end }}
+
+  search:
+    image: {{ or .services.search.containerRegistry .defaults.containerRegistry }}/openslides-search:{{ or .services.search.tag .defaults.tag }}
+    {{- if not .disableDependsOn }}
+    depends_on:
+      - postgres
+      - autoupdate
+    {{- end }}
+    restart: unless-stopped
+    environment:
+      << : *default-environment
+      {{- with .services.search.environment }}{{ marshalContent 6 . }}{{- end }}
+    networks:
+      - frontend
+      - data
+    secrets:
+      - auth_token_key
+      - auth_cookie_key
+      - postgres_password
+    {{- with .services.search.additionalContent }}{{ marshalContent 4 . }}{{- end }}
+
+  projector:
+    image: {{ or .services.projector.containerRegistry .defaults.containerRegistry }}/openslides-projector:{{ or .services.projector.tag .defaults.tag }}
+    {{- if not .disableDependsOn }}
+    depends_on:
+      - autoupdate
+      - backendAction
+      - postgres
+    {{- end }}
+    restart: unless-stopped
+    environment:
+      << : *default-environment
+      {{- with .services.projector.environment }}{{ marshalContent 6 . }}{{- end }}
+    networks:
+      - frontend
+      - data
+    secrets:
+      - auth_token_key
+      - auth_cookie_key
+      - postgres_password
+    {{- with .services.projector.additionalContent }}{{ marshalContent 4 . }}{{- end }}
+
+  auth:
+    image: {{ or .services.auth.containerRegistry .defaults.containerRegistry }}/openslides-auth:{{ or .services.auth.tag .defaults.tag }}
+    {{- if not .disableDependsOn }}
+    depends_on:
+      - redis
+      - postgres
+    {{- end }}
+    environment:
+      << : *default-environment
+      {{- with .services.auth.environment }}{{ marshalContent 6 . }}{{- end }}
+    networks:
+      - frontend
+      - data
+    secrets:
+      - auth_token_key
+      - auth_cookie_key
+      - internal_auth_password
+      - postgres_password
+    {{- with .services.auth.additionalContent }}{{ marshalContent 4 . }}{{- end }}
+
+  vote:
+    image: {{ or .services.vote.containerRegistry .defaults.containerRegistry }}/openslides-vote:{{ or .services.vote.tag .defaults.tag }}
+    {{- if not .disableDependsOn }}
+    depends_on:
+      - auth
+      - autoupdate
+      - redis
+      - postgres
+    {{- end }}
+    environment:
+      << : *default-environment
+      {{- with .services.vote.environment }}{{ marshalContent 6 . }}{{- end }}
+    networks:
+      - frontend
+      - data
+    secrets:
+      - auth_token_key
+      - auth_cookie_key
+      - postgres_password
+    {{- with .services.vote.additionalContent }}{{ marshalContent 4 . }}{{- end }}
+
+  redis:
+    image: redis:alpine
+    command: redis-server --save ""
+    environment:
+      << : *default-environment
+      {{- with .services.redis.environment }}{{ marshalContent 6 . }}{{- end }}
+    networks:
+      - data
+    {{- with .services.redis.additionalContent }}{{ marshalContent 4 . }}{{- end }}
+
+  media:
+    image: {{ or .services.media.containerRegistry .defaults.containerRegistry }}/openslides-media:{{ or .services.media.tag .defaults.tag }}
+    {{- if not .disableDependsOn }}
+    depends_on:
+      - postgres
+    {{- end }}
+    environment:
+      << : *default-environment
+      {{- with .services.media.environment }}{{ marshalContent 6 . }}{{- end }}
+    networks:
+      - frontend
+      - data
+    secrets:
+      - auth_token_key
+      - auth_cookie_key
+      - postgres_password
+    {{- with .services.media.additionalContent }}{{ marshalContent 4 . }}{{- end }}
+
+  icc:
+    image: {{ or .services.icc.containerRegistry .defaults.containerRegistry }}/openslides-icc:{{ or .services.icc.tag .defaults.tag }}
+    {{- if not .disableDependsOn }}
+    depends_on:
+      - postgres
+      - redis
+    {{- end }}
+    environment:
+      << : *default-environment
+      {{- with .services.icc.environment }}{{ marshalContent 6 . }}{{- end }}
+    networks:
+      - frontend
+      - data
+    secrets:
+      - auth_token_key
+      - auth_cookie_key
+      - postgres_password
+    {{- with .services.icc.additionalContent }}{{ marshalContent 4 . }}{{- end }}
+
+networks:
+  uplink:
+    internal: false
+  email:
+    internal: false
+  frontend:
+    internal: true
+  data:
+    internal: true
+
+{{- if not .disablePostgres }}
+
+volumes:
+  postgres-data:
+{{- end }}
+
+secrets:
+  auth_token_key:
+    file: ./secrets/auth_token_key
+  auth_cookie_key:
+    file: ./secrets/auth_cookie_key
+  superadmin:
+    file: ./secrets/superadmin
+  internal_auth_password:
+    file: ./secrets/internal_auth_password
+  postgres_password:
+    file: ./secrets/postgres_password
+{{- if .enableLocalHTTPS }}
+  cert_crt:
+    file: ./secrets/cert_crt
+  cert_key:
+    file: ./secrets/cert_key
+{{- end }}

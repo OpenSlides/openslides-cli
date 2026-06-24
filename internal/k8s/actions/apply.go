@@ -165,7 +165,7 @@ func applyDirectory(ctx context.Context, k8sClient *client.Client, dirPath strin
 			continue
 		}
 		if info.Size() == 0 {
-			logger.Warn("File is empty, skipping: %s", file.Name())
+			logger.Info("File is empty, skipping: %s", file.Name())
 			continue
 		}
 		key, _, err := applyManifest(ctx, k8sClient, manifestPath, labels)

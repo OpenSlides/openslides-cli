@@ -120,3 +120,17 @@ func IsYAMLFile(filename string) bool {
 	ext := filepath.Ext(filename)
 	return ext == ".yaml" || ext == ".yml"
 }
+
+// KeepValueOrEnvOrDefault sets value to value OR envValue OR defaultValue
+func KeepValueOrEnvOrDefault(value *string, envVarName string, defaultValue string) {
+	if *value != "" {
+		return
+	}
+
+	*value = os.Getenv(envVarName)
+	if *value != "" {
+		return
+	}
+
+	*value = defaultValue
+}

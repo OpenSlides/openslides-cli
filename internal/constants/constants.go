@@ -43,8 +43,11 @@ const (
 	// TlsCertSecretYAML is the manifest file for the kubernetes secret enabling HTTPS
 	TlsCertSecretYAML string = "tls-letsencrypt-secret.yaml"
 
-	// DefaultConfigFile is the filename used, if none is set in config file(s)
-	DefaultConfigFile string = "os-config.yaml"
+	// DefaultTemplatingOutputFilename is the filename used, if none is set in config file(s)
+	DefaultTemplatingOutputFilename string = "os-deployment.yaml"
+
+	// TemplateSuffix is the recognized suffix for template files
+	TemplateSuffix string = ".tmpl"
 
 	// CertCertName is filename for the HTTPS certificate file
 	CertCertName string = "cert_crt"
@@ -59,7 +62,7 @@ const (
 	SecretsDirPerm fs.FileMode = 0700
 
 	// SecretFilePerm is the permission for secret files (owner read/write only)
-	SecretFilePerm fs.FileMode = 0600
+	SecretFilePerm fs.FileMode = 0644
 
 	// InstanceDirPerm is the permission for project root directory (owner + others read)
 	InstanceDirPerm fs.FileMode = 0755
@@ -148,8 +151,14 @@ const (
 	BackendContentType string = "application/json"
 )
 
-// PostgreSQL datastore environment variable keys (used by get command)
+// Environment variable keys (used by get command)
 const (
+	// EnvOsmanageBackendAddress is the environment variable for address to reach backendManage
+	EnvOsmanageBackendAddress string = "OSMANAGE_BACKEND_ADDRESS"
+
+	// EnvOsmanageBackendPasswordFile is the environment variable for the password file read to authenticate to backendManage
+	EnvOsmanageBackendPasswordFile string = "OSMANAGE_BACKEND_PASSWORD_FILE"
+
 	// EnvDatabaseHost is the environment variable for PostgreSQL host
 	EnvDatabaseHost string = "DATABASE_HOST"
 
@@ -169,7 +178,7 @@ const (
 	EnvOpenSlidesDevelopment string = "OPENSLIDES_DEVELOPMENT"
 )
 
-// PostgreSQL datastore environment variable values
+// Environment variable values
 const (
 	// DevelopmentModeDisabled is the value to disable OpenSlides development mode
 	DevelopmentModeDisabled string = "false"
@@ -178,13 +187,23 @@ const (
 	DevelopmentModeEnabled string = "true"
 )
 
-// OpenSlides datastore defaults
+// OpenSlides database defaults
 const (
 	// DefaultOrganizationID is the organization ID in OpenSlides (always 1)
 	DefaultOrganizationID int = 1
 
 	// DefaultOrganizationFields are the default fields fetched for organization queries
 	DefaultOrganizationFields string = "id,name"
+)
+
+// Connect flags defaults
+const (
+	// DefaultBackendManageAddress is the default address for reaching backendManage
+	DefaultBackendManageAddress = "localhost:9002"
+
+	// DefaultPasswordFile is the default file read when authenticating to backendManage
+	// TODO : const + "/" + const
+	DefaultPasswordFile = "secrets/internal_auth_password"
 )
 
 // Migration command defaults and configuration

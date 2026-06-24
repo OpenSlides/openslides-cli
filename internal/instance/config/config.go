@@ -166,7 +166,7 @@ func createFromTemplateFile(baseDir string, force bool, tplFile string, cfg map[
 	}
 
 	// Extract filename from config if present, otherwise use a default
-	filename := filepath.Join(baseDir, getFilename(cfg))
+	filename := filepath.Join(baseDir, getFilename(cfg, tplFile))
 	return createDeploymentFile(filename, force, data, cfg, baseDir)
 }
 
@@ -237,11 +237,15 @@ func createDeploymentFile(filename string, force bool, tplData []byte, cfg map[s
 }
 
 // getFilename extracts the filename from config, or returns a default
-func getFilename(cfg map[string]any) string {
+func getFilename(cfg map[string]any, tplFile string) string {
 	if fn, ok := cfg["filename"].(string); ok && fn != "" {
 		return fn
 	}
-	return constants.DefaultConfigFile
+	tplBase := filepath.Base(tplFile)
+	if tplFilePretty, found := strings.CutSuffix(tplBase, constants.TemplateSuffix); found {
+		return tplFilePretty
+	}
+	return constants.DefaultTemplatingOutputFilename
 }
 
 type TemplateFunctions struct {

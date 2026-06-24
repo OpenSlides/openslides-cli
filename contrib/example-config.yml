@@ -1,0 +1,50 @@
+---
+
+# Name of the generated YAML file.
+filename: docker-compose.yml
+
+# The OpenSlides proxy service listens on this address.
+host: 127.0.0.1
+port: 8000
+
+# General global options
+disablePostgres: false
+disableDependsOn: false
+disableBackendManageForward: false
+enableLocalHTTPS: true
+enableAutoHTTPS: false
+
+# Defaults for all OpenSlides services.
+# tag can be set to 'latest' but is not recommended
+defaults:
+  containerRegistry: ghcr.io/openslides/openslides
+  tag: 4.3.0
+
+# You can customize single services using the services property.
+services:
+  backendManage:
+    environment:
+      OPENSLIDES_BACKEND_CREATE_INITIAL_DATA: 1
+      MIG0100_I_READ_DOCS: '1'
+      MIG0100_TIMEZONE: 'Europe/Berlin'
+
+# All properties from the "defaults" section are available here.
+#
+# Example:
+#
+# services:
+#   backendManage:
+#     tag: my-tag
+#   autoupdate:
+#     containerRegistry: example.com/my-registry
+
+# You can also define some additional content for all services. This will just
+# add the object to the respective service blob.
+#
+# Example:
+#
+# services:
+#   autoupdate:
+#     additionalContent:
+#       deploy:
+#         replicas: 4
