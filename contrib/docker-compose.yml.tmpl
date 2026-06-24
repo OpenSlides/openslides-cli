@@ -78,7 +78,7 @@ services:
       - uplink
       - frontend
     ports:
-      - {{ .host }}:{{ .port }}:8000
+      - {{ or .host "127.0.0.1" }}:{{ or .port "8000" }}:8000
     {{- if .enableLocalHTTPS }}
     secrets:
       - cert_crt
@@ -166,7 +166,7 @@ services:
       - email
     {{- if not .disableBackendManageForward }}
     ports:
-      - 127.0.0.1:9002:9002
+      - 127.0.0.1:{{ or .backendManagePort "9002" }}:9002
     {{- end }}
     secrets:
       - auth_token_key
@@ -220,6 +220,7 @@ services:
       - postgres
       - autoupdate
     {{- end }}
+    restart: unless-stopped
     environment:
       << : *default-environment
       {{- with .services.search.environment }}{{ marshalContent 6 . }}{{- end }}
@@ -240,6 +241,7 @@ services:
       - backendAction
       - postgres
     {{- end }}
+    restart: unless-stopped
     environment:
       << : *default-environment
       {{- with .services.projector.environment }}{{ marshalContent 6 . }}{{- end }}
