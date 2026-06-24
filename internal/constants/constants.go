@@ -287,4 +287,5 @@ const (
 	GRPCHost                string        = "127.0.0.1"
 	GRPCPort                string        = "50051"
 	GRPCGracefulStopTimeout time.Duration = 30 * time.Second
+	Unsafe                  bool          = false
 )
