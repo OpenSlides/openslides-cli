@@ -246,6 +246,7 @@ func TestDefaultSecrets(t *testing.T) {
 		constants.AuthCookieKey,
 		constants.InternalAuthPassword,
 		constants.PgPasswordFile,
+		constants.VoteKeyFile,
 		constants.AdminSecretsFile,
 	}
 
@@ -281,6 +282,19 @@ func TestDefaultSecrets(t *testing.T) {
 			}
 			if len(pwd) != constants.DefaultSuperadminPasswordLength {
 				t.Errorf("Expected length %d, got %d", constants.DefaultSuperadminPasswordLength, len(pwd))
+			}
+		}
+	}
+
+	// Test vote_key generates proper string
+	for _, spec := range defaultSecrets {
+		if spec.Name == constants.VoteKeyFile {
+			pwd, err := spec.Generator()
+			if err != nil {
+				t.Errorf("vote_key generator error = %v", err)
+			}
+			if len(pwd) != constants.DefaultVoteKeyLength {
+				t.Errorf("Expected length %d, got %d", constants.DefaultVoteKeyLength, len(pwd))
 			}
 		}
 	}
@@ -383,6 +397,13 @@ tag: {{ .defaults.tag }}
 		postgresPwd, _ := os.ReadFile(postgresPath)
 		if len(postgresPwd) != constants.DefaultPostgresPasswordLength {
 			t.Errorf("Expected postgres password length %d, got %d", constants.DefaultPostgresPasswordLength, len(postgresPwd))
+		}
+
+		// 6. Check vote_key has correct length
+		voteKeyPath := filepath.Join(secretsDir, constants.VoteKeyFile)
+		voteKey, _ := os.ReadFile(voteKeyPath)
+		if len(voteKey) != constants.DefaultVoteKeyLength {
+			t.Errorf("Expected vote_key length %d, got %d", constants.DefaultVoteKeyLength, len(voteKey))
 		}
 	})
 
