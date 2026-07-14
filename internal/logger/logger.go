@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 )
 
 type Level int
@@ -21,25 +22,33 @@ type Logger struct {
 	logger *log.Logger
 }
 
+type LogEntry struct {
+	Level      string
+	LevelValue Level
+	Message    string
+}
+
+type Subscriber chan LogEntry
+
+type Broadcaster struct {
+	mu          sync.RWMutex
+	subscribers map[Subscriber]struct{}
+}
+
 var global *Logger
 
+var globalBroadcaster = &Broadcaster{
+	subscribers: make(map[Subscriber]struct{}),
+}
+
 func New(levelStr string) (*Logger, error) {
-	var level Level
-	switch strings.ToLower(levelStr) {
-	case "debug":
-		level = LevelDebug
-	case "info":
-		level = LevelInfo
-	case "warn", "warning":
-		level = LevelWarn
-	case "error":
-		level = LevelError
-	default:
-		return nil, fmt.Errorf("invalid log level: %s", levelStr)
+	level, err := ParseLevel(levelStr)
+	if err != nil {
+		return nil, err
 	}
 
 	flags := log.LstdFlags
-	if os.Getenv("INVOCATION_ID") != "" { // if used as systemd service
+	if os.Getenv("INVOCATION_ID") != "" {
 		flags = 0
 	}
 
@@ -49,33 +58,88 @@ func New(levelStr string) (*Logger, error) {
 	}, nil
 }
 
+func ParseLevel(levelStr string) (Level, error) {
+	switch strings.ToLower(levelStr) {
+	case "debug":
+		return LevelDebug, nil
+	case "info":
+		return LevelInfo, nil
+	case "warn", "warning":
+		return LevelWarn, nil
+	case "error":
+		return LevelError, nil
+	default:
+		return 0, fmt.Errorf("invalid log level: %s", levelStr)
+	}
+}
+
+func levelToString(level Level) string {
+	switch level {
+	case LevelDebug:
+		return "debug"
+	case LevelInfo:
+		return "info"
+	case LevelWarn:
+		return "warn"
+	case LevelError:
+		return "error"
+	default:
+		return "warn"
+	}
+}
+
 func SetGlobal(l *Logger) {
 	global = l
 }
 
-func (l *Logger) Debug(format string, v ...any) {
-	if l.level <= LevelDebug {
-		l.logger.Printf("[DEBUG] "+format, v...)
+func (b *Broadcaster) Subscribe() Subscriber {
+	ch := make(Subscriber, 100)
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.subscribers[ch] = struct{}{}
+	return ch
+}
+
+func (b *Broadcaster) Unsubscribe(ch Subscriber) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	delete(b.subscribers, ch)
+	close(ch)
+}
+
+func (b *Broadcaster) publish(entry LogEntry) {
+	b.mu.RLock()
+	defer b.mu.RUnlock()
+	for ch := range b.subscribers {
+		select {
+		case ch <- entry:
+		default:
+			// drop if subscriber is slow, never block the logger
+		}
 	}
 }
 
-func (l *Logger) Info(format string, v ...any) {
-	if l.level <= LevelInfo {
-		l.logger.Printf("[INFO] "+format, v...)
+func Subscribe() Subscriber     { return globalBroadcaster.Subscribe() }
+func Unsubscribe(ch Subscriber) { globalBroadcaster.Unsubscribe(ch) }
+
+func (l *Logger) log(level Level, format string, v ...any) {
+	msg := fmt.Sprintf(format, v...)
+
+	globalBroadcaster.publish(LogEntry{
+		Level:      levelToString(level),
+		LevelValue: level,
+		Message:    msg,
+	})
+
+	if l.level <= level {
+		l.logger.Printf("[%s] %s", strings.ToUpper(levelToString(level)), msg)
 	}
 }
 
-func (l *Logger) Warn(format string, v ...any) {
-	if l.level <= LevelWarn {
-		l.logger.Printf("[WARN] "+format, v...)
-	}
-}
-
-func (l *Logger) Error(format string, v ...any) {
-	if l.level <= LevelError {
-		l.logger.Printf("[ERROR] "+format, v...)
-	}
-}
+func (l *Logger) Debug(format string, v ...any) { l.log(LevelDebug, format, v...) }
+func (l *Logger) Info(format string, v ...any)  { l.log(LevelInfo, format, v...) }
+func (l *Logger) Warn(format string, v ...any)  { l.log(LevelWarn, format, v...) }
+func (l *Logger) Error(format string, v ...any) { l.log(LevelError, format, v...) }
 
 // Global logging functions
 func Debug(format string, v ...any) {

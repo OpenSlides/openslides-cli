@@ -21,6 +21,102 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type LogStreamRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Level         string                 `protobuf:"bytes,1,opt,name=level,proto3" json:"level,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LogStreamRequest) Reset() {
+	*x = LogStreamRequest{}
+	mi := &file_proto_osmanage_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LogStreamRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LogStreamRequest) ProtoMessage() {}
+
+func (x *LogStreamRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_osmanage_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LogStreamRequest.ProtoReflect.Descriptor instead.
+func (*LogStreamRequest) Descriptor() ([]byte, []int) {
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *LogStreamRequest) GetLevel() string {
+	if x != nil {
+		return x.Level
+	}
+	return ""
+}
+
+type LogEntry struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Level         string                 `protobuf:"bytes,1,opt,name=level,proto3" json:"level,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LogEntry) Reset() {
+	*x = LogEntry{}
+	mi := &file_proto_osmanage_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LogEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LogEntry) ProtoMessage() {}
+
+func (x *LogEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_osmanage_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LogEntry.ProtoReflect.Descriptor instead.
+func (*LogEntry) Descriptor() ([]byte, []int) {
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *LogEntry) GetLevel() string {
+	if x != nil {
+		return x.Level
+	}
+	return ""
+}
+
+func (x *LogEntry) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
 type InstanceConfigRequest struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
 	InstanceDir       string                 `protobuf:"bytes,1,opt,name=instance_dir,json=instanceDir,proto3" json:"instance_dir,omitempty"`
@@ -34,7 +130,7 @@ type InstanceConfigRequest struct {
 
 func (x *InstanceConfigRequest) Reset() {
 	*x = InstanceConfigRequest{}
-	mi := &file_proto_osmanage_proto_msgTypes[0]
+	mi := &file_proto_osmanage_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -46,7 +142,7 @@ func (x *InstanceConfigRequest) String() string {
 func (*InstanceConfigRequest) ProtoMessage() {}
 
 func (x *InstanceConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[0]
+	mi := &file_proto_osmanage_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -59,7 +155,7 @@ func (x *InstanceConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InstanceConfigRequest.ProtoReflect.Descriptor instead.
 func (*InstanceConfigRequest) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{0}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *InstanceConfigRequest) GetInstanceDir() string {
@@ -107,7 +203,7 @@ type InstanceConfigResponse struct {
 
 func (x *InstanceConfigResponse) Reset() {
 	*x = InstanceConfigResponse{}
-	mi := &file_proto_osmanage_proto_msgTypes[1]
+	mi := &file_proto_osmanage_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -119,7 +215,7 @@ func (x *InstanceConfigResponse) String() string {
 func (*InstanceConfigResponse) ProtoMessage() {}
 
 func (x *InstanceConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[1]
+	mi := &file_proto_osmanage_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -132,7 +228,7 @@ func (x *InstanceConfigResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InstanceConfigResponse.ProtoReflect.Descriptor instead.
 func (*InstanceConfigResponse) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{1}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *InstanceConfigResponse) GetSuccess() bool {
@@ -160,7 +256,7 @@ type CreateInstanceRequest struct {
 
 func (x *CreateInstanceRequest) Reset() {
 	*x = CreateInstanceRequest{}
-	mi := &file_proto_osmanage_proto_msgTypes[2]
+	mi := &file_proto_osmanage_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -172,7 +268,7 @@ func (x *CreateInstanceRequest) String() string {
 func (*CreateInstanceRequest) ProtoMessage() {}
 
 func (x *CreateInstanceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[2]
+	mi := &file_proto_osmanage_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -185,7 +281,7 @@ func (x *CreateInstanceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateInstanceRequest.ProtoReflect.Descriptor instead.
 func (*CreateInstanceRequest) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{2}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *CreateInstanceRequest) GetInstanceDir() string {
@@ -219,7 +315,7 @@ type CreateInstanceResponse struct {
 
 func (x *CreateInstanceResponse) Reset() {
 	*x = CreateInstanceResponse{}
-	mi := &file_proto_osmanage_proto_msgTypes[3]
+	mi := &file_proto_osmanage_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -231,7 +327,7 @@ func (x *CreateInstanceResponse) String() string {
 func (*CreateInstanceResponse) ProtoMessage() {}
 
 func (x *CreateInstanceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[3]
+	mi := &file_proto_osmanage_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -244,7 +340,7 @@ func (x *CreateInstanceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateInstanceResponse.ProtoReflect.Descriptor instead.
 func (*CreateInstanceResponse) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{3}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *CreateInstanceResponse) GetSuccess() bool {
@@ -271,7 +367,7 @@ type RemoveInstanceRequest struct {
 
 func (x *RemoveInstanceRequest) Reset() {
 	*x = RemoveInstanceRequest{}
-	mi := &file_proto_osmanage_proto_msgTypes[4]
+	mi := &file_proto_osmanage_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -283,7 +379,7 @@ func (x *RemoveInstanceRequest) String() string {
 func (*RemoveInstanceRequest) ProtoMessage() {}
 
 func (x *RemoveInstanceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[4]
+	mi := &file_proto_osmanage_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -296,7 +392,7 @@ func (x *RemoveInstanceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveInstanceRequest.ProtoReflect.Descriptor instead.
 func (*RemoveInstanceRequest) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{4}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *RemoveInstanceRequest) GetInstanceDir() string {
@@ -323,7 +419,7 @@ type RemoveInstanceResponse struct {
 
 func (x *RemoveInstanceResponse) Reset() {
 	*x = RemoveInstanceResponse{}
-	mi := &file_proto_osmanage_proto_msgTypes[5]
+	mi := &file_proto_osmanage_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -335,7 +431,7 @@ func (x *RemoveInstanceResponse) String() string {
 func (*RemoveInstanceResponse) ProtoMessage() {}
 
 func (x *RemoveInstanceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[5]
+	mi := &file_proto_osmanage_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -348,7 +444,7 @@ func (x *RemoveInstanceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveInstanceResponse.ProtoReflect.Descriptor instead.
 func (*RemoveInstanceResponse) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{5}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *RemoveInstanceResponse) GetSuccess() bool {
@@ -375,7 +471,7 @@ type GetNamespaceExistsRequest struct {
 
 func (x *GetNamespaceExistsRequest) Reset() {
 	*x = GetNamespaceExistsRequest{}
-	mi := &file_proto_osmanage_proto_msgTypes[6]
+	mi := &file_proto_osmanage_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -387,7 +483,7 @@ func (x *GetNamespaceExistsRequest) String() string {
 func (*GetNamespaceExistsRequest) ProtoMessage() {}
 
 func (x *GetNamespaceExistsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[6]
+	mi := &file_proto_osmanage_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -400,7 +496,7 @@ func (x *GetNamespaceExistsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetNamespaceExistsRequest.ProtoReflect.Descriptor instead.
 func (*GetNamespaceExistsRequest) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{6}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetNamespaceExistsRequest) GetInstanceUrl() string {
@@ -427,7 +523,7 @@ type GetNamespaceExistsResponse struct {
 
 func (x *GetNamespaceExistsResponse) Reset() {
 	*x = GetNamespaceExistsResponse{}
-	mi := &file_proto_osmanage_proto_msgTypes[7]
+	mi := &file_proto_osmanage_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -439,7 +535,7 @@ func (x *GetNamespaceExistsResponse) String() string {
 func (*GetNamespaceExistsResponse) ProtoMessage() {}
 
 func (x *GetNamespaceExistsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[7]
+	mi := &file_proto_osmanage_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -452,7 +548,7 @@ func (x *GetNamespaceExistsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetNamespaceExistsResponse.ProtoReflect.Descriptor instead.
 func (*GetNamespaceExistsResponse) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{7}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetNamespaceExistsResponse) GetExists() bool {
@@ -478,7 +574,7 @@ type GetClusterStatusRequest struct {
 
 func (x *GetClusterStatusRequest) Reset() {
 	*x = GetClusterStatusRequest{}
-	mi := &file_proto_osmanage_proto_msgTypes[8]
+	mi := &file_proto_osmanage_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -490,7 +586,7 @@ func (x *GetClusterStatusRequest) String() string {
 func (*GetClusterStatusRequest) ProtoMessage() {}
 
 func (x *GetClusterStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[8]
+	mi := &file_proto_osmanage_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -503,7 +599,7 @@ func (x *GetClusterStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetClusterStatusRequest.ProtoReflect.Descriptor instead.
 func (*GetClusterStatusRequest) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{8}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetClusterStatusRequest) GetKubeconfig() string {
@@ -524,7 +620,7 @@ type GetClusterStatusResponse struct {
 
 func (x *GetClusterStatusResponse) Reset() {
 	*x = GetClusterStatusResponse{}
-	mi := &file_proto_osmanage_proto_msgTypes[9]
+	mi := &file_proto_osmanage_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -536,7 +632,7 @@ func (x *GetClusterStatusResponse) String() string {
 func (*GetClusterStatusResponse) ProtoMessage() {}
 
 func (x *GetClusterStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[9]
+	mi := &file_proto_osmanage_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -549,7 +645,7 @@ func (x *GetClusterStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetClusterStatusResponse.ProtoReflect.Descriptor instead.
 func (*GetClusterStatusResponse) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{9}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetClusterStatusResponse) GetStatus() string {
@@ -584,7 +680,7 @@ type GetServiceAddressRequest struct {
 
 func (x *GetServiceAddressRequest) Reset() {
 	*x = GetServiceAddressRequest{}
-	mi := &file_proto_osmanage_proto_msgTypes[10]
+	mi := &file_proto_osmanage_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -596,7 +692,7 @@ func (x *GetServiceAddressRequest) String() string {
 func (*GetServiceAddressRequest) ProtoMessage() {}
 
 func (x *GetServiceAddressRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[10]
+	mi := &file_proto_osmanage_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -609,7 +705,7 @@ func (x *GetServiceAddressRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServiceAddressRequest.ProtoReflect.Descriptor instead.
 func (*GetServiceAddressRequest) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{10}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetServiceAddressRequest) GetInstanceUrl() string {
@@ -643,7 +739,7 @@ type GetServiceAddressResponse struct {
 
 func (x *GetServiceAddressResponse) Reset() {
 	*x = GetServiceAddressResponse{}
-	mi := &file_proto_osmanage_proto_msgTypes[11]
+	mi := &file_proto_osmanage_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -655,7 +751,7 @@ func (x *GetServiceAddressResponse) String() string {
 func (*GetServiceAddressResponse) ProtoMessage() {}
 
 func (x *GetServiceAddressResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[11]
+	mi := &file_proto_osmanage_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -668,7 +764,7 @@ func (x *GetServiceAddressResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetServiceAddressResponse.ProtoReflect.Descriptor instead.
 func (*GetServiceAddressResponse) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{11}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *GetServiceAddressResponse) GetAddress() string {
@@ -697,7 +793,7 @@ type GetInstanceHealthRequest struct {
 
 func (x *GetInstanceHealthRequest) Reset() {
 	*x = GetInstanceHealthRequest{}
-	mi := &file_proto_osmanage_proto_msgTypes[12]
+	mi := &file_proto_osmanage_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -709,7 +805,7 @@ func (x *GetInstanceHealthRequest) String() string {
 func (*GetInstanceHealthRequest) ProtoMessage() {}
 
 func (x *GetInstanceHealthRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[12]
+	mi := &file_proto_osmanage_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -722,7 +818,7 @@ func (x *GetInstanceHealthRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetInstanceHealthRequest.ProtoReflect.Descriptor instead.
 func (*GetInstanceHealthRequest) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{12}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *GetInstanceHealthRequest) GetInstanceUrl() string {
@@ -768,7 +864,7 @@ type GetInstanceHealthResponse struct {
 
 func (x *GetInstanceHealthResponse) Reset() {
 	*x = GetInstanceHealthResponse{}
-	mi := &file_proto_osmanage_proto_msgTypes[13]
+	mi := &file_proto_osmanage_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -780,7 +876,7 @@ func (x *GetInstanceHealthResponse) String() string {
 func (*GetInstanceHealthResponse) ProtoMessage() {}
 
 func (x *GetInstanceHealthResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[13]
+	mi := &file_proto_osmanage_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -793,7 +889,7 @@ func (x *GetInstanceHealthResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetInstanceHealthResponse.ProtoReflect.Descriptor instead.
 func (*GetInstanceHealthResponse) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{13}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *GetInstanceHealthResponse) GetHealthy() bool {
@@ -856,7 +952,7 @@ type PodStatus struct {
 
 func (x *PodStatus) Reset() {
 	*x = PodStatus{}
-	mi := &file_proto_osmanage_proto_msgTypes[14]
+	mi := &file_proto_osmanage_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -868,7 +964,7 @@ func (x *PodStatus) String() string {
 func (*PodStatus) ProtoMessage() {}
 
 func (x *PodStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[14]
+	mi := &file_proto_osmanage_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -881,7 +977,7 @@ func (x *PodStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PodStatus.ProtoReflect.Descriptor instead.
 func (*PodStatus) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{14}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *PodStatus) GetName() string {
@@ -919,7 +1015,7 @@ type ContainerStatus struct {
 
 func (x *ContainerStatus) Reset() {
 	*x = ContainerStatus{}
-	mi := &file_proto_osmanage_proto_msgTypes[15]
+	mi := &file_proto_osmanage_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -931,7 +1027,7 @@ func (x *ContainerStatus) String() string {
 func (*ContainerStatus) ProtoMessage() {}
 
 func (x *ContainerStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[15]
+	mi := &file_proto_osmanage_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -944,7 +1040,7 @@ func (x *ContainerStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ContainerStatus.ProtoReflect.Descriptor instead.
 func (*ContainerStatus) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{15}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *ContainerStatus) GetName() string {
@@ -1001,7 +1097,7 @@ type InstancePodStatus struct {
 
 func (x *InstancePodStatus) Reset() {
 	*x = InstancePodStatus{}
-	mi := &file_proto_osmanage_proto_msgTypes[16]
+	mi := &file_proto_osmanage_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1013,7 +1109,7 @@ func (x *InstancePodStatus) String() string {
 func (*InstancePodStatus) ProtoMessage() {}
 
 func (x *InstancePodStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[16]
+	mi := &file_proto_osmanage_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1026,7 +1122,7 @@ func (x *InstancePodStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InstancePodStatus.ProtoReflect.Descriptor instead.
 func (*InstancePodStatus) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{16}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *InstancePodStatus) GetName() string {
@@ -1067,7 +1163,7 @@ type GetInstanceStatusRequest struct {
 
 func (x *GetInstanceStatusRequest) Reset() {
 	*x = GetInstanceStatusRequest{}
-	mi := &file_proto_osmanage_proto_msgTypes[17]
+	mi := &file_proto_osmanage_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1079,7 +1175,7 @@ func (x *GetInstanceStatusRequest) String() string {
 func (*GetInstanceStatusRequest) ProtoMessage() {}
 
 func (x *GetInstanceStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[17]
+	mi := &file_proto_osmanage_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1092,7 +1188,7 @@ func (x *GetInstanceStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetInstanceStatusRequest.ProtoReflect.Descriptor instead.
 func (*GetInstanceStatusRequest) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{17}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *GetInstanceStatusRequest) GetInstanceUrl() string {
@@ -1120,7 +1216,7 @@ type GetInstanceStatusResponse struct {
 
 func (x *GetInstanceStatusResponse) Reset() {
 	*x = GetInstanceStatusResponse{}
-	mi := &file_proto_osmanage_proto_msgTypes[18]
+	mi := &file_proto_osmanage_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1132,7 +1228,7 @@ func (x *GetInstanceStatusResponse) String() string {
 func (*GetInstanceStatusResponse) ProtoMessage() {}
 
 func (x *GetInstanceStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[18]
+	mi := &file_proto_osmanage_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1145,7 +1241,7 @@ func (x *GetInstanceStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetInstanceStatusResponse.ProtoReflect.Descriptor instead.
 func (*GetInstanceStatusResponse) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{18}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GetInstanceStatusResponse) GetPods() []*InstancePodStatus {
@@ -1182,7 +1278,7 @@ type UpdateBackendmanageRequest struct {
 
 func (x *UpdateBackendmanageRequest) Reset() {
 	*x = UpdateBackendmanageRequest{}
-	mi := &file_proto_osmanage_proto_msgTypes[19]
+	mi := &file_proto_osmanage_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1194,7 +1290,7 @@ func (x *UpdateBackendmanageRequest) String() string {
 func (*UpdateBackendmanageRequest) ProtoMessage() {}
 
 func (x *UpdateBackendmanageRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[19]
+	mi := &file_proto_osmanage_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1207,7 +1303,7 @@ func (x *UpdateBackendmanageRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateBackendmanageRequest.ProtoReflect.Descriptor instead.
 func (*UpdateBackendmanageRequest) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{19}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *UpdateBackendmanageRequest) GetInstanceUrl() string {
@@ -1258,7 +1354,7 @@ type UpdateBackendmanageResponse struct {
 
 func (x *UpdateBackendmanageResponse) Reset() {
 	*x = UpdateBackendmanageResponse{}
-	mi := &file_proto_osmanage_proto_msgTypes[20]
+	mi := &file_proto_osmanage_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1270,7 +1366,7 @@ func (x *UpdateBackendmanageResponse) String() string {
 func (*UpdateBackendmanageResponse) ProtoMessage() {}
 
 func (x *UpdateBackendmanageResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[20]
+	mi := &file_proto_osmanage_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1283,7 +1379,7 @@ func (x *UpdateBackendmanageResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateBackendmanageResponse.ProtoReflect.Descriptor instead.
 func (*UpdateBackendmanageResponse) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{20}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *UpdateBackendmanageResponse) GetComplete() bool {
@@ -1326,7 +1422,7 @@ type UpdateInstanceRequest struct {
 
 func (x *UpdateInstanceRequest) Reset() {
 	*x = UpdateInstanceRequest{}
-	mi := &file_proto_osmanage_proto_msgTypes[21]
+	mi := &file_proto_osmanage_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1338,7 +1434,7 @@ func (x *UpdateInstanceRequest) String() string {
 func (*UpdateInstanceRequest) ProtoMessage() {}
 
 func (x *UpdateInstanceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[21]
+	mi := &file_proto_osmanage_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1351,7 +1447,7 @@ func (x *UpdateInstanceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateInstanceRequest.ProtoReflect.Descriptor instead.
 func (*UpdateInstanceRequest) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{21}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *UpdateInstanceRequest) GetInstanceDir() string {
@@ -1398,7 +1494,7 @@ type UpdateInstanceResponse struct {
 
 func (x *UpdateInstanceResponse) Reset() {
 	*x = UpdateInstanceResponse{}
-	mi := &file_proto_osmanage_proto_msgTypes[22]
+	mi := &file_proto_osmanage_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1410,7 +1506,7 @@ func (x *UpdateInstanceResponse) String() string {
 func (*UpdateInstanceResponse) ProtoMessage() {}
 
 func (x *UpdateInstanceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[22]
+	mi := &file_proto_osmanage_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1423,7 +1519,7 @@ func (x *UpdateInstanceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateInstanceResponse.ProtoReflect.Descriptor instead.
 func (*UpdateInstanceResponse) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{22}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *UpdateInstanceResponse) GetHealthy() bool {
@@ -1495,7 +1591,7 @@ type ScaleServiceRequest struct {
 
 func (x *ScaleServiceRequest) Reset() {
 	*x = ScaleServiceRequest{}
-	mi := &file_proto_osmanage_proto_msgTypes[23]
+	mi := &file_proto_osmanage_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1507,7 +1603,7 @@ func (x *ScaleServiceRequest) String() string {
 func (*ScaleServiceRequest) ProtoMessage() {}
 
 func (x *ScaleServiceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[23]
+	mi := &file_proto_osmanage_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1520,7 +1616,7 @@ func (x *ScaleServiceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScaleServiceRequest.ProtoReflect.Descriptor instead.
 func (*ScaleServiceRequest) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{23}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *ScaleServiceRequest) GetInstanceDir() string {
@@ -1571,7 +1667,7 @@ type ScaleServiceResponse struct {
 
 func (x *ScaleServiceResponse) Reset() {
 	*x = ScaleServiceResponse{}
-	mi := &file_proto_osmanage_proto_msgTypes[24]
+	mi := &file_proto_osmanage_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1583,7 +1679,7 @@ func (x *ScaleServiceResponse) String() string {
 func (*ScaleServiceResponse) ProtoMessage() {}
 
 func (x *ScaleServiceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[24]
+	mi := &file_proto_osmanage_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1596,7 +1692,7 @@ func (x *ScaleServiceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ScaleServiceResponse.ProtoReflect.Descriptor instead.
 func (*ScaleServiceResponse) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{24}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *ScaleServiceResponse) GetComplete() bool {
@@ -1640,7 +1736,7 @@ type StartInstanceRequest struct {
 
 func (x *StartInstanceRequest) Reset() {
 	*x = StartInstanceRequest{}
-	mi := &file_proto_osmanage_proto_msgTypes[25]
+	mi := &file_proto_osmanage_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1652,7 +1748,7 @@ func (x *StartInstanceRequest) String() string {
 func (*StartInstanceRequest) ProtoMessage() {}
 
 func (x *StartInstanceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[25]
+	mi := &file_proto_osmanage_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1665,7 +1761,7 @@ func (x *StartInstanceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartInstanceRequest.ProtoReflect.Descriptor instead.
 func (*StartInstanceRequest) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{25}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *StartInstanceRequest) GetInstanceDir() string {
@@ -1718,7 +1814,7 @@ type StartInstanceResponse struct {
 
 func (x *StartInstanceResponse) Reset() {
 	*x = StartInstanceResponse{}
-	mi := &file_proto_osmanage_proto_msgTypes[26]
+	mi := &file_proto_osmanage_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1730,7 +1826,7 @@ func (x *StartInstanceResponse) String() string {
 func (*StartInstanceResponse) ProtoMessage() {}
 
 func (x *StartInstanceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[26]
+	mi := &file_proto_osmanage_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1743,7 +1839,7 @@ func (x *StartInstanceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartInstanceResponse.ProtoReflect.Descriptor instead.
 func (*StartInstanceResponse) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{26}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *StartInstanceResponse) GetHealthy() bool {
@@ -1806,7 +1902,7 @@ type StopInstanceRequest struct {
 
 func (x *StopInstanceRequest) Reset() {
 	*x = StopInstanceRequest{}
-	mi := &file_proto_osmanage_proto_msgTypes[27]
+	mi := &file_proto_osmanage_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1818,7 +1914,7 @@ func (x *StopInstanceRequest) String() string {
 func (*StopInstanceRequest) ProtoMessage() {}
 
 func (x *StopInstanceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[27]
+	mi := &file_proto_osmanage_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1831,7 +1927,7 @@ func (x *StopInstanceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StopInstanceRequest.ProtoReflect.Descriptor instead.
 func (*StopInstanceRequest) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{27}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *StopInstanceRequest) GetInstanceDir() string {
@@ -1866,7 +1962,7 @@ type StopInstanceResponse struct {
 
 func (x *StopInstanceResponse) Reset() {
 	*x = StopInstanceResponse{}
-	mi := &file_proto_osmanage_proto_msgTypes[28]
+	mi := &file_proto_osmanage_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1878,7 +1974,7 @@ func (x *StopInstanceResponse) String() string {
 func (*StopInstanceResponse) ProtoMessage() {}
 
 func (x *StopInstanceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[28]
+	mi := &file_proto_osmanage_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1891,7 +1987,7 @@ func (x *StopInstanceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StopInstanceResponse.ProtoReflect.Descriptor instead.
 func (*StopInstanceResponse) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{28}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *StopInstanceResponse) GetComplete() bool {
@@ -1929,7 +2025,7 @@ type DatabaseConfig struct {
 
 func (x *DatabaseConfig) Reset() {
 	*x = DatabaseConfig{}
-	mi := &file_proto_osmanage_proto_msgTypes[29]
+	mi := &file_proto_osmanage_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1941,7 +2037,7 @@ func (x *DatabaseConfig) String() string {
 func (*DatabaseConfig) ProtoMessage() {}
 
 func (x *DatabaseConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[29]
+	mi := &file_proto_osmanage_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1954,7 +2050,7 @@ func (x *DatabaseConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DatabaseConfig.ProtoReflect.Descriptor instead.
 func (*DatabaseConfig) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{29}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *DatabaseConfig) GetHost() string {
@@ -2006,7 +2102,7 @@ type QueryParams struct {
 
 func (x *QueryParams) Reset() {
 	*x = QueryParams{}
-	mi := &file_proto_osmanage_proto_msgTypes[30]
+	mi := &file_proto_osmanage_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2018,7 +2114,7 @@ func (x *QueryParams) String() string {
 func (*QueryParams) ProtoMessage() {}
 
 func (x *QueryParams) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[30]
+	mi := &file_proto_osmanage_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2031,7 +2127,7 @@ func (x *QueryParams) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryParams.ProtoReflect.Descriptor instead.
 func (*QueryParams) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{30}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *QueryParams) GetCollection() string {
@@ -2079,7 +2175,7 @@ type GetCollectionRequest struct {
 
 func (x *GetCollectionRequest) Reset() {
 	*x = GetCollectionRequest{}
-	mi := &file_proto_osmanage_proto_msgTypes[31]
+	mi := &file_proto_osmanage_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2091,7 +2187,7 @@ func (x *GetCollectionRequest) String() string {
 func (*GetCollectionRequest) ProtoMessage() {}
 
 func (x *GetCollectionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[31]
+	mi := &file_proto_osmanage_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2104,7 +2200,7 @@ func (x *GetCollectionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCollectionRequest.ProtoReflect.Descriptor instead.
 func (*GetCollectionRequest) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{31}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *GetCollectionRequest) GetDbConfig() *DatabaseConfig {
@@ -2136,7 +2232,7 @@ type GetCollectionResponse struct {
 
 func (x *GetCollectionResponse) Reset() {
 	*x = GetCollectionResponse{}
-	mi := &file_proto_osmanage_proto_msgTypes[32]
+	mi := &file_proto_osmanage_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2148,7 +2244,7 @@ func (x *GetCollectionResponse) String() string {
 func (*GetCollectionResponse) ProtoMessage() {}
 
 func (x *GetCollectionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[32]
+	mi := &file_proto_osmanage_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2161,7 +2257,7 @@ func (x *GetCollectionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCollectionResponse.ProtoReflect.Descriptor instead.
 func (*GetCollectionResponse) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{32}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *GetCollectionResponse) GetSuccess() bool {
@@ -2229,7 +2325,7 @@ type MigrationsRequest struct {
 
 func (x *MigrationsRequest) Reset() {
 	*x = MigrationsRequest{}
-	mi := &file_proto_osmanage_proto_msgTypes[33]
+	mi := &file_proto_osmanage_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2241,7 +2337,7 @@ func (x *MigrationsRequest) String() string {
 func (*MigrationsRequest) ProtoMessage() {}
 
 func (x *MigrationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[33]
+	mi := &file_proto_osmanage_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2254,7 +2350,7 @@ func (x *MigrationsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MigrationsRequest.ProtoReflect.Descriptor instead.
 func (*MigrationsRequest) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{33}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *MigrationsRequest) GetAddressBackendmanage() string {
@@ -2284,7 +2380,7 @@ type MigrationsResponse struct {
 
 func (x *MigrationsResponse) Reset() {
 	*x = MigrationsResponse{}
-	mi := &file_proto_osmanage_proto_msgTypes[34]
+	mi := &file_proto_osmanage_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2296,7 +2392,7 @@ func (x *MigrationsResponse) String() string {
 func (*MigrationsResponse) ProtoMessage() {}
 
 func (x *MigrationsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[34]
+	mi := &file_proto_osmanage_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2309,7 +2405,7 @@ func (x *MigrationsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MigrationsResponse.ProtoReflect.Descriptor instead.
 func (*MigrationsResponse) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{34}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *MigrationsResponse) GetSuccess() bool {
@@ -2359,7 +2455,7 @@ type MigrationsProgressResponse struct {
 
 func (x *MigrationsProgressResponse) Reset() {
 	*x = MigrationsProgressResponse{}
-	mi := &file_proto_osmanage_proto_msgTypes[35]
+	mi := &file_proto_osmanage_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2371,7 +2467,7 @@ func (x *MigrationsProgressResponse) String() string {
 func (*MigrationsProgressResponse) ProtoMessage() {}
 
 func (x *MigrationsProgressResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[35]
+	mi := &file_proto_osmanage_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2384,7 +2480,7 @@ func (x *MigrationsProgressResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MigrationsProgressResponse.ProtoReflect.Descriptor instead.
 func (*MigrationsProgressResponse) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{35}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *MigrationsProgressResponse) GetOutput() string {
@@ -2427,7 +2523,7 @@ type SendManageActionRequest struct {
 
 func (x *SendManageActionRequest) Reset() {
 	*x = SendManageActionRequest{}
-	mi := &file_proto_osmanage_proto_msgTypes[36]
+	mi := &file_proto_osmanage_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2439,7 +2535,7 @@ func (x *SendManageActionRequest) String() string {
 func (*SendManageActionRequest) ProtoMessage() {}
 
 func (x *SendManageActionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[36]
+	mi := &file_proto_osmanage_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2452,7 +2548,7 @@ func (x *SendManageActionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendManageActionRequest.ProtoReflect.Descriptor instead.
 func (*SendManageActionRequest) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{36}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *SendManageActionRequest) GetAddressBackendmanage() string {
@@ -2494,7 +2590,7 @@ type SendManageActionResponse struct {
 
 func (x *SendManageActionResponse) Reset() {
 	*x = SendManageActionResponse{}
-	mi := &file_proto_osmanage_proto_msgTypes[37]
+	mi := &file_proto_osmanage_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2506,7 +2602,7 @@ func (x *SendManageActionResponse) String() string {
 func (*SendManageActionResponse) ProtoMessage() {}
 
 func (x *SendManageActionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_osmanage_proto_msgTypes[37]
+	mi := &file_proto_osmanage_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2519,7 +2615,7 @@ func (x *SendManageActionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SendManageActionResponse.ProtoReflect.Descriptor instead.
 func (*SendManageActionResponse) Descriptor() ([]byte, []int) {
-	return file_proto_osmanage_proto_rawDescGZIP(), []int{37}
+	return file_proto_osmanage_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *SendManageActionResponse) GetSuccess() bool {
@@ -2547,7 +2643,12 @@ var File_proto_osmanage_proto protoreflect.FileDescriptor
 
 const file_proto_osmanage_proto_rawDesc = "" +
 	"\n" +
-	"\x14proto/osmanage.proto\x12\bosmanage\"\xb0\x01\n" +
+	"\x14proto/osmanage.proto\x12\bosmanage\"(\n" +
+	"\x10LogStreamRequest\x12\x14\n" +
+	"\x05level\x18\x01 \x01(\tR\x05level\":\n" +
+	"\bLogEntry\x12\x14\n" +
+	"\x05level\x18\x01 \x01(\tR\x05level\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"\xb0\x01\n" +
 	"\x15InstanceConfigRequest\x12!\n" +
 	"\finstance_dir\x18\x01 \x01(\tR\vinstanceDir\x12.\n" +
 	"\x13stack_template_path\x18\x02 \x01(\tR\x11stackTemplatePath\x12\x18\n" +
@@ -2776,7 +2877,7 @@ const file_proto_osmanage_proto_rawDesc = "" +
 	"\x18SendManageActionResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x14\n" +
 	"\x05error\x18\x02 \x01(\tR\x05error\x12\x12\n" +
-	"\x04body\x18\x03 \x01(\fR\x04body2\xa1\x0f\n" +
+	"\x04body\x18\x03 \x01(\fR\x04body2\xe1\x0f\n" +
 	"\x0fOsmanageService\x12R\n" +
 	"\rSetupInstance\x12\x1f.osmanage.InstanceConfigRequest\x1a .osmanage.InstanceConfigResponse\x12S\n" +
 	"\x0eConfigInstance\x12\x1f.osmanage.InstanceConfigRequest\x1a .osmanage.InstanceConfigResponse\x12S\n" +
@@ -2794,7 +2895,9 @@ const file_proto_osmanage_proto_rawDesc = "" +
 	"\fStopInstance\x12\x1d.osmanage.StopInstanceRequest\x1a\x1e.osmanage.StopInstanceResponse0\x01\x12P\n" +
 	"\rGetCollection\x12\x1e.osmanage.GetCollectionRequest\x1a\x1f.osmanage.GetCollectionResponse\x12X\n" +
 	"\x11MigrationsMigrate\x12\x1b.osmanage.MigrationsRequest\x1a$.osmanage.MigrationsProgressResponse0\x01\x12Y\n" +
-	"\x12MigrationsFinalize\x12\x1b.osmanage.MigrationsRequest\x1a$.osmanage.MigrationsProgressResponse0\x01\x12L\n" +
+	"\x12MigrationsFinalize\x12\x1b.osmanage.MigrationsRequest\x1a$.osmanage.MigrationsProgressResponse0\x01\x12>\n" +
+	"\n" +
+	"StreamLogs\x12\x1a.osmanage.LogStreamRequest\x1a\x12.osmanage.LogEntry0\x01\x12L\n" +
 	"\x0fMigrationsReset\x12\x1b.osmanage.MigrationsRequest\x1a\x1c.osmanage.MigrationsResponse\x12a\n" +
 	"$MigrationsClearCollectionfieldTables\x12\x1b.osmanage.MigrationsRequest\x1a\x1c.osmanage.MigrationsResponse\x12L\n" +
 	"\x0fMigrationsStats\x12\x1b.osmanage.MigrationsRequest\x1a\x1c.osmanage.MigrationsResponse\x12O\n" +
@@ -2813,109 +2916,113 @@ func file_proto_osmanage_proto_rawDescGZIP() []byte {
 	return file_proto_osmanage_proto_rawDescData
 }
 
-var file_proto_osmanage_proto_msgTypes = make([]protoimpl.MessageInfo, 42)
+var file_proto_osmanage_proto_msgTypes = make([]protoimpl.MessageInfo, 44)
 var file_proto_osmanage_proto_goTypes = []any{
-	(*InstanceConfigRequest)(nil),       // 0: osmanage.InstanceConfigRequest
-	(*InstanceConfigResponse)(nil),      // 1: osmanage.InstanceConfigResponse
-	(*CreateInstanceRequest)(nil),       // 2: osmanage.CreateInstanceRequest
-	(*CreateInstanceResponse)(nil),      // 3: osmanage.CreateInstanceResponse
-	(*RemoveInstanceRequest)(nil),       // 4: osmanage.RemoveInstanceRequest
-	(*RemoveInstanceResponse)(nil),      // 5: osmanage.RemoveInstanceResponse
-	(*GetNamespaceExistsRequest)(nil),   // 6: osmanage.GetNamespaceExistsRequest
-	(*GetNamespaceExistsResponse)(nil),  // 7: osmanage.GetNamespaceExistsResponse
-	(*GetClusterStatusRequest)(nil),     // 8: osmanage.GetClusterStatusRequest
-	(*GetClusterStatusResponse)(nil),    // 9: osmanage.GetClusterStatusResponse
-	(*GetServiceAddressRequest)(nil),    // 10: osmanage.GetServiceAddressRequest
-	(*GetServiceAddressResponse)(nil),   // 11: osmanage.GetServiceAddressResponse
-	(*GetInstanceHealthRequest)(nil),    // 12: osmanage.GetInstanceHealthRequest
-	(*GetInstanceHealthResponse)(nil),   // 13: osmanage.GetInstanceHealthResponse
-	(*PodStatus)(nil),                   // 14: osmanage.PodStatus
-	(*ContainerStatus)(nil),             // 15: osmanage.ContainerStatus
-	(*InstancePodStatus)(nil),           // 16: osmanage.InstancePodStatus
-	(*GetInstanceStatusRequest)(nil),    // 17: osmanage.GetInstanceStatusRequest
-	(*GetInstanceStatusResponse)(nil),   // 18: osmanage.GetInstanceStatusResponse
-	(*UpdateBackendmanageRequest)(nil),  // 19: osmanage.UpdateBackendmanageRequest
-	(*UpdateBackendmanageResponse)(nil), // 20: osmanage.UpdateBackendmanageResponse
-	(*UpdateInstanceRequest)(nil),       // 21: osmanage.UpdateInstanceRequest
-	(*UpdateInstanceResponse)(nil),      // 22: osmanage.UpdateInstanceResponse
-	(*ScaleServiceRequest)(nil),         // 23: osmanage.ScaleServiceRequest
-	(*ScaleServiceResponse)(nil),        // 24: osmanage.ScaleServiceResponse
-	(*StartInstanceRequest)(nil),        // 25: osmanage.StartInstanceRequest
-	(*StartInstanceResponse)(nil),       // 26: osmanage.StartInstanceResponse
-	(*StopInstanceRequest)(nil),         // 27: osmanage.StopInstanceRequest
-	(*StopInstanceResponse)(nil),        // 28: osmanage.StopInstanceResponse
-	(*DatabaseConfig)(nil),              // 29: osmanage.DatabaseConfig
-	(*QueryParams)(nil),                 // 30: osmanage.QueryParams
-	(*GetCollectionRequest)(nil),        // 31: osmanage.GetCollectionRequest
-	(*GetCollectionResponse)(nil),       // 32: osmanage.GetCollectionResponse
-	(*MigrationsRequest)(nil),           // 33: osmanage.MigrationsRequest
-	(*MigrationsResponse)(nil),          // 34: osmanage.MigrationsResponse
-	(*MigrationsProgressResponse)(nil),  // 35: osmanage.MigrationsProgressResponse
-	(*SendManageActionRequest)(nil),     // 36: osmanage.SendManageActionRequest
-	(*SendManageActionResponse)(nil),    // 37: osmanage.SendManageActionResponse
-	nil,                                 // 38: osmanage.ContainerStatus.EnvVarsEntry
-	nil,                                 // 39: osmanage.GetInstanceStatusResponse.ServiceCountsEntry
-	nil,                                 // 40: osmanage.StartInstanceRequest.LabelsEntry
-	nil,                                 // 41: osmanage.QueryParams.SimpleFilterEntry
+	(*LogStreamRequest)(nil),            // 0: osmanage.LogStreamRequest
+	(*LogEntry)(nil),                    // 1: osmanage.LogEntry
+	(*InstanceConfigRequest)(nil),       // 2: osmanage.InstanceConfigRequest
+	(*InstanceConfigResponse)(nil),      // 3: osmanage.InstanceConfigResponse
+	(*CreateInstanceRequest)(nil),       // 4: osmanage.CreateInstanceRequest
+	(*CreateInstanceResponse)(nil),      // 5: osmanage.CreateInstanceResponse
+	(*RemoveInstanceRequest)(nil),       // 6: osmanage.RemoveInstanceRequest
+	(*RemoveInstanceResponse)(nil),      // 7: osmanage.RemoveInstanceResponse
+	(*GetNamespaceExistsRequest)(nil),   // 8: osmanage.GetNamespaceExistsRequest
+	(*GetNamespaceExistsResponse)(nil),  // 9: osmanage.GetNamespaceExistsResponse
+	(*GetClusterStatusRequest)(nil),     // 10: osmanage.GetClusterStatusRequest
+	(*GetClusterStatusResponse)(nil),    // 11: osmanage.GetClusterStatusResponse
+	(*GetServiceAddressRequest)(nil),    // 12: osmanage.GetServiceAddressRequest
+	(*GetServiceAddressResponse)(nil),   // 13: osmanage.GetServiceAddressResponse
+	(*GetInstanceHealthRequest)(nil),    // 14: osmanage.GetInstanceHealthRequest
+	(*GetInstanceHealthResponse)(nil),   // 15: osmanage.GetInstanceHealthResponse
+	(*PodStatus)(nil),                   // 16: osmanage.PodStatus
+	(*ContainerStatus)(nil),             // 17: osmanage.ContainerStatus
+	(*InstancePodStatus)(nil),           // 18: osmanage.InstancePodStatus
+	(*GetInstanceStatusRequest)(nil),    // 19: osmanage.GetInstanceStatusRequest
+	(*GetInstanceStatusResponse)(nil),   // 20: osmanage.GetInstanceStatusResponse
+	(*UpdateBackendmanageRequest)(nil),  // 21: osmanage.UpdateBackendmanageRequest
+	(*UpdateBackendmanageResponse)(nil), // 22: osmanage.UpdateBackendmanageResponse
+	(*UpdateInstanceRequest)(nil),       // 23: osmanage.UpdateInstanceRequest
+	(*UpdateInstanceResponse)(nil),      // 24: osmanage.UpdateInstanceResponse
+	(*ScaleServiceRequest)(nil),         // 25: osmanage.ScaleServiceRequest
+	(*ScaleServiceResponse)(nil),        // 26: osmanage.ScaleServiceResponse
+	(*StartInstanceRequest)(nil),        // 27: osmanage.StartInstanceRequest
+	(*StartInstanceResponse)(nil),       // 28: osmanage.StartInstanceResponse
+	(*StopInstanceRequest)(nil),         // 29: osmanage.StopInstanceRequest
+	(*StopInstanceResponse)(nil),        // 30: osmanage.StopInstanceResponse
+	(*DatabaseConfig)(nil),              // 31: osmanage.DatabaseConfig
+	(*QueryParams)(nil),                 // 32: osmanage.QueryParams
+	(*GetCollectionRequest)(nil),        // 33: osmanage.GetCollectionRequest
+	(*GetCollectionResponse)(nil),       // 34: osmanage.GetCollectionResponse
+	(*MigrationsRequest)(nil),           // 35: osmanage.MigrationsRequest
+	(*MigrationsResponse)(nil),          // 36: osmanage.MigrationsResponse
+	(*MigrationsProgressResponse)(nil),  // 37: osmanage.MigrationsProgressResponse
+	(*SendManageActionRequest)(nil),     // 38: osmanage.SendManageActionRequest
+	(*SendManageActionResponse)(nil),    // 39: osmanage.SendManageActionResponse
+	nil,                                 // 40: osmanage.ContainerStatus.EnvVarsEntry
+	nil,                                 // 41: osmanage.GetInstanceStatusResponse.ServiceCountsEntry
+	nil,                                 // 42: osmanage.StartInstanceRequest.LabelsEntry
+	nil,                                 // 43: osmanage.QueryParams.SimpleFilterEntry
 }
 var file_proto_osmanage_proto_depIdxs = []int32{
-	14, // 0: osmanage.GetInstanceHealthResponse.pods:type_name -> osmanage.PodStatus
-	38, // 1: osmanage.ContainerStatus.env_vars:type_name -> osmanage.ContainerStatus.EnvVarsEntry
-	15, // 2: osmanage.InstancePodStatus.containers:type_name -> osmanage.ContainerStatus
-	16, // 3: osmanage.GetInstanceStatusResponse.pods:type_name -> osmanage.InstancePodStatus
-	39, // 4: osmanage.GetInstanceStatusResponse.service_counts:type_name -> osmanage.GetInstanceStatusResponse.ServiceCountsEntry
-	14, // 5: osmanage.UpdateInstanceResponse.pods:type_name -> osmanage.PodStatus
-	40, // 6: osmanage.StartInstanceRequest.labels:type_name -> osmanage.StartInstanceRequest.LabelsEntry
-	14, // 7: osmanage.StartInstanceResponse.pods:type_name -> osmanage.PodStatus
-	41, // 8: osmanage.QueryParams.simple_filter:type_name -> osmanage.QueryParams.SimpleFilterEntry
-	29, // 9: osmanage.GetCollectionRequest.db_config:type_name -> osmanage.DatabaseConfig
-	30, // 10: osmanage.GetCollectionRequest.query_params:type_name -> osmanage.QueryParams
-	0,  // 11: osmanage.OsmanageService.SetupInstance:input_type -> osmanage.InstanceConfigRequest
-	0,  // 12: osmanage.OsmanageService.ConfigInstance:input_type -> osmanage.InstanceConfigRequest
-	2,  // 13: osmanage.OsmanageService.CreateInstance:input_type -> osmanage.CreateInstanceRequest
-	4,  // 14: osmanage.OsmanageService.RemoveInstance:input_type -> osmanage.RemoveInstanceRequest
-	6,  // 15: osmanage.OsmanageService.GetNamespaceExists:input_type -> osmanage.GetNamespaceExistsRequest
-	8,  // 16: osmanage.OsmanageService.GetClusterStatus:input_type -> osmanage.GetClusterStatusRequest
-	10, // 17: osmanage.OsmanageService.GetServiceAddress:input_type -> osmanage.GetServiceAddressRequest
-	12, // 18: osmanage.OsmanageService.GetInstanceHealth:input_type -> osmanage.GetInstanceHealthRequest
-	17, // 19: osmanage.OsmanageService.GetInstanceStatus:input_type -> osmanage.GetInstanceStatusRequest
-	19, // 20: osmanage.OsmanageService.UpdateBackendmanage:input_type -> osmanage.UpdateBackendmanageRequest
-	21, // 21: osmanage.OsmanageService.UpdateInstance:input_type -> osmanage.UpdateInstanceRequest
-	23, // 22: osmanage.OsmanageService.ScaleService:input_type -> osmanage.ScaleServiceRequest
-	25, // 23: osmanage.OsmanageService.StartInstance:input_type -> osmanage.StartInstanceRequest
-	27, // 24: osmanage.OsmanageService.StopInstance:input_type -> osmanage.StopInstanceRequest
-	31, // 25: osmanage.OsmanageService.GetCollection:input_type -> osmanage.GetCollectionRequest
-	33, // 26: osmanage.OsmanageService.MigrationsMigrate:input_type -> osmanage.MigrationsRequest
-	33, // 27: osmanage.OsmanageService.MigrationsFinalize:input_type -> osmanage.MigrationsRequest
-	33, // 28: osmanage.OsmanageService.MigrationsReset:input_type -> osmanage.MigrationsRequest
-	33, // 29: osmanage.OsmanageService.MigrationsClearCollectionfieldTables:input_type -> osmanage.MigrationsRequest
-	33, // 30: osmanage.OsmanageService.MigrationsStats:input_type -> osmanage.MigrationsRequest
-	33, // 31: osmanage.OsmanageService.MigrationsProgress:input_type -> osmanage.MigrationsRequest
-	36, // 32: osmanage.OsmanageService.SendManageAction:input_type -> osmanage.SendManageActionRequest
-	1,  // 33: osmanage.OsmanageService.SetupInstance:output_type -> osmanage.InstanceConfigResponse
-	1,  // 34: osmanage.OsmanageService.ConfigInstance:output_type -> osmanage.InstanceConfigResponse
-	3,  // 35: osmanage.OsmanageService.CreateInstance:output_type -> osmanage.CreateInstanceResponse
-	5,  // 36: osmanage.OsmanageService.RemoveInstance:output_type -> osmanage.RemoveInstanceResponse
-	7,  // 37: osmanage.OsmanageService.GetNamespaceExists:output_type -> osmanage.GetNamespaceExistsResponse
-	9,  // 38: osmanage.OsmanageService.GetClusterStatus:output_type -> osmanage.GetClusterStatusResponse
-	11, // 39: osmanage.OsmanageService.GetServiceAddress:output_type -> osmanage.GetServiceAddressResponse
-	13, // 40: osmanage.OsmanageService.GetInstanceHealth:output_type -> osmanage.GetInstanceHealthResponse
-	18, // 41: osmanage.OsmanageService.GetInstanceStatus:output_type -> osmanage.GetInstanceStatusResponse
-	20, // 42: osmanage.OsmanageService.UpdateBackendmanage:output_type -> osmanage.UpdateBackendmanageResponse
-	22, // 43: osmanage.OsmanageService.UpdateInstance:output_type -> osmanage.UpdateInstanceResponse
-	24, // 44: osmanage.OsmanageService.ScaleService:output_type -> osmanage.ScaleServiceResponse
-	26, // 45: osmanage.OsmanageService.StartInstance:output_type -> osmanage.StartInstanceResponse
-	28, // 46: osmanage.OsmanageService.StopInstance:output_type -> osmanage.StopInstanceResponse
-	32, // 47: osmanage.OsmanageService.GetCollection:output_type -> osmanage.GetCollectionResponse
-	35, // 48: osmanage.OsmanageService.MigrationsMigrate:output_type -> osmanage.MigrationsProgressResponse
-	35, // 49: osmanage.OsmanageService.MigrationsFinalize:output_type -> osmanage.MigrationsProgressResponse
-	34, // 50: osmanage.OsmanageService.MigrationsReset:output_type -> osmanage.MigrationsResponse
-	34, // 51: osmanage.OsmanageService.MigrationsClearCollectionfieldTables:output_type -> osmanage.MigrationsResponse
-	34, // 52: osmanage.OsmanageService.MigrationsStats:output_type -> osmanage.MigrationsResponse
-	34, // 53: osmanage.OsmanageService.MigrationsProgress:output_type -> osmanage.MigrationsResponse
-	37, // 54: osmanage.OsmanageService.SendManageAction:output_type -> osmanage.SendManageActionResponse
-	33, // [33:55] is the sub-list for method output_type
-	11, // [11:33] is the sub-list for method input_type
+	16, // 0: osmanage.GetInstanceHealthResponse.pods:type_name -> osmanage.PodStatus
+	40, // 1: osmanage.ContainerStatus.env_vars:type_name -> osmanage.ContainerStatus.EnvVarsEntry
+	17, // 2: osmanage.InstancePodStatus.containers:type_name -> osmanage.ContainerStatus
+	18, // 3: osmanage.GetInstanceStatusResponse.pods:type_name -> osmanage.InstancePodStatus
+	41, // 4: osmanage.GetInstanceStatusResponse.service_counts:type_name -> osmanage.GetInstanceStatusResponse.ServiceCountsEntry
+	16, // 5: osmanage.UpdateInstanceResponse.pods:type_name -> osmanage.PodStatus
+	42, // 6: osmanage.StartInstanceRequest.labels:type_name -> osmanage.StartInstanceRequest.LabelsEntry
+	16, // 7: osmanage.StartInstanceResponse.pods:type_name -> osmanage.PodStatus
+	43, // 8: osmanage.QueryParams.simple_filter:type_name -> osmanage.QueryParams.SimpleFilterEntry
+	31, // 9: osmanage.GetCollectionRequest.db_config:type_name -> osmanage.DatabaseConfig
+	32, // 10: osmanage.GetCollectionRequest.query_params:type_name -> osmanage.QueryParams
+	2,  // 11: osmanage.OsmanageService.SetupInstance:input_type -> osmanage.InstanceConfigRequest
+	2,  // 12: osmanage.OsmanageService.ConfigInstance:input_type -> osmanage.InstanceConfigRequest
+	4,  // 13: osmanage.OsmanageService.CreateInstance:input_type -> osmanage.CreateInstanceRequest
+	6,  // 14: osmanage.OsmanageService.RemoveInstance:input_type -> osmanage.RemoveInstanceRequest
+	8,  // 15: osmanage.OsmanageService.GetNamespaceExists:input_type -> osmanage.GetNamespaceExistsRequest
+	10, // 16: osmanage.OsmanageService.GetClusterStatus:input_type -> osmanage.GetClusterStatusRequest
+	12, // 17: osmanage.OsmanageService.GetServiceAddress:input_type -> osmanage.GetServiceAddressRequest
+	14, // 18: osmanage.OsmanageService.GetInstanceHealth:input_type -> osmanage.GetInstanceHealthRequest
+	19, // 19: osmanage.OsmanageService.GetInstanceStatus:input_type -> osmanage.GetInstanceStatusRequest
+	21, // 20: osmanage.OsmanageService.UpdateBackendmanage:input_type -> osmanage.UpdateBackendmanageRequest
+	23, // 21: osmanage.OsmanageService.UpdateInstance:input_type -> osmanage.UpdateInstanceRequest
+	25, // 22: osmanage.OsmanageService.ScaleService:input_type -> osmanage.ScaleServiceRequest
+	27, // 23: osmanage.OsmanageService.StartInstance:input_type -> osmanage.StartInstanceRequest
+	29, // 24: osmanage.OsmanageService.StopInstance:input_type -> osmanage.StopInstanceRequest
+	33, // 25: osmanage.OsmanageService.GetCollection:input_type -> osmanage.GetCollectionRequest
+	35, // 26: osmanage.OsmanageService.MigrationsMigrate:input_type -> osmanage.MigrationsRequest
+	35, // 27: osmanage.OsmanageService.MigrationsFinalize:input_type -> osmanage.MigrationsRequest
+	0,  // 28: osmanage.OsmanageService.StreamLogs:input_type -> osmanage.LogStreamRequest
+	35, // 29: osmanage.OsmanageService.MigrationsReset:input_type -> osmanage.MigrationsRequest
+	35, // 30: osmanage.OsmanageService.MigrationsClearCollectionfieldTables:input_type -> osmanage.MigrationsRequest
+	35, // 31: osmanage.OsmanageService.MigrationsStats:input_type -> osmanage.MigrationsRequest
+	35, // 32: osmanage.OsmanageService.MigrationsProgress:input_type -> osmanage.MigrationsRequest
+	38, // 33: osmanage.OsmanageService.SendManageAction:input_type -> osmanage.SendManageActionRequest
+	3,  // 34: osmanage.OsmanageService.SetupInstance:output_type -> osmanage.InstanceConfigResponse
+	3,  // 35: osmanage.OsmanageService.ConfigInstance:output_type -> osmanage.InstanceConfigResponse
+	5,  // 36: osmanage.OsmanageService.CreateInstance:output_type -> osmanage.CreateInstanceResponse
+	7,  // 37: osmanage.OsmanageService.RemoveInstance:output_type -> osmanage.RemoveInstanceResponse
+	9,  // 38: osmanage.OsmanageService.GetNamespaceExists:output_type -> osmanage.GetNamespaceExistsResponse
+	11, // 39: osmanage.OsmanageService.GetClusterStatus:output_type -> osmanage.GetClusterStatusResponse
+	13, // 40: osmanage.OsmanageService.GetServiceAddress:output_type -> osmanage.GetServiceAddressResponse
+	15, // 41: osmanage.OsmanageService.GetInstanceHealth:output_type -> osmanage.GetInstanceHealthResponse
+	20, // 42: osmanage.OsmanageService.GetInstanceStatus:output_type -> osmanage.GetInstanceStatusResponse
+	22, // 43: osmanage.OsmanageService.UpdateBackendmanage:output_type -> osmanage.UpdateBackendmanageResponse
+	24, // 44: osmanage.OsmanageService.UpdateInstance:output_type -> osmanage.UpdateInstanceResponse
+	26, // 45: osmanage.OsmanageService.ScaleService:output_type -> osmanage.ScaleServiceResponse
+	28, // 46: osmanage.OsmanageService.StartInstance:output_type -> osmanage.StartInstanceResponse
+	30, // 47: osmanage.OsmanageService.StopInstance:output_type -> osmanage.StopInstanceResponse
+	34, // 48: osmanage.OsmanageService.GetCollection:output_type -> osmanage.GetCollectionResponse
+	37, // 49: osmanage.OsmanageService.MigrationsMigrate:output_type -> osmanage.MigrationsProgressResponse
+	37, // 50: osmanage.OsmanageService.MigrationsFinalize:output_type -> osmanage.MigrationsProgressResponse
+	1,  // 51: osmanage.OsmanageService.StreamLogs:output_type -> osmanage.LogEntry
+	36, // 52: osmanage.OsmanageService.MigrationsReset:output_type -> osmanage.MigrationsResponse
+	36, // 53: osmanage.OsmanageService.MigrationsClearCollectionfieldTables:output_type -> osmanage.MigrationsResponse
+	36, // 54: osmanage.OsmanageService.MigrationsStats:output_type -> osmanage.MigrationsResponse
+	36, // 55: osmanage.OsmanageService.MigrationsProgress:output_type -> osmanage.MigrationsResponse
+	39, // 56: osmanage.OsmanageService.SendManageAction:output_type -> osmanage.SendManageActionResponse
+	34, // [34:57] is the sub-list for method output_type
+	11, // [11:34] is the sub-list for method input_type
 	11, // [11:11] is the sub-list for extension type_name
 	11, // [11:11] is the sub-list for extension extendee
 	0,  // [0:11] is the sub-list for field type_name
@@ -2926,7 +3033,7 @@ func file_proto_osmanage_proto_init() {
 	if File_proto_osmanage_proto != nil {
 		return
 	}
-	file_proto_osmanage_proto_msgTypes[32].OneofWrappers = []any{
+	file_proto_osmanage_proto_msgTypes[34].OneofWrappers = []any{
 		(*GetCollectionResponse_Exists)(nil),
 		(*GetCollectionResponse_JsonData)(nil),
 	}
@@ -2936,7 +3043,7 @@ func file_proto_osmanage_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_osmanage_proto_rawDesc), len(file_proto_osmanage_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   42,
+			NumMessages:   44,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

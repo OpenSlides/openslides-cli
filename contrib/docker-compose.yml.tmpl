@@ -166,7 +166,7 @@ services:
       - email
     {{- if not .disableBackendManageForward }}
     ports:
-      - 127.0.0.1:9002:9002
+      - 127.0.0.1:{{ or .backendManagePort "9002" }}:9002
     {{- end }}
     secrets:
       - auth_token_key
