@@ -124,7 +124,7 @@ func createMigrationCmd(name, description string, withProgressTracking bool) *co
 
 		if withProgressTracking && progressInterval != nil && *progressInterval > 0 && Running(response) {
 			// check whether migration has been completed successfully (not running and finished)
-			stopCondition := func(r *pb.MigrationsResponse) bool { return !Running(r) && Finished(r) }
+			stopCondition := func(r *pb.MigrationsResponse) bool { return !Running(r) && Finalized(r) }
 
 			printCallback := func(update *pb.MigrationsProgressResponse) error {
 				fmt.Print(update.Output)
@@ -309,9 +309,9 @@ func Running(mr *pb.MigrationsResponse) bool {
 	return mr.Status == constants.MigrationStatusRunning
 }
 
-// Finished returns true if the migration has finished successfully
-func Finished(mr *pb.MigrationsResponse) bool {
-	return mr.Status == constants.MigrationStatusFinished
+// Finalized returns true if the migration has finalized successfully
+func Finalized(mr *pb.MigrationsResponse) bool {
+	return mr.Status == constants.MigrationStatusFinalized
 }
 
 // isRetryableError determines if an error should trigger a retry
