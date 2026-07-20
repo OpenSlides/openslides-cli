@@ -30,12 +30,10 @@ service OsmanageService {
   
   // server side streaming
   rpc MigrationsMigrate(MigrationsRequest) returns (stream MigrationsProgressResponse);
-  rpc MigrationsFinalize(MigrationsRequest) returns (stream MigrationsProgressResponse);
   rpc StreamLogs(LogStreamRequest) returns (stream LogEntry);
   
   // unary gRPC calls
   rpc MigrationsReset(MigrationsRequest) returns (MigrationsResponse);
-  rpc MigrationsClearCollectionfieldTables(MigrationsRequest) returns (MigrationsResponse);
   rpc MigrationsStats(MigrationsRequest) returns (MigrationsResponse);
   rpc MigrationsProgress(MigrationsRequest) returns (MigrationsResponse);
 
