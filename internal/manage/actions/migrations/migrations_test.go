@@ -61,13 +61,13 @@ func TestRunning(t *testing.T) {
 	}
 }
 
-func TestFinished(t *testing.T) {
+func TestFinalized(t *testing.T) {
 	tests := []struct {
-		name     string
-		status   string
-		finished bool
+		name      string
+		status    string
+		finalized bool
 	}{
-		{"finished", constants.MigrationStatusFinished, true},
+		{"finalized", constants.MigrationStatusFinalized, true},
 		{"completed", "completed", false},
 		{"failed", "failed", false},
 		{"empty", "", false},
@@ -75,8 +75,8 @@ func TestFinished(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			resp := &pb.MigrationsResponse{Status: tt.status}
-			if got := Finished(resp); got != tt.finished {
-				t.Errorf("Finished() = %v, want %v", got, tt.finished)
+			if got := Finalized(resp); got != tt.finalized {
+				t.Errorf("Finalized() = %v, want %v", got, tt.finalized)
 			}
 		})
 	}
