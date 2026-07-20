@@ -20,15 +20,6 @@ func (s *OsmanageServiceServer) MigrationsMigrate(
 	)
 }
 
-func (s *OsmanageServiceServer) MigrationsFinalize(
-	req *pb.MigrationsRequest,
-	stream pb.OsmanageService_MigrationsFinalizeServer,
-) error {
-	return executeMigrationStream(req, stream, "finalize",
-		func(r *pb.MigrationsResponse) bool { return !migrations.Running(r) && !migrations.Finalizing(r) },
-	)
-}
-
 func (s *OsmanageServiceServer) MigrationsReset(
 	ctx context.Context,
 	req *pb.MigrationsRequest,
@@ -57,7 +48,7 @@ func (s *OsmanageServiceServer) MigrationsProgress(
 	return executeMigrationUnary(req, "progress")
 }
 
-// executeMigrationStream handles streaming migration commands (migrate, finalize)
+// executeMigrationStream handles streaming migration commands (migrate)
 func executeMigrationStream(
 	req *pb.MigrationsRequest,
 	stream interface {

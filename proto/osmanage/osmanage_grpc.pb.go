@@ -19,29 +19,27 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	OsmanageService_SetupInstance_FullMethodName                        = "/osmanage.OsmanageService/SetupInstance"
-	OsmanageService_ConfigInstance_FullMethodName                       = "/osmanage.OsmanageService/ConfigInstance"
-	OsmanageService_CreateInstance_FullMethodName                       = "/osmanage.OsmanageService/CreateInstance"
-	OsmanageService_RemoveInstance_FullMethodName                       = "/osmanage.OsmanageService/RemoveInstance"
-	OsmanageService_GetNamespaceExists_FullMethodName                   = "/osmanage.OsmanageService/GetNamespaceExists"
-	OsmanageService_GetClusterStatus_FullMethodName                     = "/osmanage.OsmanageService/GetClusterStatus"
-	OsmanageService_GetServiceAddress_FullMethodName                    = "/osmanage.OsmanageService/GetServiceAddress"
-	OsmanageService_GetInstanceHealth_FullMethodName                    = "/osmanage.OsmanageService/GetInstanceHealth"
-	OsmanageService_GetInstanceStatus_FullMethodName                    = "/osmanage.OsmanageService/GetInstanceStatus"
-	OsmanageService_UpdateBackendmanage_FullMethodName                  = "/osmanage.OsmanageService/UpdateBackendmanage"
-	OsmanageService_UpdateInstance_FullMethodName                       = "/osmanage.OsmanageService/UpdateInstance"
-	OsmanageService_ScaleService_FullMethodName                         = "/osmanage.OsmanageService/ScaleService"
-	OsmanageService_StartInstance_FullMethodName                        = "/osmanage.OsmanageService/StartInstance"
-	OsmanageService_StopInstance_FullMethodName                         = "/osmanage.OsmanageService/StopInstance"
-	OsmanageService_GetCollection_FullMethodName                        = "/osmanage.OsmanageService/GetCollection"
-	OsmanageService_MigrationsMigrate_FullMethodName                    = "/osmanage.OsmanageService/MigrationsMigrate"
-	OsmanageService_MigrationsFinalize_FullMethodName                   = "/osmanage.OsmanageService/MigrationsFinalize"
-	OsmanageService_StreamLogs_FullMethodName                           = "/osmanage.OsmanageService/StreamLogs"
-	OsmanageService_MigrationsReset_FullMethodName                      = "/osmanage.OsmanageService/MigrationsReset"
-	OsmanageService_MigrationsClearCollectionfieldTables_FullMethodName = "/osmanage.OsmanageService/MigrationsClearCollectionfieldTables"
-	OsmanageService_MigrationsStats_FullMethodName                      = "/osmanage.OsmanageService/MigrationsStats"
-	OsmanageService_MigrationsProgress_FullMethodName                   = "/osmanage.OsmanageService/MigrationsProgress"
-	OsmanageService_SendManageAction_FullMethodName                     = "/osmanage.OsmanageService/SendManageAction"
+	OsmanageService_SetupInstance_FullMethodName       = "/osmanage.OsmanageService/SetupInstance"
+	OsmanageService_ConfigInstance_FullMethodName      = "/osmanage.OsmanageService/ConfigInstance"
+	OsmanageService_CreateInstance_FullMethodName      = "/osmanage.OsmanageService/CreateInstance"
+	OsmanageService_RemoveInstance_FullMethodName      = "/osmanage.OsmanageService/RemoveInstance"
+	OsmanageService_GetNamespaceExists_FullMethodName  = "/osmanage.OsmanageService/GetNamespaceExists"
+	OsmanageService_GetClusterStatus_FullMethodName    = "/osmanage.OsmanageService/GetClusterStatus"
+	OsmanageService_GetServiceAddress_FullMethodName   = "/osmanage.OsmanageService/GetServiceAddress"
+	OsmanageService_GetInstanceHealth_FullMethodName   = "/osmanage.OsmanageService/GetInstanceHealth"
+	OsmanageService_GetInstanceStatus_FullMethodName   = "/osmanage.OsmanageService/GetInstanceStatus"
+	OsmanageService_UpdateBackendmanage_FullMethodName = "/osmanage.OsmanageService/UpdateBackendmanage"
+	OsmanageService_UpdateInstance_FullMethodName      = "/osmanage.OsmanageService/UpdateInstance"
+	OsmanageService_ScaleService_FullMethodName        = "/osmanage.OsmanageService/ScaleService"
+	OsmanageService_StartInstance_FullMethodName       = "/osmanage.OsmanageService/StartInstance"
+	OsmanageService_StopInstance_FullMethodName        = "/osmanage.OsmanageService/StopInstance"
+	OsmanageService_GetCollection_FullMethodName       = "/osmanage.OsmanageService/GetCollection"
+	OsmanageService_MigrationsMigrate_FullMethodName   = "/osmanage.OsmanageService/MigrationsMigrate"
+	OsmanageService_StreamLogs_FullMethodName          = "/osmanage.OsmanageService/StreamLogs"
+	OsmanageService_MigrationsReset_FullMethodName     = "/osmanage.OsmanageService/MigrationsReset"
+	OsmanageService_MigrationsStats_FullMethodName     = "/osmanage.OsmanageService/MigrationsStats"
+	OsmanageService_MigrationsProgress_FullMethodName  = "/osmanage.OsmanageService/MigrationsProgress"
+	OsmanageService_SendManageAction_FullMethodName    = "/osmanage.OsmanageService/SendManageAction"
 )
 
 // OsmanageServiceClient is the client API for OsmanageService service.
@@ -68,11 +66,9 @@ type OsmanageServiceClient interface {
 	GetCollection(ctx context.Context, in *GetCollectionRequest, opts ...grpc.CallOption) (*GetCollectionResponse, error)
 	// server side streaming
 	MigrationsMigrate(ctx context.Context, in *MigrationsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[MigrationsProgressResponse], error)
-	MigrationsFinalize(ctx context.Context, in *MigrationsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[MigrationsProgressResponse], error)
 	StreamLogs(ctx context.Context, in *LogStreamRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[LogEntry], error)
 	// unary gRPC calls
 	MigrationsReset(ctx context.Context, in *MigrationsRequest, opts ...grpc.CallOption) (*MigrationsResponse, error)
-	MigrationsClearCollectionfieldTables(ctx context.Context, in *MigrationsRequest, opts ...grpc.CallOption) (*MigrationsResponse, error)
 	MigrationsStats(ctx context.Context, in *MigrationsRequest, opts ...grpc.CallOption) (*MigrationsResponse, error)
 	MigrationsProgress(ctx context.Context, in *MigrationsRequest, opts ...grpc.CallOption) (*MigrationsResponse, error)
 	// generic manage action via backendmanage client
@@ -310,28 +306,9 @@ func (c *osmanageServiceClient) MigrationsMigrate(ctx context.Context, in *Migra
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type OsmanageService_MigrationsMigrateClient = grpc.ServerStreamingClient[MigrationsProgressResponse]
 
-func (c *osmanageServiceClient) MigrationsFinalize(ctx context.Context, in *MigrationsRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[MigrationsProgressResponse], error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &OsmanageService_ServiceDesc.Streams[7], OsmanageService_MigrationsFinalize_FullMethodName, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &grpc.GenericClientStream[MigrationsRequest, MigrationsProgressResponse]{ClientStream: stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type OsmanageService_MigrationsFinalizeClient = grpc.ServerStreamingClient[MigrationsProgressResponse]
-
 func (c *osmanageServiceClient) StreamLogs(ctx context.Context, in *LogStreamRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[LogEntry], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &OsmanageService_ServiceDesc.Streams[8], OsmanageService_StreamLogs_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &OsmanageService_ServiceDesc.Streams[7], OsmanageService_StreamLogs_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -352,16 +329,6 @@ func (c *osmanageServiceClient) MigrationsReset(ctx context.Context, in *Migrati
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MigrationsResponse)
 	err := c.cc.Invoke(ctx, OsmanageService_MigrationsReset_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *osmanageServiceClient) MigrationsClearCollectionfieldTables(ctx context.Context, in *MigrationsRequest, opts ...grpc.CallOption) (*MigrationsResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MigrationsResponse)
-	err := c.cc.Invoke(ctx, OsmanageService_MigrationsClearCollectionfieldTables_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -422,11 +389,9 @@ type OsmanageServiceServer interface {
 	GetCollection(context.Context, *GetCollectionRequest) (*GetCollectionResponse, error)
 	// server side streaming
 	MigrationsMigrate(*MigrationsRequest, grpc.ServerStreamingServer[MigrationsProgressResponse]) error
-	MigrationsFinalize(*MigrationsRequest, grpc.ServerStreamingServer[MigrationsProgressResponse]) error
 	StreamLogs(*LogStreamRequest, grpc.ServerStreamingServer[LogEntry]) error
 	// unary gRPC calls
 	MigrationsReset(context.Context, *MigrationsRequest) (*MigrationsResponse, error)
-	MigrationsClearCollectionfieldTables(context.Context, *MigrationsRequest) (*MigrationsResponse, error)
 	MigrationsStats(context.Context, *MigrationsRequest) (*MigrationsResponse, error)
 	MigrationsProgress(context.Context, *MigrationsRequest) (*MigrationsResponse, error)
 	// generic manage action via backendmanage client
@@ -489,17 +454,11 @@ func (UnimplementedOsmanageServiceServer) GetCollection(context.Context, *GetCol
 func (UnimplementedOsmanageServiceServer) MigrationsMigrate(*MigrationsRequest, grpc.ServerStreamingServer[MigrationsProgressResponse]) error {
 	return status.Error(codes.Unimplemented, "method MigrationsMigrate not implemented")
 }
-func (UnimplementedOsmanageServiceServer) MigrationsFinalize(*MigrationsRequest, grpc.ServerStreamingServer[MigrationsProgressResponse]) error {
-	return status.Error(codes.Unimplemented, "method MigrationsFinalize not implemented")
-}
 func (UnimplementedOsmanageServiceServer) StreamLogs(*LogStreamRequest, grpc.ServerStreamingServer[LogEntry]) error {
 	return status.Error(codes.Unimplemented, "method StreamLogs not implemented")
 }
 func (UnimplementedOsmanageServiceServer) MigrationsReset(context.Context, *MigrationsRequest) (*MigrationsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method MigrationsReset not implemented")
-}
-func (UnimplementedOsmanageServiceServer) MigrationsClearCollectionfieldTables(context.Context, *MigrationsRequest) (*MigrationsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method MigrationsClearCollectionfieldTables not implemented")
 }
 func (UnimplementedOsmanageServiceServer) MigrationsStats(context.Context, *MigrationsRequest) (*MigrationsResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method MigrationsStats not implemented")
@@ -770,17 +729,6 @@ func _OsmanageService_MigrationsMigrate_Handler(srv interface{}, stream grpc.Ser
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type OsmanageService_MigrationsMigrateServer = grpc.ServerStreamingServer[MigrationsProgressResponse]
 
-func _OsmanageService_MigrationsFinalize_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(MigrationsRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(OsmanageServiceServer).MigrationsFinalize(m, &grpc.GenericServerStream[MigrationsRequest, MigrationsProgressResponse]{ServerStream: stream})
-}
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type OsmanageService_MigrationsFinalizeServer = grpc.ServerStreamingServer[MigrationsProgressResponse]
-
 func _OsmanageService_StreamLogs_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(LogStreamRequest)
 	if err := stream.RecvMsg(m); err != nil {
@@ -806,24 +754,6 @@ func _OsmanageService_MigrationsReset_Handler(srv interface{}, ctx context.Conte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OsmanageServiceServer).MigrationsReset(ctx, req.(*MigrationsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _OsmanageService_MigrationsClearCollectionfieldTables_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MigrationsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OsmanageServiceServer).MigrationsClearCollectionfieldTables(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: OsmanageService_MigrationsClearCollectionfieldTables_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OsmanageServiceServer).MigrationsClearCollectionfieldTables(ctx, req.(*MigrationsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -930,10 +860,6 @@ var OsmanageService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _OsmanageService_MigrationsReset_Handler,
 		},
 		{
-			MethodName: "MigrationsClearCollectionfieldTables",
-			Handler:    _OsmanageService_MigrationsClearCollectionfieldTables_Handler,
-		},
-		{
 			MethodName: "MigrationsStats",
 			Handler:    _OsmanageService_MigrationsStats_Handler,
 		},
@@ -980,11 +906,6 @@ var OsmanageService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "MigrationsMigrate",
 			Handler:       _OsmanageService_MigrationsMigrate_Handler,
-			ServerStreams: true,
-		},
-		{
-			StreamName:    "MigrationsFinalize",
-			Handler:       _OsmanageService_MigrationsFinalize_Handler,
 			ServerStreams: true,
 		},
 		{
