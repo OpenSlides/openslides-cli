@@ -2886,7 +2886,7 @@ const file_proto_osmanage_proto_rawDesc = "" +
 	"\x18SendManageActionResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x14\n" +
 	"\x05error\x18\x02 \x01(\tR\x05error\x12\x12\n" +
-	"\x04body\x18\x03 \x01(\fR\x04body2\xe1\x0f\n" +
+	"\x04body\x18\x03 \x01(\fR\x04body2\xa3\x0e\n" +
 	"\x0fOsmanageService\x12R\n" +
 	"\rSetupInstance\x12\x1f.osmanage.InstanceConfigRequest\x1a .osmanage.InstanceConfigResponse\x12S\n" +
 	"\x0eConfigInstance\x12\x1f.osmanage.InstanceConfigRequest\x1a .osmanage.InstanceConfigResponse\x12S\n" +
@@ -2903,12 +2903,10 @@ const file_proto_osmanage_proto_rawDesc = "" +
 	"\rStartInstance\x12\x1e.osmanage.StartInstanceRequest\x1a\x1f.osmanage.StartInstanceResponse0\x01\x12O\n" +
 	"\fStopInstance\x12\x1d.osmanage.StopInstanceRequest\x1a\x1e.osmanage.StopInstanceResponse0\x01\x12P\n" +
 	"\rGetCollection\x12\x1e.osmanage.GetCollectionRequest\x1a\x1f.osmanage.GetCollectionResponse\x12X\n" +
-	"\x11MigrationsMigrate\x12\x1b.osmanage.MigrationsRequest\x1a$.osmanage.MigrationsProgressResponse0\x01\x12Y\n" +
-	"\x12MigrationsFinalize\x12\x1b.osmanage.MigrationsRequest\x1a$.osmanage.MigrationsProgressResponse0\x01\x12>\n" +
+	"\x11MigrationsMigrate\x12\x1b.osmanage.MigrationsRequest\x1a$.osmanage.MigrationsProgressResponse0\x01\x12>\n" +
 	"\n" +
 	"StreamLogs\x12\x1a.osmanage.LogStreamRequest\x1a\x12.osmanage.LogEntry0\x01\x12L\n" +
-	"\x0fMigrationsReset\x12\x1b.osmanage.MigrationsRequest\x1a\x1c.osmanage.MigrationsResponse\x12a\n" +
-	"$MigrationsClearCollectionfieldTables\x12\x1b.osmanage.MigrationsRequest\x1a\x1c.osmanage.MigrationsResponse\x12L\n" +
+	"\x0fMigrationsReset\x12\x1b.osmanage.MigrationsRequest\x1a\x1c.osmanage.MigrationsResponse\x12L\n" +
 	"\x0fMigrationsStats\x12\x1b.osmanage.MigrationsRequest\x1a\x1c.osmanage.MigrationsResponse\x12O\n" +
 	"\x12MigrationsProgress\x12\x1b.osmanage.MigrationsRequest\x1a\x1c.osmanage.MigrationsResponse\x12Y\n" +
 	"\x10SendManageAction\x12!.osmanage.SendManageActionRequest\x1a\".osmanage.SendManageActionResponseB5Z3github.com/OpenSlides/openslides-cli/proto/osmanageb\x06proto3"
@@ -3000,38 +2998,34 @@ var file_proto_osmanage_proto_depIdxs = []int32{
 	29, // 24: osmanage.OsmanageService.StopInstance:input_type -> osmanage.StopInstanceRequest
 	33, // 25: osmanage.OsmanageService.GetCollection:input_type -> osmanage.GetCollectionRequest
 	35, // 26: osmanage.OsmanageService.MigrationsMigrate:input_type -> osmanage.MigrationsRequest
-	35, // 27: osmanage.OsmanageService.MigrationsFinalize:input_type -> osmanage.MigrationsRequest
-	0,  // 28: osmanage.OsmanageService.StreamLogs:input_type -> osmanage.LogStreamRequest
-	35, // 29: osmanage.OsmanageService.MigrationsReset:input_type -> osmanage.MigrationsRequest
-	35, // 30: osmanage.OsmanageService.MigrationsClearCollectionfieldTables:input_type -> osmanage.MigrationsRequest
-	35, // 31: osmanage.OsmanageService.MigrationsStats:input_type -> osmanage.MigrationsRequest
-	35, // 32: osmanage.OsmanageService.MigrationsProgress:input_type -> osmanage.MigrationsRequest
-	38, // 33: osmanage.OsmanageService.SendManageAction:input_type -> osmanage.SendManageActionRequest
-	3,  // 34: osmanage.OsmanageService.SetupInstance:output_type -> osmanage.InstanceConfigResponse
-	3,  // 35: osmanage.OsmanageService.ConfigInstance:output_type -> osmanage.InstanceConfigResponse
-	5,  // 36: osmanage.OsmanageService.CreateInstance:output_type -> osmanage.CreateInstanceResponse
-	7,  // 37: osmanage.OsmanageService.RemoveInstance:output_type -> osmanage.RemoveInstanceResponse
-	9,  // 38: osmanage.OsmanageService.GetNamespaceExists:output_type -> osmanage.GetNamespaceExistsResponse
-	11, // 39: osmanage.OsmanageService.GetClusterStatus:output_type -> osmanage.GetClusterStatusResponse
-	13, // 40: osmanage.OsmanageService.GetServiceAddress:output_type -> osmanage.GetServiceAddressResponse
-	15, // 41: osmanage.OsmanageService.GetInstanceHealth:output_type -> osmanage.GetInstanceHealthResponse
-	20, // 42: osmanage.OsmanageService.GetInstanceStatus:output_type -> osmanage.GetInstanceStatusResponse
-	22, // 43: osmanage.OsmanageService.UpdateBackendmanage:output_type -> osmanage.UpdateBackendmanageResponse
-	24, // 44: osmanage.OsmanageService.UpdateInstance:output_type -> osmanage.UpdateInstanceResponse
-	26, // 45: osmanage.OsmanageService.ScaleService:output_type -> osmanage.ScaleServiceResponse
-	28, // 46: osmanage.OsmanageService.StartInstance:output_type -> osmanage.StartInstanceResponse
-	30, // 47: osmanage.OsmanageService.StopInstance:output_type -> osmanage.StopInstanceResponse
-	34, // 48: osmanage.OsmanageService.GetCollection:output_type -> osmanage.GetCollectionResponse
-	37, // 49: osmanage.OsmanageService.MigrationsMigrate:output_type -> osmanage.MigrationsProgressResponse
-	37, // 50: osmanage.OsmanageService.MigrationsFinalize:output_type -> osmanage.MigrationsProgressResponse
-	1,  // 51: osmanage.OsmanageService.StreamLogs:output_type -> osmanage.LogEntry
-	36, // 52: osmanage.OsmanageService.MigrationsReset:output_type -> osmanage.MigrationsResponse
-	36, // 53: osmanage.OsmanageService.MigrationsClearCollectionfieldTables:output_type -> osmanage.MigrationsResponse
-	36, // 54: osmanage.OsmanageService.MigrationsStats:output_type -> osmanage.MigrationsResponse
-	36, // 55: osmanage.OsmanageService.MigrationsProgress:output_type -> osmanage.MigrationsResponse
-	39, // 56: osmanage.OsmanageService.SendManageAction:output_type -> osmanage.SendManageActionResponse
-	34, // [34:57] is the sub-list for method output_type
-	11, // [11:34] is the sub-list for method input_type
+	0,  // 27: osmanage.OsmanageService.StreamLogs:input_type -> osmanage.LogStreamRequest
+	35, // 28: osmanage.OsmanageService.MigrationsReset:input_type -> osmanage.MigrationsRequest
+	35, // 29: osmanage.OsmanageService.MigrationsStats:input_type -> osmanage.MigrationsRequest
+	35, // 30: osmanage.OsmanageService.MigrationsProgress:input_type -> osmanage.MigrationsRequest
+	38, // 31: osmanage.OsmanageService.SendManageAction:input_type -> osmanage.SendManageActionRequest
+	3,  // 32: osmanage.OsmanageService.SetupInstance:output_type -> osmanage.InstanceConfigResponse
+	3,  // 33: osmanage.OsmanageService.ConfigInstance:output_type -> osmanage.InstanceConfigResponse
+	5,  // 34: osmanage.OsmanageService.CreateInstance:output_type -> osmanage.CreateInstanceResponse
+	7,  // 35: osmanage.OsmanageService.RemoveInstance:output_type -> osmanage.RemoveInstanceResponse
+	9,  // 36: osmanage.OsmanageService.GetNamespaceExists:output_type -> osmanage.GetNamespaceExistsResponse
+	11, // 37: osmanage.OsmanageService.GetClusterStatus:output_type -> osmanage.GetClusterStatusResponse
+	13, // 38: osmanage.OsmanageService.GetServiceAddress:output_type -> osmanage.GetServiceAddressResponse
+	15, // 39: osmanage.OsmanageService.GetInstanceHealth:output_type -> osmanage.GetInstanceHealthResponse
+	20, // 40: osmanage.OsmanageService.GetInstanceStatus:output_type -> osmanage.GetInstanceStatusResponse
+	22, // 41: osmanage.OsmanageService.UpdateBackendmanage:output_type -> osmanage.UpdateBackendmanageResponse
+	24, // 42: osmanage.OsmanageService.UpdateInstance:output_type -> osmanage.UpdateInstanceResponse
+	26, // 43: osmanage.OsmanageService.ScaleService:output_type -> osmanage.ScaleServiceResponse
+	28, // 44: osmanage.OsmanageService.StartInstance:output_type -> osmanage.StartInstanceResponse
+	30, // 45: osmanage.OsmanageService.StopInstance:output_type -> osmanage.StopInstanceResponse
+	34, // 46: osmanage.OsmanageService.GetCollection:output_type -> osmanage.GetCollectionResponse
+	37, // 47: osmanage.OsmanageService.MigrationsMigrate:output_type -> osmanage.MigrationsProgressResponse
+	1,  // 48: osmanage.OsmanageService.StreamLogs:output_type -> osmanage.LogEntry
+	36, // 49: osmanage.OsmanageService.MigrationsReset:output_type -> osmanage.MigrationsResponse
+	36, // 50: osmanage.OsmanageService.MigrationsStats:output_type -> osmanage.MigrationsResponse
+	36, // 51: osmanage.OsmanageService.MigrationsProgress:output_type -> osmanage.MigrationsResponse
+	39, // 52: osmanage.OsmanageService.SendManageAction:output_type -> osmanage.SendManageActionResponse
+	32, // [32:53] is the sub-list for method output_type
+	11, // [11:32] is the sub-list for method input_type
 	11, // [11:11] is the sub-list for extension type_name
 	11, // [11:11] is the sub-list for extension extendee
 	0,  // [0:11] is the sub-list for field type_name

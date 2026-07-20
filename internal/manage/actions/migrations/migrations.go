@@ -26,13 +26,8 @@ Examples:
     --address <myBackendManageIP>:9002 \
     --password-file my.instance.dir/secrets/internal_auth_password
 
-  # Run migrations on auxiliary tables
+  # Run migrations on live tables
   osmanage migrations migrate \
-    --address <myBackendManageIP>:9002 \
-    --password-file my.instance.dir/secrets/internal_auth_password
-
-  # Apply migrations to live tables
-  osmanage migrations finalize \
     --address <myBackendManageIP>:9002 \
     --password-file my.instance.dir/secrets/internal_auth_password
 
@@ -46,15 +41,8 @@ Examples:
     --address <myBackendManageIP>:9002 \
     --password-file my.instance.dir/secrets/internal_auth_password
 
-  # Custom progress interval
-  osmanage migrations finalize \
-    --address <myBackendManageIP>:9002 \
-    --password-file my.instance.dir/secrets/internal_auth_password \
-    --interval 2s
-
 Available commands:
-  migrate                       Run migrations on auxiliary tables
-  finalize                      Apply migrations to live tables
+  migrate                       Run migrations on live tables
   reset                         Reset unapplied migrations
   stats                         Show migration statistics
   progress                      Check running migration progress`
@@ -69,9 +57,7 @@ func Cmd() *cobra.Command {
 
 	cmd.AddCommand(
 		migrateCmd(),
-		finalizeCmd(),
 		resetCmd(),
-		clearCollectionfieldTablesCmd(),
 		statsCmd(),
 		progressCmd(),
 	)
@@ -80,20 +66,11 @@ func Cmd() *cobra.Command {
 }
 
 func migrateCmd() *cobra.Command {
-	return createMigrationCmd("migrate", "Prepare migrations but do not apply them to the live tables", true)
-}
-
-func finalizeCmd() *cobra.Command {
-	return createMigrationCmd("finalize", "Prepare migrations and apply them to the live tables", true)
+	return createMigrationCmd("migrate", "Prepare migrations and apply them to the live tables", true)
 }
 
 func resetCmd() *cobra.Command {
 	return createMigrationCmd("reset", "Reset unapplied migrations", false)
-}
-
-// TODO: unavailable after 4.3.0, delete when backward compatibility no longer needed
-func clearCollectionfieldTablesCmd() *cobra.Command {
-	return createMigrationCmd("clear-collectionfield-tables", "Clear all data from auxiliary tables (only when OpenSlides is offline)", false)
 }
 
 func statsCmd() *cobra.Command {
@@ -145,13 +122,9 @@ func createMigrationCmd(name, description string, withProgressTracking bool) *co
 		}
 		fmt.Print(output)
 
-		if withProgressTracking && progressInterval != nil && *progressInterval > 0 && (Running(response) || Finalizing(response)) {
-			var stopCondition func(*pb.MigrationsResponse) bool
-			if name == "finalize" {
-				stopCondition = func(r *pb.MigrationsResponse) bool { return !Running(r) && !Finalizing(r) }
-			} else {
-				stopCondition = func(r *pb.MigrationsResponse) bool { return !Running(r) }
-			}
+		if withProgressTracking && progressInterval != nil && *progressInterval > 0 && Running(response) {
+			// check whether migration has been completed successfully (not running and finished)
+			stopCondition := func(r *pb.MigrationsResponse) bool { return !Running(r) && Finished(r) }
 
 			printCallback := func(update *pb.MigrationsProgressResponse) error {
 				fmt.Print(update.Output)
@@ -236,8 +209,8 @@ func ExecuteMigrationCommand(cl *client.Client, command string) (*pb.MigrationsR
 			Stats:     string(httpResp.Stats),
 		}
 
-		logger.Debug("Migration response - Success: %v, Status: %s, Running: %v, Finalizing: %v",
-			migrationResp.Success, migrationResp.Status, Running(migrationResp), Finalizing(migrationResp))
+		logger.Debug("Migration response - Success: %v, Status: %s, Running: %v",
+			migrationResp.Success, migrationResp.Status, Running(migrationResp))
 
 		return migrationResp, nil
 	}
@@ -264,7 +237,7 @@ func TrackMigrationProgress(
 
 		update := &pb.MigrationsProgressResponse{
 			Output:    response.Output,
-			Running:   Running(response) || Finalizing(response),
+			Running:   Running(response),
 			Success:   response.Success,
 			Exception: response.Exception,
 		}
@@ -328,8 +301,7 @@ func formatAll(mr *pb.MigrationsResponse) (string, error) {
 // Faulty returns true if the migration failed
 func Faulty(mr *pb.MigrationsResponse) bool {
 	return !mr.Success || mr.Exception != "" ||
-		mr.Status == constants.MigrationStatusFailed ||
-		mr.Status == constants.FinalizationStatusFailed
+		mr.Status == constants.MigrationStatusFailed
 }
 
 // Running returns true if the migration is currently in progress
@@ -337,9 +309,9 @@ func Running(mr *pb.MigrationsResponse) bool {
 	return mr.Status == constants.MigrationStatusRunning
 }
 
-// Finalizing returns true if the migration finalization is currently in progress
-func Finalizing(mr *pb.MigrationsResponse) bool {
-	return mr.Status == constants.FinalizationStatusRunning
+// Finished returns true if the migration has finished successfully
+func Finished(mr *pb.MigrationsResponse) bool {
+	return mr.Status == constants.MigrationStatusFinished
 }
 
 // isRetryableError determines if an error should trigger a retry
