@@ -223,8 +223,11 @@ const (
 	// MigrationStatusFailed indicates a migration process has failed
 	MigrationStatusFailed string = "migration_failed"
 
-	// MigrationStatusFinished indicates a migration process has finished successfully
+	// MigrationStatusFinished indicates a migration modules process has finished successfully
 	MigrationStatusFinished string = "migration_finished"
+
+	// MigrationStatusFinalized indicates a migration has successfully finished and tables have been persisted to outside transactions
+	MigrationStatusFinalized string = "finalized"
 
 	// MigrationMaxRetries is the maximum number of retry attempts for failed migration requests
 	MigrationMaxRetries int = 5
