@@ -69,6 +69,7 @@ message CreateInstanceRequest {
   string instance_dir = 1;
   string db_password = 2;
   string superadmin_password = 3;
+  string vote_key = 4;
 }
 
 message CreateInstanceResponse {

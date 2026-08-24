@@ -28,6 +28,9 @@ const (
 	// PgPasswordFile contains the PostgreSQL database password
 	PgPasswordFile string = "postgres_password"
 
+	// VoteKeyFile contains the vote key secret
+	VoteKeyFile string = "vote_key"
+
 	// AuthTokenKey contains the authentication token secret
 	AuthTokenKey string = "auth_token_key"
 
@@ -81,6 +84,9 @@ const (
 
 	// DefaultPostgresPasswordLength is the default length for database passwords
 	DefaultPostgresPasswordLength int = 40
+
+	// DefaultVoteKeyLength is the default length for vote key secret
+	DefaultVoteKeyLength int = 40
 
 	// DefaultSecretBytesLength is the number of random bytes used for base64-encoded secrets.
 	// These 32 bytes produce a 44-character base64 string used for:

@@ -143,6 +143,7 @@ func TestCreateInstance(t *testing.T) {
 	existingSecrets := map[string]string{
 		constants.PgPasswordFile:       "old-db-password",
 		constants.AdminSecretsFile:     "old-admin-password",
+		constants.VoteKeyFile:          "old-vote-key",
 		constants.InternalAuthPassword: "some-auth-key",
 	}
 
@@ -156,8 +157,9 @@ func TestCreateInstance(t *testing.T) {
 	// Run createInstance
 	dbPassword := "new-database-password"
 	superadminPassword := "new-superadmin-password"
+	voteKey := "new-vote-key"
 
-	err = CreateInstance(tmpDir, dbPassword, superadminPassword)
+	err = CreateInstance(tmpDir, dbPassword, superadminPassword, voteKey)
 	if err != nil {
 		t.Fatalf("createInstance failed: %v", err)
 	}
@@ -178,6 +180,15 @@ func TestCreateInstance(t *testing.T) {
 	}
 	if string(adminContent) != superadminPassword {
 		t.Errorf("superadmin = %q, want %q", string(adminContent), superadminPassword)
+	}
+
+	// Verify vote_key was overwritten
+	voteKeyContent, err := os.ReadFile(filepath.Join(secretsDir, constants.VoteKeyFile))
+	if err != nil {
+		t.Fatalf("Failed to read vote_key: %v", err)
+	}
+	if string(voteKeyContent) != voteKey {
+		t.Errorf("vote_key = %q, want %q", string(voteKeyContent), voteKey)
 	}
 
 	// Verify other secrets were not touched
@@ -234,7 +245,7 @@ func TestCreateInstance_SecretsDirectoryNotExist(t *testing.T) {
 	})
 
 	// Don't create secrets directory - should fail
-	err = CreateInstance(tmpDir, "password", "admin")
+	err = CreateInstance(tmpDir, "password", "admin", "key")
 	if err == nil {
 		t.Error("Expected error when secrets directory doesn't exist, got nil")
 	}

@@ -51,6 +51,7 @@ var defaultSecrets = []SecretSpec{
 	{constants.AuthCookieKey, randomSecret},
 	{constants.InternalAuthPassword, randomSecret},
 	{constants.PgPasswordFile, func() ([]byte, error) { return randomString(constants.DefaultPostgresPasswordLength) }},
+	{constants.VoteKeyFile, func() ([]byte, error) { return randomString(constants.DefaultVoteKeyLength) }},
 	{constants.AdminSecretsFile, func() ([]byte, error) { return randomString(constants.DefaultSuperadminPasswordLength) }},
 }
 

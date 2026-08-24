@@ -133,6 +133,7 @@ my.instance.dir.org/
     ├── internal_auth_password
     ├── postgres_password
     ├── superadmin
+    ├── vote_key
     ├── cert_crt               # (if HTTPS enabled)
     └── cert_key
 ```

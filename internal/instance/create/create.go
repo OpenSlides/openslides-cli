@@ -21,12 +21,13 @@ This command:
 2. Sets all secret files to 600 permissions
 3. Writes the database password to postgres_password
 4. Writes the superadmin password to superadmin
+5. Writes the vote key to vote_key
 
 The secrets directory must already exist (created by 'setup' command).
 
 Examples:
-  osmanage create ./my.instance.dir.org --db-password "mydbpass" --superadmin-password "myadminpass"
-  osmanage create ./my.instance.dir.org --db-password "$(cat db.txt)" --superadmin-password "$(cat admin.txt)"`
+  osmanage create ./my.instance.dir.org --db-password "mydbpass" --superadmin-password "myadminpass" --vote-key "myvotekey"
+  osmanage create ./my.instance.dir.org --db-password "$(cat db.txt)" --superadmin-password "$(cat admin.txt)" --vote-key "$(cat vote_key.txt)"`
 )
 
 func Cmd() *cobra.Command {
@@ -39,16 +40,18 @@ func Cmd() *cobra.Command {
 
 	dbPassword := cmd.Flags().String("db-password", "", "PostgreSQL database password (required)")
 	superadminPassword := cmd.Flags().String("superadmin-password", "", "Superadmin password (required)")
+	voteKey := cmd.Flags().String("vote-key", "", "Vote Key (required)")
 
 	_ = cmd.MarkFlagRequired("db-password")
 	_ = cmd.MarkFlagRequired("superadmin-password")
+	_ = cmd.MarkFlagRequired("vote-key")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		logger.Info("=== K8S CREATE INSTANCE ===")
 		instanceDir := args[0]
 		logger.Debug("Instance directory: %s", instanceDir)
 
-		if err := CreateInstance(instanceDir, *dbPassword, *superadminPassword); err != nil {
+		if err := CreateInstance(instanceDir, *dbPassword, *superadminPassword, *voteKey); err != nil {
 			return fmt.Errorf("creating instance: %w", err)
 		}
 
@@ -60,12 +63,15 @@ func Cmd() *cobra.Command {
 }
 
 // CreateInstance sets up the secrets directory with the provided passwords
-func CreateInstance(instanceDir, dbPassword, superadminPassword string) error {
+func CreateInstance(instanceDir, dbPassword, superadminPassword, voteKey string) error {
 	if strings.TrimSpace(dbPassword) == "" {
 		return fmt.Errorf("db_password cannot be empty")
 	}
 	if strings.TrimSpace(superadminPassword) == "" {
 		return fmt.Errorf("superadmin_password cannot be empty")
+	}
+	if strings.TrimSpace(voteKey) == "" {
+		return fmt.Errorf("vote_key cannot be empty")
 	}
 
 	secretsDir := filepath.Join(instanceDir, constants.SecretsDirName)
@@ -91,6 +97,12 @@ func CreateInstance(instanceDir, dbPassword, superadminPassword string) error {
 	logger.Debug("Writing superadmin password to: %s", superadminPath)
 	if err := os.WriteFile(superadminPath, []byte(superadminPassword), constants.SecretFilePerm); err != nil {
 		return fmt.Errorf("writing superadmin password: %w", err)
+	}
+
+	voteKeyPath := filepath.Join(secretsDir, constants.VoteKeyFile)
+	logger.Debug("Writing vote key to: %s", voteKeyPath)
+	if err := os.WriteFile(voteKeyPath, []byte(voteKey), constants.SecretFilePerm); err != nil {
+		return fmt.Errorf("writing vote key: %w", err)
 	}
 
 	logger.Info("Passwords configured successfully")
