@@ -361,6 +361,7 @@ func isRetryableError(err error) bool {
 		"eof",
 		"broken pipe",
 		"i/o timeout",
+		"connect: no route to host",
 	}
 
 	for _, pattern := range retryablePatterns {
