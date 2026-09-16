@@ -230,10 +230,10 @@ const (
 	FinalizationStatusFailed string = "finalization_failed"
 
 	// MigrationMaxRetries is the maximum number of retry attempts for failed migration requests
-	MigrationMaxRetries int = 5
+	MigrationMaxRetries int = 8
 
 	// MigrationRetryDelay is the delay between retry attempts
-	MigrationRetryDelay time.Duration = 5 * time.Second
+	MigrationRetryDelay time.Duration = 3 * time.Second
 
 	// MigrationTotalTimeout is the maximum time allowed for all retry attempts
 	MigrationTotalTimeout time.Duration = 3 * time.Minute

@@ -233,11 +233,18 @@ func ExecuteGetCollection(ctx context.Context, dbConfig *pb.DatabaseConfig, para
 
 	// Initialize datastore flow
 	env := environment.ForTests(envMap)
-	dsFlow, err := datastore.NewFlowPostgres(env)
+	dsFlow, initPostgres, err := datastore.NewFlowPostgres(env)
 	if err != nil {
 		return &pb.GetCollectionResponse{
 			Success: false,
-			Error:   fmt.Sprintf("creating datastore flow: %v", err),
+			Error:   fmt.Sprintf("connecting to database: %v", err),
+		}, nil
+	}
+
+	if err := initPostgres(ctx); err != nil {
+		return &pb.GetCollectionResponse{
+			Success: false,
+			Error:   fmt.Sprintf("init postgres flow: %v", err),
 		}, nil
 	}
 
