@@ -211,6 +211,7 @@ func TestIsRetryableError(t *testing.T) {
 		{"connection reset", "connection reset by peer", true},
 		{"timeout", "i/o timeout", true},
 		{"eof", "unexpected EOF", true},
+		{"no route to host", "connect: no route to host", true},
 		{"server error 503", "server returned 503", true},
 		{"server error 502", "bad gateway 502", true},
 		{"server error 504", "gateway timeout 504", true},
