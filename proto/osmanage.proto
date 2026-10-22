@@ -187,6 +187,7 @@ message UpdateInstanceRequest {
   string kubeconfig = 2;
   bool skip_ready_check = 3;
   int32 timeout_seconds = 4;
+  bool prune = 5;
 }
 
 message UpdateInstanceResponse {

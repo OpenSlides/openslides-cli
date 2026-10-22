@@ -44,7 +44,7 @@ func (s *OsmanageServiceServer) UpdateInstance(
 		})
 	}
 
-	err = actions.UpdateInstance(ctx, k8sClient, req.InstanceDir, req.SkipReadyCheck, timeout, streamCallback, inactiveCallback)
+	err = actions.UpdateInstance(ctx, k8sClient, req.InstanceDir, req.SkipReadyCheck, timeout, streamCallback, inactiveCallback, req.Prune)
 	if err != nil {
 		return stream.Send(&pb.UpdateInstanceResponse{
 			Complete: true,
