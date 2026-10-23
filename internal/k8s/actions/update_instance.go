@@ -33,6 +33,7 @@ func UpdateInstanceCmd() *cobra.Command {
 
 	kubeconfig := cmd.Flags().String("kubeconfig", "", "Path to kubeconfig file")
 	skipReadyCheck := cmd.Flags().Bool("skip-ready-check", false, "Skip waiting for instance to become ready")
+	prune := cmd.Flags().Bool("pruen", false, "Prune Kubernetes instance resources that are no longer in use.")
 	timeout := cmd.Flags().Duration("timeout", constants.DefaultInstanceTimeout, "Timeout for instance health check")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
@@ -46,7 +47,7 @@ func UpdateInstanceCmd() *cobra.Command {
 			return fmt.Errorf("creating k8s client: %w", err)
 		}
 
-		if err := UpdateInstance(context.Background(), k8sClient, instanceDir, *skipReadyCheck, *timeout, nil, nil); err != nil {
+		if err := UpdateInstance(context.Background(), k8sClient, instanceDir, *skipReadyCheck, *timeout, nil, nil, *prune); err != nil {
 			return err
 		}
 
@@ -67,6 +68,7 @@ func UpdateInstance(
 	timeout time.Duration,
 	callback func(*HealthStatus) error,
 	inactiveCallback func() error,
+	prune bool,
 ) error {
 	namespace := utils.ExtractNamespace(instanceDir)
 	logger.Info("Namespace: %s", namespace)
@@ -92,12 +94,15 @@ func UpdateInstance(
 
 	stackDir := filepath.Join(instanceDir, constants.StackDirName)
 	applied, err := applyDirectory(ctx, k8sClient, stackDir, nil)
+
 	if err != nil {
 		return fmt.Errorf("applying stack: %w", err)
 	}
 
-	if err := pruneOrphans(ctx, k8sClient, namespace, applied); err != nil {
-		logger.Warn("Failed to prune orphaned resources: %v", err)
+	if prune {
+		if err := pruneOrphans(ctx, k8sClient, namespace, applied); err != nil {
+			logger.Warn("Failed to prune orphaned resources: %v", err)
+		}
 	}
 
 	if skipReadyCheck {
