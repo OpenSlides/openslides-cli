@@ -3,9 +3,9 @@ module github.com/OpenSlides/openslides-cli
 go 1.26.0
 
 require (
-	github.com/OpenSlides/openslides-go v0.0.0-20261019143238-985a3acd9af1
+	github.com/OpenSlides/openslides-go v0.0.0-20261106073320-ebf4e1bb74ef
 	github.com/schollz/progressbar/v3 v3.19.1
-	github.com/shopspring/decimal v1.4.0
+	github.com/shopspring/decimal v1.6.0
 	github.com/spf13/cobra v1.10.2
 	golang.org/x/text v0.41.0
 	google.golang.org/grpc v1.83.0
@@ -53,11 +53,11 @@ require (
 	github.com/rs/zerolog v1.35.1 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
-	go.yaml.in/yaml/v3 v3.0.4 // indirect
+	go.yaml.in/yaml/v3 v3.0.6 // indirect
 	golang.org/x/net v0.55.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sync v0.23.0 // indirect
-	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/sync v0.24.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/term v0.44.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
