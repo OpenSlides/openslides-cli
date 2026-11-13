@@ -3,7 +3,7 @@ module github.com/OpenSlides/openslides-cli
 go 1.26.0
 
 require (
-	github.com/OpenSlides/openslides-go v0.0.0-20261106073320-ebf4e1bb74ef
+	github.com/OpenSlides/openslides-go v0.0.0-20261113070633-6ac7f2ad9281
 	github.com/schollz/progressbar/v3 v3.19.1
 	github.com/shopspring/decimal v1.6.0
 	github.com/spf13/cobra v1.10.2
