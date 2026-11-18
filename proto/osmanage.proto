@@ -30,12 +30,10 @@ service OsmanageService {
   
   // server side streaming
   rpc MigrationsMigrate(MigrationsRequest) returns (stream MigrationsProgressResponse);
-  rpc MigrationsFinalize(MigrationsRequest) returns (stream MigrationsProgressResponse);
   rpc StreamLogs(LogStreamRequest) returns (stream LogEntry);
   
   // unary gRPC calls
   rpc MigrationsReset(MigrationsRequest) returns (MigrationsResponse);
-  rpc MigrationsClearCollectionfieldTables(MigrationsRequest) returns (MigrationsResponse);
   rpc MigrationsStats(MigrationsRequest) returns (MigrationsResponse);
   rpc MigrationsProgress(MigrationsRequest) returns (MigrationsResponse);
 
@@ -189,6 +187,7 @@ message UpdateInstanceRequest {
   string kubeconfig = 2;
   bool skip_ready_check = 3;
   int32 timeout_seconds = 4;
+  bool prune = 5;
 }
 
 message UpdateInstanceResponse {
