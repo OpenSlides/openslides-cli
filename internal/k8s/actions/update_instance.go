@@ -33,7 +33,7 @@ func UpdateInstanceCmd() *cobra.Command {
 
 	kubeconfig := cmd.Flags().String("kubeconfig", "", "Path to kubeconfig file")
 	skipReadyCheck := cmd.Flags().Bool("skip-ready-check", false, "Skip waiting for instance to become ready")
-	prune := cmd.Flags().Bool("pruen", false, "Prune Kubernetes instance resources that are no longer in use.")
+	prune := cmd.Flags().Bool("prune", false, "Prune Kubernetes instance resources that are no longer in use.")
 	timeout := cmd.Flags().Duration("timeout", constants.DefaultInstanceTimeout, "Timeout for instance health check")
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
