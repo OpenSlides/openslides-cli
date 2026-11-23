@@ -45,6 +45,7 @@ x-default-environment: &default-environment
   VOTE_DATABASE_USER: {{ or .defaultEnvironment.VOTE_DATABASE_USER "openslides" }}
   VOTE_HOST: {{ or .defaultEnvironment.VOTE_HOST "vote" }}
   VOTE_PORT: {{ or .defaultEnvironment.VOTE_PORT "9013" }}
+  VOTE_SECRET_KEY_FILE: {{ or .defaultEnvironment.VOTE_SECRET_KEY_FILE "/run/secrets/vote_key" }}
 
 services:
 
@@ -293,6 +294,7 @@ services:
       - auth_token_key
       - auth_cookie_key
       - postgres_password
+      - vote_key
     {{- with .services.vote.additionalContent }}{{ marshalContent 4 . }}{{- end }}
 
   redis:
@@ -369,6 +371,8 @@ secrets:
     file: ./secrets/internal_auth_password
   postgres_password:
     file: ./secrets/postgres_password
+  vote_key:
+    file: ./secrets/vote_key
 {{- if .enableLocalHTTPS }}
   cert_crt:
     file: ./secrets/cert_crt
