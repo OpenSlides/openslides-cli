@@ -217,8 +217,7 @@ Commands for interacting with the OpenSlides backend API.
 Manage OpenSlides database migrations.
 
 **Subcommands:**
-- `migrate`: Run migrations on auxiliary tables
-- `finalize`: Apply migrations to live tables
+- `migrate`: Run migrations on live tables
 - `reset`: Reset unapplied migrations
 - `stats`: Show migration statistics
 - `progress`: Check running migration progress
@@ -235,17 +234,6 @@ osmanage migrations stats \
 osmanage migrations migrate \
   --address localhost:9002 \
   --password-file ./secrets/internal_auth_password
-
-# Apply migrations
-osmanage migrations finalize \
-  --address localhost:9002 \
-  --password-file ./secrets/internal_auth_password
-
-# Apply without progress output
-osmanage migrations finalize \
-  --address localhost:9002 \
-  --password-file ./secrets/internal_auth_password \
-  --interval 0
 ```
 
 **Migration Stats Output:**
